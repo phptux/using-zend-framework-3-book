@@ -29,7 +29,7 @@
         "ru": "Русский",
         "es": "Español",
         "fr": "Français",
-        "de": "Deutsch
+        "de": "Deutsch"
     },
     "incomplete_translations": ["es", "fr"],
     "theme" : "default",
