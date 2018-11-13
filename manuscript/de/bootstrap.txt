@@ -1,0 +1,623 @@
+# Anhang C. Einführung in Twitter Bootstrap {#bootstrap}
+
+Twitter Bootstrap (kurz Bootstrap) ist ein beliebtes CSS-Framework, das das Erstellen ermöglicht.
+Ihre Website sieht professionell aus und ist optisch ansprechend, auch wenn Sie keine
+fortgeschrittene Designerfähigkeiten haben. In diesem Anhang finden Sie einige einführende Informationen
+über Bootstrap und dessen Anwendungsbeispiele.
+
+## Überblick über Bootstrap-Dateien
+
+Der Quellcode der Komponenten vom Bootstrap Framework sind auf viele CSS-Dateien verteilt.
+Es ist bekannt, dass das Herunterladen mehrerer kleiner Dateien normalerweise langsamer ist,
+als eine einzelne große Datei. Aus diesem Grund werden Bootstrap-CSS-Stylesheets
+mit einem Spezialwerkzeug "verkettet" und in Form einer einzelnen Datei
+Datei mit dem Namen *bootstrap.css* verteilt.
+
+Die Datei *bootstrap.css* hat jedoch einen Nachteil: Sie enthält viele Zeichen
+(Leerzeichen, Zeilenumbrüche, Kommentare, usw.) für die Codeausführung nicht erforderlich sind.
+Diese verschwenden Netzwerkbandbreite beim Herunterladen der Datei, wodurch die Ladezeit der Seite erhöht wird.
+Um dieses Problem zu beheben, wird die *Minifizierung* verwendet.
+
+Die Minifizierung ist das Entfernen aller nicht benötigten Zeichen aus dem
+Quellcode ohne seine Funktionalität zu ändern. Die minimierte Bootstrap-Datei lautet
+*bootstrap.min.css*.
+
+T> Es wird generell empfohlen, die minimierte Datei zu verwenden, insbesondere in der
+T> Produktionsumgebung, weil dadurch die Seitenladezeit reduziert wird.
+T> Wenn Sie in Bootstrap-Code einsteigen möchten, um zu verstehen, wie es funktioniert, ist es besser
+T> die übliche (nicht minimierte) Datei zu verwenden oder laden Sie sich die ursprünglichen Quelldateien herunter
+T> (nicht verkettet).
+
+Schauen wir uns die darin gespeicherten Dateien
+im Verzeichnis *APP_DIR/public* und dessen Unterverzeichnisse genauer an (Abbildung C.1).
+
+![Abbildung C.1. Struktur des Verzeichnisses APP_DIR/public](images/bootstrap/bootstrap_files.png)
+
+Das Verzeichnis *css* enthält die CSS-Stylesheets:
+
+* Die Dateien *bootstrap.css* und  bootstrap.min.css* sind die üblichen und reduzierten Versionen
+  von Bootstrap.
+
+* Die *bootstrap-theme.css* ist die optionale Bootstrap-Designdatei für "eigene
+  Themen". Das *bootstrap-theme.min.css* ist die reduzierte Version.
+  
+* Die Datei *style.css* ist das Stylesheet, das von Ihnen verwendet und erweitert werden kann,
+  um eigene CSS-Regeln zu definieren, die zusätzlich zu den Bootstrap-Regeln angewendet werden.
+  Auf diese Weise können Sie das Erscheinungsbild Ihrer Webanwendung anpassen.
+ 
+* Möglicherweise bemerken Sie auch verschiedene Dateien mit der Erweiterung .map enden.
+  Dies sind die MAP-Dateien[^map], die zum Debuggen des CSS-Codes verwendet werden können.
+  
+[^map]: Nach der Verkettung und Minifizierung ist der CSS-Code schwer zu lesen und zu debuggen.
+        Eine MAP-Datei (Quellzuordnung) ermöglicht das Wiederherstellen der verminderten Datei in ihren üblichen Zustand.
+
+Das Verzeichnis *fonts* enthält mehrere Dateien (z.B. *glyphicons-halflings-regular.svg*), die
+von Bootstrap zum Rendern von Symbolen benötigt werden. Diese Symbole (auch Glyphicons genannt) können verwendet werden, um das
+Aussehen der Schaltflächen und Dropdown-Menüs zu verbessern.
+
+Das Unterverzeichnis *APP_DIR/public/js* enthält JavaScript-Erweiterungen des Bootstrap-Frameworks. Sie
+sind als jQuery-Plugins implementiert:
+
+* Die *bootstrap.js* ist die Datei, die den JavaScript-Code der Bootstrap-Erweiterungen enthält.
+  Die Datei *bootstrap.min.js* ist die reduzierte Version.
+
+* Da Bootstrap-Erweiterungen als jQuery-Plugins implementiert sind, benötigen Sie die neueste Version der
+  Bibliothek jQuery vorhanden. Daher enthält das Verzeichnis *js*
+  die jQuery-Bibliothek *jquery-2.2.4.min.js*.
+  
+## Grid System
+
+In den meisten Websites muss der Inhalt in einer tabellenartigen Struktur mit Zeilen
+und Spalten organisiert sein. In Abbildung C.2 sehen Sie ein Beispiel für ein Layout einer typischen Website:
+Kopfzeile mit Logo, Seitenleiste links, Seiteninhalt in der Mitte, Anzeigenleiste rechts,
+und die Fußzeile am unteren Rand der Seite. Diese Blöcke sind zwar in einem Raster angeordnet, jedoch haben die
+Gitterzellen eine ungleiche Breite (einige Zellen können sich über mehrere Spalten erstrecken).
+
+![Abbildung C.2. Ein typisches Site-Layout](images/bootstrap/typical_grid.png)
+
+Bootstrap bietet ein einfaches Layout-Grid-System, um es Ihnen zu vereinfachen, 
+den Inhalt auf Ihren Seiten in Zeilen und Spalten anzuzeigen.
+
+Jede Zeile besteht aus bis zu 12 Spalten [^cols] (Abbildung C.3). Die Spaltenbreite ist flexibel
+und hängt von der Breite des Gittercontainerelements ab. Die Höhe kann
+abhängig von der Höhe des Zellinhalts variieren. Der Abstand zwischen den Spalten beträgt 30 Pixel (15 Pixel
+Abstabd an beiden Seiten).
+
+[^cols]: Sie müssen nicht genau 12 Spalten in eine Zeile einfügen, da möglicherweise weniger Spalten vorhanden sind.
+         Wenn Sie weniger Spalten haben, ist der Platz rechts von der letzten Spalte leer.
+
+![Abbildung C.3. Bootstrap-Grid-System](images/bootstrap/bootstrap_grid.png)
+
+Spalten können überspannt werden, sodass eine einzelne Zelle den Platz mehrerer Spalten beansprucht.
+In Abbildung C.3 besteht die obere Rasterzeile beispielsweise aus 12 Spalten.
+Jede Zelle überspannt eine einzelne Spalte. In der unteren Reihe
+umfasst die erste Zelle 2 Spalten, die zweite und die dritte Spalte umfassen jeweils 4 Spalten und die vierte Zelle
+umfasst 2 Spalten (insgesamt haben wir 12 Spalten).
+
+Q> **Warum besteht das Bootstrap-Grid nur aus 12 Spalten?**
+Q>
+Q> Wahrscheinlich, weil 12 Spalten für die meisten Websites ausreichen. Wenn Sie ein feineres Gitter mit
+Q> viele Spalten haben, wäre es schwieriger, die Spaltenbereiche ohne einen Rechner zu berechnen.
+Q> Zum Glück erlaubt Bootstrap die Anzahl der Spalten pro Zeile anzupassen, so dass Sie so viele Spalten haben können
+Q> wie Sie möchten.
+
+### Das Gitter definieren
+
+Um Elemente in einem Raster auf Ihrer Webseite anzuordnen, beginnen Sie mit der Definition der
+Container durch Hinzufügen eines Elements `<div>` mit der CSS-Klasse `.container`.
+Um dem Raster eine neue Zeile hinzuzufügen, verwenden Sie ein Element `<div>` mit der CSS-Klasse `.row`,
+wie im folgenden Beispiel gezeigt:
+
+{line-numbers=off, lang=html}
+~~~
+<div class="container">
+  <div class="row">
+  ...
+  </div>
+</div>
+~~~
+
+Zum Hinzufügen von Spalten verwenden Sie `<div>`-Elemente, deren CSS-Klassennamen sich von `.col-md-1`
+bis `.col-md-12` unterscheiden. Die Zahl im Klassennamen gibt an, über wie viele Spalten sich jede Gitterzelle
+erstreckt:
+
+{line-numbers=off, lang=html}
+~~~
+<div class="container">
+  <div class="row">
+    <div class="col-md-1">Cell 1</div>
+    <div class="col-md-5">Cell 2</div>
+    <div class="col-md-6">Cell 3</div>  
+  </div>
+</div>
+~~~
+
+Im obigen Beispiel haben wir drei Zellen. Die erste Zelle hat eine Breite von 1 (es
+verwendet die Klasse `.col-md-1`), die zweite Zelle umfasst 5 Gitterspalten (Klasse `.col-md-5`)
+und die dritte Zelle überspannt 6 Spalten (Klasse `.col-md-6`).
+
+Als weiteres Beispiel definieren wir das Layout, das wir in Abbildung C.2 gesehen haben.
+Das Layout hat die Kopfzeile (Logo überspannt 3 Spalten), den Hauptinhaltsbereich (7 Spalten),
+die Seitenleiste (überspannt 3 Spalten), die Werbeanzeige (2 Spalten) und die Fußzeile. Wir können
+bei diesem Layout folgenden HTML-Code verwenden:
+
+{line-numbers=off, lang=html}
+~~~
+<div class="container">
+  <!-- Header -->
+  <div class="row">
+    <div class="col-md-3">Logo</div>
+    <div class="col-md-9"></div>  
+  </div>
+  <!-- Body-->
+  <div class="row">
+    <div class="col-md-3">Sidebar</div>
+    <div class="col-md-7">Page Content</div>  
+    <div class="col-md-2">Ads</div>  
+  </div>
+  <!-- Footer -->
+  <div class="row">
+    <div class="col-md-12">Page Footer</div>  
+  </div>
+</div>
+~~~
+
+### Offset-Spalten
+
+In echten Webseiten muss das Raster manchmal "leere Löcher" enthalten. Sie können
+solche Löcher durch Versetzen von Zellen nach rechts mit der
+Hilfe von CSS-Klassen mit dem Namen `.col-md-offset-1` bis `.col-md-offset-12` definieren. Die Zahl im
+Klassenname gibt an, wie viele Spalten übersprungen werden sollen.
+
+Schauen Sie sich zum Beispiel Abbildung C.4 an:
+
+![Abbildung C.4. Spaltenversätze](images/bootstrap/offset-grid.png)
+
+Das Raster oben hat drei Zellen, die letzten beiden Zellen sind nach rechts versetzt.
+Um das Gitter wie in Abbildung C.4 zu definieren, können Sie folgenden
+HTML Quelltext verwenden:
+
+{line-numbers=of, lang=html}
+~~~
+<div class="container">
+  <div class="row">
+    <div class="col-md-2">Cell 1</div>
+    <div class="col-md-4 col-md-offset-2">Cell 2</div>  
+    <div class="col-md-2 col-md-offset-2">Cell 3</div>  
+  </div>  
+</div>
+~~~
+
+### Gitter verschachteln
+
+Sie können komplexe Seitenlayouts erstellen, indem Sie Raster verschachteln (siehe Abbildung C.5).
+Um den Inhalt zu verschachteln, fügen Sie ein neues `<div>`-Element hinzu, das die Klasse `.row` und die Gruppen
+`.col-md-*` für die Spalten innerhalb einer vorhandenen `.col-md- *` Spalte enthält.
+
+! [Abbildung C.5. Verschachteltes Raster] (images / bootstrap / nested-grid.png)
+
+Um das Raster wie in Abbildung C.5 gezeigt zu erzeugen, können Sie den folgenden HTML-Code verwenden:
+
+{line-numbers=off, lang=html}
+~~~
+<div class="container">
+  <div class="row">
+    <div class="col-md-2">Cell 1</div>
+    <div class="col-md-8">
+      <! - Verschachteltes Gitter -> 
+      <div class="row">
+        <div class="col-md-4">Cell 21</div>
+        <div class="col-md-4">Cell 22</div>  
+      </div>
+      <div class="row">
+        <div class="col-md-4">Cell 23</div>
+        <div class="col-md-4">Cell 24</div>       
+      </div>  
+    </div>  
+    <div class="col-md-2">Cell 3</div>  
+  </div>  
+</div>
+~~~
+
+Im obigen Beispiel haben wir das Gitter definiert, das aus drei Zellen besteht (durch graue Farbe gekennzeichnet):
+Die erste Zelle umfasst 2 Spalten, die zweite Zelle 8 Spalten und die dritte Zelle
+2 Spalten. Dann setzen wir die verschachtelten Rasterzeilen in die zweite Zelle. Weil die übergeordnete Zelle
+8 Spalten umspannt, umspannt das untergeordnete Raster ebenfalls 8 Spalten.
+
+### Das "Mobile First" Konzept
+
+Twitter Bootstrap unterstützt verschiedene Geräte, die unterschiedliche
+Displays haben, wie Tablets und Mobiltelefone. Aus diesem Grund wird das Layoutraster
+den verschiedenen Bildschirmauflösungen angepasst.
+
+T> Dies wird auch als *responsiveness* oder "mobile first" -Konzept bezeichnet.
+T> Bootstrap ist Mobile-First, was bedeutet, dass Ihre Website sichtbar auf
+T> jeden Bildschirm ist. Dies befreit Sie jedoch nicht von Mühe an
+T> Vorbereitung und Planung des Layouts.
+
+Diese Anpassung wird auf zwei Arten durchgeführt. Der erste Weg ist die Spaltenbreite
+innerhalb des Gitters flexibel zu halten. Zum Beispiel, wenn Sie die Größe des Browsers erhöhen,
+wird das Raster entsprechend skaliert, um den gesamten Raum auszufüllen.
+
+Was passiert aber, wenn Ihre Webseite für die Anzeige zu breit ist? Um den versteckten Teil zu sehen,
+muss der Seitenbesucher nach rechts scrollen. Für Mobiltelefone und andere niedrigauflösende
+Geräte ist dies kein guter Ansatz. Stattdessen wäre es besser, dass das Raster
+unterhalb der Bildschirmbreite "gestapelt" wird. Wenn das Gitter gestapelt ist, werden seine Zeilen umgewandelt.
+Zellen werden dann untereinander positioniert (siehe Abbildung C.6).
+
+Um dieses besser steuern zu können, wann das Raster "gestapelt" wird, bietet Bootstrap zusätzliche
+CSS-Klassen an: `.col-xs-1` bis `col-xs-12` (die Abkürzung "xs" bedeutet "extrakleine" Geräte oder Telefone),
+`.col-sm-1` bis `.col-sm-12` ("sm" steht für "kleine Geräte" oder Tablets) und `.col-lg-1` bis `.col-lg-12`
+(große Geräte oder Breitbildschirme). Diese Klassen können zusammen mit den Klassen `.col-md-1` - `.col-md-12` verwendet werden,
+die wir bereits verwendet haben (die Abkürzung "md" bedeutet "mittlere Geräte" oder Desktops).
+
+Zum Beispiel definieren die Klassen das Gitter `.col-md- *`, welches "gestapelt" wird, wenn die Bildschirmbreite unter
+unter 992 Pixel ist und horizontal für breitere Bildschirme. Die Klasse `.col-sm-*` kann verwendet werden, um die
+Raster zu "stapeln" unterhalb einer Bildschirmbreite von 768 Pixel und horizontal über diesem Punkt. Die Klasse `.col-xs-*`
+macht das Raster immer horizontal, unabhängig von der Bildschirmbreite.
+
+![Abbildung C.6. Raster passt sich der Bildschirmgröße an](images/bootstrap/stacked-grid.png)
+
+Tabelle C.1 enthält eine Zusammenfassung der verfügbaren Rasterklassen und deren Aufgliederungsseitenbreite.
+
+{title="Tabelle C.1. CSS-Klassen zum Definieren des Layoutrasters"}
+|---------------|-------------------|
+| *Klassenname*	| *Breakdown-Breite*|
+|---------------|-------------------|
+| `.col-xs-*` 	| <768px 			|
+|---------------|-------------------|
+| `.col-sm-*` 	| > = 768px 		|
+|---------------|-------------------|
+| `.col-md-*` 	| > = 992px 		|
+|---------------|-------------------|
+| `.col-lg-*` 	| > = 1200px 		|
+|---------------|-------------------|
+
+I> Das Rastersystem von Bootstrap vereinfacht die Positionierung von Elementen
+I> auf einer Webseite erheblich. Die Nutzung des Gitters ist jedoch nicht zwingend. Zum Beispiel,
+I> benötigen Sie manchmal ein viel komplexeres Layout und das einfache Rastersystem wird dafür
+I> nicht ausreichen. In diesem Fall können Sie Ihr benutzerdefiniertes Layout mithilfe von HTML-Elemente wie
+I> `<table>` oder `<div>` erstellen und verwenden.
+
+## Bootstrap-Schnittstellenkomponenten
+
+In diesem Abschnitt geben wir eine Zusammenfassung der von Twitter bereitgestellten nützlichen Schnittstellenkomponenten.
+Einige dieser Komponenten planen wir in unseren weiteren Beispielen. Dieser Abschnitt
+soll eine Vorstellung geben, wie Sie diese Widgets auf Ihren eigenen Websites verwenden können.
+
+### Navigationsleiste
+
+Die Navigationsleiste befindet sich normalerweise auf Ihrer Website und enthält die Links zum Hauptmenü,
+wie *Home*, *Download*, *Support*, *About*, usw. Twitter Bootstrap
+bietet einen schönen visuellen Stil für die Navbar an (siehe Abbildung C.7):
+
+![Abbildung C.7. Navbar](images/bootstrap/navbar.png)
+
+Wie Sie in der Abbildung oben sehen können, hat eine Navigationsleiste normalerweise die Kopfzeile (Logo oder Name
+Ihrer Website kann hier platziert werden) und die Links zu den Hauptseiten.
+Um eine Navigationsleiste auf Ihrer Seite zu platzieren, verwenden Sie den folgenden HTML-Code:
+
+{line-numbers=on, lang=html}
+~~~
+<nav class="navbar navbar-default" role="navigation">  
+  <div class="navbar-header">
+    <a class="navbar-brand" href="#">Hello World</a>    
+  </div>
+  <ul class="nav navbar-nav">      
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Download</a></li>
+    <li><a href="#">Support</a></li>
+    <li><a href="#">About</a></li>
+  </ul>    
+</nav>
+~~~
+
+In Zeile 1 oben haben wir das Element `<nav>` verwendet, das die gesamte Navigation enthält.
+Die zugehörige CSS-Klasse `.navbar` wird durch Bootstrap definiert und
+zeigt das Erscheinungsbild der Basis-Navigationsleiste an. Die CSS-Klasse `.navbar-default`
+legt das "Standard"-Motiv für die Navigationsleiste fest.
+
+Das optionale [Attribut](http://www.w3.org/TR/xhtml-role/) `role` ist ein HTML-Attribut, 
+dass das Kommentieren der Seitenelemente mit maschinell extrahierbaren Elementen ermöglicht.
+Zum Beispiel können semantische Information über den Zweck eines Elements hinterlegt werden. In diesem Beispiel
+teilt das Attribut mit, dass das Element `<nav>` für die Navigation verwendet wird.
+
+In den Zeilen 2-4 definieren wir den Kopfbereich der Navbar, der den Hyperlink *Hello World* enthält.
+Der Hyperlink verweist in der Regel auf die Hauptseite Ihrer Website. Der Hyperlink
+besitzt die Klasse `.navbar-brand`, die den Text visuell aufwertet.
+
+In den Zeilen 5-10 geben wir die Navigationslinks für die Seiten *Home*, *Download*, *Support* und *About* an.
+Diese Links sind innerhalb eines ungeordneten Listenelements angeordnet. Das Element hat die
+CSS-Klassen `.nav` und `.navbar-nav`. Die Listenelemente sind in einer Zeile platziert.
+
+#### Dropdown-Menü
+
+Mit der Bootstrap-Navigationsleiste ist es möglich, das Dropdown-Menü als
+Navigationselement zu verwenden. Zum Beispiel, wenn der Abschnitt *Support* Ihrer Seite
+Unterteilt in die Seiten *Documentation* und *Help* ist, können diese als
+ein Dropdown-Menü implementiert werden (siehe Abbildung C.8).
+
+![Abbildung C.8. Navbar mit Dropdown-Menü](images/bootstrap/navbar_with_dropdown.png)
+
+Sie definieren das Dropdown-Menü, indem Sie den Listeneintrag *Support* aus dem vorherigen Beispiel
+auf folgende Weise ersetzen:
+
+{line-numbers=on, lang=html}
+~~~
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+     Support <b class="caret"></b>
+  </a>
+  <ul class="dropdown-menu">
+    <li><a href="#">Documentation</a></li>
+    <li><a href="#">Help</a></li>          
+  </ul>
+</li>
+~~~
+
+Im obigen Code verwenden wir das Element `<li>` mit der CSS-Klasse `.dropdown`, welches angibt,
+dass es sich um ein Dropdown-Menü handelt (Zeile 1). In den Zeilen 2-4 definiert das Element `<a>` den anzuzeigenden Hyperlink,
+welcher angezeigt wird, wenn das Menü ausgeblendet ist (der wird der Text *Support* gefolgt von dem Dreieck-Icon angezeigt).
+
+Wenn der Websitebenutzer auf den Hyperlink klickt, wird das Dropdown-Menü (Zeilen 5-8) angezeigt. Das 
+ungeordnetes Listenelement `<ul>` mit der Klasse `.dropdown-menu` definiert sein visuelles Erscheinungsbild. Das 
+Dropdown-Menü enthält zwei Elemente: die Hyperlinks *Documentation* und *Help*.
+
+#### Minimierbare Navigationsleiste
+
+Wie beim Rastersystem unterstützt die Navbar-Komponente verschiedene Arten von Bildschirmauflösungen.
+Bei Geräten mit niedriger Auflösung kann die Navigationsleiste, wie in Abbildung C.9 dargestellt, minimiert werden.
+
+![Abbildung C.9. Minimierte Navigationsleiste](images/bootstrap/navbar_collapsed.png)
+
+Wie Sie sehen, werden im minimierten Modus nur die Kopfzeile der Navbar und die drei horizontalen
+Balken (Sandwitch-Icon) rechts angezeigt, welche den Toggle-Button kennzeichnen. Durch Klicken auf das Icon werden die ausgeblendeten Navigationsleistenelemente erweitert.
+
+Sie definieren die minimierte Navigationsleiste wie im folgenden Beispiel gezeigt:
+
+{line-numbers=on, lang=html}
+~~~
+<nav class="navbar navbar-default" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" 
+            data-target=".navbar-ex1-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="#">Hello World</a>    
+  </div>
+
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav">      
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Download</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          Support <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Help</a></li>          
+        </ul>
+      </li>
+      <li><a href="#">About</a></li>
+    </ul>    
+  </div><!-- /.navbar-collapse -->
+</nav>
+~~~
+
+In den Zeilen 3-12 definieren wir die Navbar-Header, die
+unabhängig von der Bildschirmauflösung angezeigt wird. Die Kopfzeile enthält die den Toggle-Button mit den drei
+horizontale Balken (Sandwitch-Icon) und den Beschreibungstext "Toggle navigation".
+
+Der zusammenklappbare Teil des Menüs ist in den Zeilen 15-30 zu sehen. In diesem Bereich setzen wir
+unsere Navigationslinks und die Dropdown-Menüelemente.
+
+#### Inverse Navbar Style
+
+Die Navigationsleiste kann mit zwei Standard-"Themen" angezeigt werden: der *default*-Theme (wir haben sie oben gesehen),
+und die Theme *inverse*. Durch das inverse Design werden die Navbar-Elemente in dunklen Farben angezeigt
+(Abbildung C.10). Sie haben wahrscheinlich eine solche inverse Navbar in dem Demo der Zend Skeleton Application gesehen.
+
+![Abbildung C.10. Umgekehrter Navbar-Stil](images/bootstrap/navbar_inverse.png)
+
+Das inverse Design wird definiert, indem einfach die Klasse `.navbar-default` von dem Element `<nav>`
+mit der Klasse `.navbar-inverse` ersetzten:
+
+{line-numbers=off, lang=html}
+~~~
+<nav class="navbar navbar-inverse" role="navigation">
+  ...
+</nav>
+~~~
+
+### Breadcrumbs
+
+Breadcrumbs sind eine nützliche Schnittstellenkomponente, die zusammen mit der Navigationsleiste verwendet werden kann,
+um dem Besucher der Seite eine Vorstellung von seinem aktuellen Standort innerhalb der Site zu vermitteln (Abbildung C.11).
+
+![Abbildung C.11. Breadcrumbs](images/bootstrap/breadcrumbs.png)
+
+In der Abbildung oben haben wir ein Beispiel für das Dokumentationssystem unserer Website.
+Da die Dokumentationsseiten tief verschachtelt sein können, informieren die Breadcrumbs den Benutzer,
+welche Seite er gerade besucht. So geht Ihr Benutzer nicht verloren und ist in der Lage, die von ihm zuvor
+besuchten Seite und zu den übergeordneten Seiten zurück zu kehren.
+
+Um die Breadcrumbs zu definieren, verwenden Sie das geordnete Listenelement `<ol>` mit der CSS-Klasse `.breadcrumb`
+(siehe Beispiel unten):
+
+{line-numbers=off, lang=html}
+~~~
+<ol class="breadcrumb">
+  <li><a href="#">Home</a></li>
+  <li><a href="#">Support</a></li>
+  <li class="active">Documentation</li>
+</ol>
+~~~
+
+### Seitennummerierung
+
+Die Komponente für die Seitennummerierung (Pagination) ist nützlich, wenn Sie eine lange Liste von Elementen anzuzeigen haben.
+Wenn eine solche lange Liste auf einer einzelnen Seite angezeigt wird, muss der Benutzer die Seite
+mehrmals nach unten scrollen, um das Ende der Liste zu sehen. Um die Benutzererfahrung zu verbessern, würden Sie die Ausgabe in einzelne
+Seiten zerlegen und die Komponente für die Seitennummerierung für die Navigation zwischen den Seiten verwenden (Abbildung C.12):
+
+![Abbildung C.12. Seitennummerierung (Pagination)](images/bootstrap/pagination.png)
+
+Verwenden Sie den folgenden HTML-Code, um die Seitennummerierung wie in der Abbildung oben zu definieren:
+
+{line-numbers=off, lang=html}
+~~~
+<ul class="pagination">
+  <li><a href="#">&laquo; Newest</a></li>
+  <li><a href="#">&lt; Newer</a></li>
+  <li><a href="#">1</a></li>
+  <li><a href="#">2</a></li>
+  <li><a href="#">3</a></li>
+  <li><a href="#">4</a></li>
+  <li><a href="#">5</a></li>
+  <li><a href="#">Older &gt;</a></li>
+  <li><a href="#">Oldest &raquo</a></li>
+</ul>
+~~~
+
+### Buttons & Glyphicons
+
+Twitter Bootstrap bietet einen schönen visuellen Stil für Buttons (Abbildung C.13).
+
+![Abbildung C.13. Buttons](images/bootstrap/btn_save_cancel.png)
+
+Verwenden Sie zum Erstellen des Buttons, wie in der obigen Abbildung, den folgenden HTML-Code:
+
+{line-numbers=off, lang=html}
+~~~
+<p>
+  <button type="button" class="btn btn-primary">Save</button>
+  <button type="button" class="btn btn-default">Cancel</button>  
+</p>    
+~~~
+
+Im obigen Code verwenden wir die CSS-Klasse `.btn`, um dem Button einen
+visuellen Stil zuzuweisen. Zusätzlich verwenden wir die Klasse `.btn-primary` für den Button *Save*
+(normalerweise ist das der primäre Button in einem Formular) oder die Klasse `btn-default`
+für einen gewöhnlichen nicht-primären Button, wie für *Cancel*.
+
+Um die Bedeutung eines Buttons besser auszudrücken, bietet Bootstrap Ihnen mehrere
+zusätzliche Button-Klassen: `.btn-success` (für Buttons, die einige Änderungen auf der Seite vornehmen),
+`.btn-info` (für Information-Buttons),` .btn-warning` (für Buttons, die eine unerwünschte 
+Wirkung haben) und `.btn-danger` (für Buttons, die zu irreversiblen Folgen führen können).
+Ein Beispiel für die Verwendung dieser Button-Stile finden Sie im folgenden Code:
+
+{line-numbers=off, lang=html}
+~~~
+<p>
+  <button type="button" class="btn btn-default">Default</button>
+  <button type="button" class="btn btn-primary">Primary</button>
+  <button type="button" class="btn btn-success">Success</button>
+  <button type="button" class="btn btn-info">Info</button>
+  <button type="button" class="btn btn-warning">Warning</button>
+  <button type="button" class="btn btn-danger">Danger</button>
+</p>    
+~~~
+
+Abbildung C.14 zeigt das Ergebnis der Buttons:
+
+![Abbildung C.14. Button-Stile](images/bootstrap/btn_colors.png)
+
+Bootstrap enthält 180 Symbole (Glyphicons genannt), die Sie zusammen mit Ihren Buttons, in
+Dropdown-Menüs, in Navigationslinks usw. verwenden können. So fügen Sie einem Button ein Symbol wie folgt hinzu:
+
+{line-numbers=off, lang=html}
+~~~
+<p>
+  <button type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-plus"></span> Create
+  </button>  
+  <button type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-pencil"></span> Edit
+  </button>  
+  <button type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-remove"></span> Delete
+  </button>  
+</p>    
+~~~
+
+Im obigen Code haben wir eine einfache Symbolleiste mit drei Buttons definiert:
+*Create*, *Edit* und *Delete*. Wir haben auf jedem Button ein Symbol
+mit Hilfe des Elementes `<span>` platziert. Das Element `<span>` sollte zwei Klassen haben:
+die Klasse `.glyphicon` ist für alle Symbole üblich. Die zweite Klasse steht für den Symbolnamen.
+Im obigen Beispiel haben wir die Klasse `.glyphicon-plus` für den Button *Create* verwendet,
+die Klasse `.glyphicon-pencil` für *Edit* und `.glyphicon-remove` für *Delete*.
+Das Ergebnis unserer Arbeit ist in Abbildung C.15 dargestellt.
+
+![Abbildung C.15. Buttons mit Symbolen](images/bootstrap/btn_icons.png)
+
+Sie können die Größe der Buttons variieren, indem Sie die Klasse `.btn-lg` für große Buttons angeben,` btn-sm` für kleine
+Buttons oder die Klasse `.btn-xs` für extrakleine Buttons. In Abbildung C.16 beispielsweise wird ein großer *Download* Button
+angezeigt.
+
+![Abbildung C.16. Großer Button](images/bootstrap/btn_lg.png)
+
+Um eine solche Buttons zu definieren, können Sie den folgenden HTML-Code verwenden:
+
+{line-numbers=off, lang=html}
+~~~
+<button type="button" class="btn btn-success btn-lg">
+  <span class="glyphicon glyphicon-download"></span> Download
+</button>  
+~~~
+
+## Anpassen von Bootstrap
+
+Um die Einführung zu Twitter Bootstrap abzuschließen, beschreiben wir, wie Sie Änderungen
+am Bootstrap-Framework vornehmen können. Sie können das Bootstrap-Erscheinungsbild mithilfe von
+[Customize](http://getbootstrap.com/customize/) der Bootstrap-Website anpassen (Abbildung C.17).
+
+![Abbildung C.17. Anpassen der Bootstrap-Seite](images/bootstrap/bootstrap_customize.png)
+
+Auf der Seite "Customize" können Sie auswählen, welche Bootstrap-Quelldateien in die "verkettete" Datei *bootstrap.css* 
+aufgenommen werden sollen. Wenn Sie keine Funktionalität benötigen, können Sie diese aus dem System der
+resultierende Datei ausschließen, wodurch der Netzwerkverkehr und die Ladezeit der Seite reduziert werden.
+Sie können auch einige nicht verwendete JavaScript-Code-Komponenten aus der resultierenden Datei *bootstrap.js* entfernen.
+
+Außerdem können Sie verschiedene CSS-Parameter wie Hintergrundfarbe, Basistextfarbe, Schriftfamilie, usw. auswählen.
+Es stehen mehr als hundert anpassbare Parameter zur Verfügung.
+
+I> CSS-Anpassung ist möglich, da Bootstrap-Quelldateien in LESS[^less] gespeichert werden.
+I> LESS ist ein Format, mit dem Sie variable Parameter definieren können (z.B. `@bodyBackground` oder `@textColor`).
+I> Sobald die Parameter definiert sind, werden die LESS-Dateien in übliche CSS-Dateien kompiliert, minimiert
+I> und zum Download zur Verfügung gestellt.
+
+Wenn Sie mit den Tuning-Parametern fertig sind, können Sie auf der Seite *Customize* nach unten scrollen
+und klicken auf den Button *Compile and Download*.
+Als Ergebnis wird das Archiv *bootstrap.zip* heruntergeladen.
+Dieses enthält alle angepassten Bootstrap-Dateien (sowohl üblich als auch minimiert die
+CSS-und JS-Dateien und Glyphicons-Schriftarten).
+
+[^less]: LESS ist eine dynamische Stylesheet-Sprache, die Standard-CSS mit Funktionen erweitert,
+         wie Variablen, Mixins (Einbetten aller Eigenschaften einer CSS-Klasse in eine andere CSS-Klasse),
+         Verschachtelung von Codeblöcken, arithmetische Operationen und Funktionen.
+
+## Zusammenfassung
+
+Twitter Bootstrap ist ein CSS-Framework, das entwickelt wurde, um das Design Ihrer
+Webseiten einfacher zu gestalten. Es bietet den standardmäßigen, schön aussehenden Stil für die Typografie,
+Tabellen, Formulare, Buttons, Bilder usw. Damit können Sie eine professionelle Seite
+innerhalb von Minuten erstellen.
+
+Das von Bootstrap bereitgestellte Grid-System ermöglicht das Anordnen von Elementen
+auf Ihrer Webseite in einem Raster mit Zeilen und Spalten. Das Raster passt sich an
+verschiedene Bildschirmauflösungen an, damit Ihre Seite auch auf Mobiltelefonen,
+Tablets, Desktops und Breitbildschirme gut lesbar ist.
+
+Twitter Bootstrap bietet auch nützliche Webschnittstellenkomponenten wie
+Dropdown-Menüs, Navigationsleisten, Breadcrumbs usw. Diese Komponenten
+werden durch die JavaScript-Erweiterungen unterstützt.
+  
+Bootstrap wird mit der Zend Skeleton Application ausgeliefert.
+Sie können es sofort verwenden oder alternativ die neueste
+Bootstrap-Version von der Projektseite aus herunterladen und diese nach Ihren Wünschen anpassen.

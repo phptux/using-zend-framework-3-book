@@ -1,0 +1,377 @@
+# Anhang B. Einführung in die PHP-Entwicklung mit der NetBeans-IDE {#netbeans}
+
+In diesem Buch verwenden wir die NetBeans-IDE zur Entwicklung von Zend Framework 3
+basierte Anwendungen. Im [Anhang A. Konfigurieren der Webentwicklungsumgebung](#devenv) haben wir die NetBeans-IDE installiert.
+Hier geben wir einige nützliche Tipps zur Verwendung von NetBeans für die PHP-Programmierung.
+Wir lernen, wie Sie eine ZF3-basierte Website starten und interaktiv debuggen können.
+
+Q> *Was ist, wenn ich zum Entwickeln meiner Anwendungen eine andere IDE (nicht NetBeans) verwenden möchte?*
+Q>
+Q> Nun, Sie können jede beliebige IDE verwenden, die Sie möchten. Das Problem ist, dass es unmöglich ist,
+Q> alle IDEs für die PHP-Entwicklung in diesem Buch abzudecken. Der Autor gibt nur Anweisungen
+Q> für NetBeans IDE. Für Anfänger wäre es einfacher, die NetBeans-IDE zu verwenden. Fortgeschrittene
+Q> Entwickler können eine IDE ihrer Wahl verwenden.
+
+## Führen Sie die Konfiguration aus
+
+Um eine Website ausführen und debuggen zu können, müssen Sie zuerst die
+Eigenschaften der Website editieren. Klicken Sie dazu mit der rechten Maustaste im Bereich *Projekte* von NetBeans und
+wählen Sie im Projektnamen den Eintrag *Eigenschaften* im Kontextmenü aus.
+Das Dialogfeld *Eigenschaften* des Projekts wird angezeigt (siehe Abbildung B.1).
+
+![Abbildung B.1. Eigenschaften | Quellen](images/netbeans/properties_sources.png)
+
+Klicken Sie im linken Bereich des angezeigten Dialogfelds auf den Knoten *Sources*. Im rechten Bereich
+Bearbeiten Sie das Feld *Web Root*, um auf das Verzeichnis *APP_DIR/public* Ihrer Website zu verweisen.
+Klicken Sie dazu auf die Schaltfläche *Durchsuchen* rechts neben dem Feld. Dann,
+klicken Sie im Dialogfeld auf das Verzeichnis *public* und anschließend auf die Schaltfläche *Ordner auswählen*
+(gezeigt in Abbildung B.2).
+
+![Abbildung B.2. Ordner durchsuchen](images/netbeans/properties_browse_folders.png)
+
+Klicken Sie anschließend im linken Bereich auf den Knoten *Run Configuration*. Im rechten Bereich sollte
+die Einstellungen für Ihre Seite angezeigt werden (Abbildung B.3).
+
+![Abbildung B.3. Eigenschaften | Konfiguration ausführen](images/netbeans/properties_run_config.png)
+
+Im rechten Bereich sehen Sie, dass die aktuelle Konfiguration "Standard" ist. Als Option können Sie
+Sie mehrere Konfigurationen erstellen.
+
+Bearbeiten Sie die Felder wie folgt:
+
+* Wählen Sie im Feld *Ausführen als* "Lokale Website (auf lokalem Webserver ausgeführt)" aus.
+
+* Geben Sie im Feld *Projekt URL* "http://localhost" ein. Wenn Sie Ihre virtuelle Hosts konfiguriert haben,
+  können Sie hier den Host mit einem anderen Port (z.B. Port 8080) eigeben. Die Portnummer hängen Sie wie folgt an: "http://localhost:8080".
+
+* Lassen Sie das Feld *Index Datei* leer, da das Modul *mod_rewrite* von Apache nutzt und immer
+  auf unsere Datei *index.php* verweist.
+  
+* Im Feld *Argumente* können Sie angeben, welche GET-Parameter an Ihre Seite übergeben werden sollen.
+  Dieses Feld lassen wir leer.
+
+Klicken Sie abschließend auf die Schaltfläche *OK*, um das Dialogfeld *Eigenschaften* zu schließen.
+
+## Ausführen der Website
+
+Wenn Sie die Website ausführen, müssen Sie sie Ihren Standard-Webbrowser öffnen. Zum starten
+klicken Sie auf der Seite auf die Schaltfläche *Run* in der *Run Toolbar* (Abbildung B.4). Alternative
+können Sie die Taste *F6* auf Ihrer Tastatur drücken.
+
+![Abbildung B.4. Werkzeugleiste ausführen](images/netbeans/launch_toolbar.png)
+
+Wenn mit Ihrer Konfiguration alles in Ordnung ist, wird der Standard-Webbrowser
+gestartet und im Browserfenster können Sie die Seite *Home* Ihrer Web-Anwendung sehen.
+
+Den gleichen Effekt hätte die Eingabe von "http://localhost/" in Ihrem Browser. Doch mit der Toolbar von NetBeans
+"Ausführen" können Sie dies mit einem einzigen Klick ausführen.
+
+## Debugging in NetBeans
+
+Das "konventionelle" Debugging-Verfahren wollen wir an der PHP-Funktion `var_dump()`
+untersuchen:
+
+{line-numbers=off,lang=php}
+~~~
+var_dump($var);
+
+exit;
+~~~
+
+Die Zeilen darüber würden den Wert der Variablen `$var` im Browsers ausgeben
+und dann die Programmausführung beenden. Würden Sie so eine komplexe Web-Anwendung debuggen,
+würde das Debuggen zu einem Problem werden, da Sie in Ihren PHP-Quelldateien Befehle zum Variablen-Dump eingeben müssen.
+Aktualisieren Sie dann Ihre Webseite im Browser, um die Ausgabe zu sehen, und bearbeiten Sie dann die Quelldatei erneut, bis Sie sie wieder aufrufen
+den Grund des Problems bestimmen.
+
+Wenn Sie dagegen Ihre Website in der NetBeans-IDE debuggen, hält der PHP-Interpreter die Ausführung des Programms
+in jeder Zeile an, in der Sie einen *Haltepunkt* gesetzt haben. Dadurch ist es bequem möglich,
+Informationen über den aktuellen Status des Programms abrufen, z.B. die Werte der lokalen Variablen
+und dem Aufrufstapel. Die Debugging-Informationen werden im NetBeans-Fenster in grafischer Form angezeigt.
+
+W> Um die Site debuggen zu können, muss die Erweiterung XDebug installiert sein.
+W> Falls Sie die Software noch nicht installiert haben, finden Sie weitere Informationen im [Anhang A. Konfigurieren der Webentwicklungsumgebung](#devenv)
+W> zur Installation.
+
+Um die Debugging-Sitzung zu starten, klicken Sie im NetBeans-Fenster auf die Schaltfläche *Debug* in der *Run Toolbar* (Abbildung B.4).
+Alternativ können Sie die Tastenkombination *CTRL + F5* auf Ihrer Tastatur drücken.
+
+Wenn alles in Ordnung ist, sollten Sie den aktuellen Programmzähler auf der
+erste Codezeile der Datei *index.php* sehen können (siehe Abbildung B.5):
+
+![Abbildung B.5. Debugging-Sitzung](images/netbeans/debug_session.png)
+
+Während sich das Programm im angehaltenen Zustand befindet, ist das Fenster Ihres Webbrowsers eingefroren, weil
+der Browser auf Daten vom Webserver wartet. Sobald Sie die Programmausführung fortsetzen,
+empfängt der Browser die Daten und zeigt die Webseite an.
+
+## Debug-Symbolleiste
+
+Sie können die Programmausführung mit der *Debug Toolbar* fortsetzen/unterbrechen (siehe Abbildung B.6):
+
+![Abbildung B.6. Debug-Symbolleiste](images/netbeans/debug_toolbar.png)
+
+Mit *Debugger-Sitzung beenden* in der Symbolleiste können Sie den Debugger anhalten. Drücken Sie
+diese Schaltfläche, wenn Sie mit dem Debuggen des Programms fertig sind. Der gleiche Effekt hätte
+die Tastenkombination *SHIFT + F5*.
+
+Durch Klicken auf die Schaltfläche *Continue* (oder Drücken der Taste *F5*) wird die Programmausführung
+bis zum nächsten Haltepunkt fortgesetzt oder bis zum Ende des Programms, wenn keine weiteren Haltepunkte vorhanden sind.
+
+Die *Step Over* -Symbolleisten-Schaltfläche (oder die * F8 * -Taste) bewegt den aktuellen Programmzähler
+zur nächsten Zeile des Programms.
+
+Mit *Step Into* in der Symbolleiste (oder die Taste *F7*) bewegen Sie den aktuellen Programmzähler
+in die nächste Zeile des Programms. Wenn es sich um einen Funktionseingang handelt, wird in die Funktion
+gesprungen. Verwenden Sie diese Option, wenn Sie Ihren Code eingehender untersuchen möchten.
+
+Mit der Schaltfläche *Step Out* in der Symbolleisten (*CTRL + F7*) können Sie die Programmausführung bis zur Rückkehr
+aus der aktuellen Funktion fortsetzen.
+
+Mit *Run to Cursor* (*F4*) können Sie die Programmausführung bis zur Codezeile fortsetzen, in der Sie sich befinden - 
+wo Sie den Cursor gesetzt haben. Dies kann praktisch sein, wenn Sie einen Codeblock überspringen und an einem bestimmten Punkt in
+einer Zeile Ihres Programms anhalten möchten.
+
+## Haltepunkte
+
+In der Regel setzen Sie einen oder mehrere Haltepunkte auf die Zeilen, die Sie schrittweise im debuggen möchten.
+Um einen Haltepunkt festzulegen, setzen Sie Ihre Maus links von der Codezeile, in der Sie den Haltepunkt haben möchten
+und klicken auf die Zeilennummer. Alternativ können Sie die Einfügemarke in die Zeile setzen,
+wo Sie einen Haltepunkt setzen möchten und drücken Sie die Tastenkombination *STRG + F8*.
+
+Wenn Sie den Haltepunkt setzen, wird die Zeile rot markiert und ein kleines rotes Rechteck wird
+links davon angezeigt (in Abbildung B.7 gezeigt):
+
+![Abbildung B.7. Haltepunkt setzen](images/netbeans/breakpoint.png)
+
+T> Achten Sie darauf, keinen Haltepunkt in einer leeren Zeile oder in einer Kommentarzeile festzulegen.
+T> Ein solcher Haltepunkt wird von XDebug ignoriert und durch ein "gebrochenes Quadrat" markiert.
+T> (siehe Abbildung B.8):
+
+![Abbildung B.8. Inaktiver Haltepunkt](images/netbeans/breakpoint_on_comment.png)
+
+Sie können mit dem Drücken der Taste *F5* zwischen Haltepunkten wechseln. Diese Taste setzt die Programmausführung fort,
+bis es auf den nächsten Haltepunkt trifft. Sobald der Programmablauf den Haltepunkt erreicht hat,
+wir der PHP-Interpreter angehalten und Sie können den Status des Programms überprüfen.
+
+Die vollständige Liste der von Ihnen festgelegten Haltepunkte finden Sie im Fenster *Haltepunkte* (siehe Abbildung B.9).
+Das Fenster *Haltepunkte* befindet sich im unteren Teil des NetBeans-Fensters.
+In diesem Fenster können Sie neue Haltepunkte hinzufügen oder bereits festgelegte Haltepunkte entfernen.
+
+![Abbildung B.9. Fenster aller Haltepunkte](images/netbeans/breakpoints_window.png)
+
+## Variablen beobachten
+
+Wenn der PHP-Interpreter angehalten ist, können Sie die Werte von PHP-Variablen bequem überwachen.
+Eine einfache Methode zum Durchsuchen einer Variablen ist das Positionieren des Mauszeigers über den Namen der Variablen
+innerhalb des Codes und eine kurze Sekunde warten. Wenn der Variablenwert ausgewertet werden kann,
+wird er in einem kleinen Popup-Fenster angezeigt.
+
+Eine andere Möglichkeit, Variablen zu beobachten, ist das Fenster *Variables* (siehe Abbildung B.10),
+das im unteren Teil des NetBeans-Fensters angezeigt wird. Das Fenster *Variablen* hat
+drei Spalten: *Name*, *Typ* und *Value*.
+
+![Abbildung B.10. Variablenfenster](images/netbeans/variables_window.png)
+
+Hauptsächlich werden Sie mit drei Arten von Variablen konfrontiert: *Super Globals*, *Locals* und *$this*:
+
+* *Super-globale* Variablen sind spezielle PHP-Variablen wie `$ _GET`, `$ _POST`, `$ _SERVER`, `$ _COOKIES`
+  und so weiter. Sie enthalten normalerweise Serverinformationen und Parameter, die vom Webbrowser übergeben werden
+  und sind Teil des HTTP-Requests.
+
+* *Locals* Variablen sind Variablen, die im Gültigkeitsbereich der aktuellen Funktion (oder Klassenmethode) sich befinden.
+  Wenn Sie beispielsweise in der Anwendung *Hello World* einen Haltepunkt im `IndexController::aboutAction )` setzen,
+  dann ist die Variable `$appName` ist eine lokale Variable.
+  
+* *$this* Variable zeigt auf die aktuelle Klasseninstanz, wenn der aktuelle Code ausgeführt wird.
+  
+Einige Variablen können "erweitert" werden (zum Erweitern einer Variablen müssen Sie auf ein Dreieckssymbol links vom
+Variablenname klicken). Durch Klicken und Erweitern von *$this* können Sie beispielsweise alle Klassenvariablen der
+Klasseninstanz betrachten. Wenn Sie eine Array-Variable erweitern, können Sie Array-Elemente überwachen.
+  
+Mit dem Fenster *Variables* können Sie nicht nur den Wert der Variablen beobachten, sondern auch
+den Wert im laufenden Betrieb zu ändern. Platzieren Sie dazu den Mauszeiger über der Wertespalte und
+klicken Sie darüber. Das Bearbeitungsfeld wird angezeigt, in dem Sie einen neuen Wert der Variablen festlegen können.
+  
+## Call Stack
+
+Der *Call Stack* zeigt die Liste der verschachtelten Funktionen an, deren Code gerade
+ausgeführt wirde (siehe Abbildung B.11). Jede Zeile des Call-Stack
+ (auch Stack-Frame genannt) enthält den vollständigen Namen der Klasse,
+Name der Methode innerhalb der Klasse und Zeilennummer. Bewegt man sich im Stapel nach unten,
+können Sie den aktuellen Ausführungsstatus des Programms besser verstehen.
+
+![Abbildung B.11. Call-Stack-Fenster](images/netbeans/call_stack_window.png)
+
+In Abbildung B.11 sehen Sie zum Beispiel aktuell der `IndexController::aboutAction()`
+ausgeführt wird und diese Methode wurde wiederum von der Methode `AbstractActionController::onDispatch ()` aufgerufen,
+und so weiter. Wir können den Aufrufstapel durchlaufen, bis wir die Datei *index.php* erreichen, die die oberste Ebene des Stapels ist.
+Sie können auch auf einen Stapelrahmen klicken, um die Stelle des Codes anzuzeigen, der gerade ausgeführt wird.
+  
+## Debugging-Optionen
+
+Mit NetBeans können Sie einige Aspekte des Verhaltens des Debuggers konfigurieren. Öffnen Sie dafür den Dialog
+*Options* unter dem Menü *Tools->Options**. Klicken Sie im angezeigten Dialogfeld auf die Registerkarte *PHP*.
+Wählen Sie auf dieser Registerkarte die Unterregisterkarte *Debugging* aus (Abbildung B.12).
+
+![Abbildung B.12. PHP Debugging Optionen](images/netbeans/options_php_debugging.png)
+
+In der Regel ändern Sie die meisten dieser Optionen nicht. Sie müssen nur eine Vorstellung
+von dem haben, was sie tun. Dies sind die folgenden Debugging-Optionen:
+
+* Die Parameter *Debugger Port* und *Session ID* definieren, wie NetBeans eine Verbindung zu XDebug herstellt.
+  Standardmäßig lautet die Portnummer 9000. Die Portnummer sollte mit dem Port vom Debugger identisch sein,
+  den Sie bei der Installation von XDebug in der Datei *php.ini* festgelegt haben. Der Session-Name lautet standardmäßig
+  "netbeans-xdebug". Ändern Sie diesen Wert normalerweise nicht.
+  
+* Mit dem Parameter *Stop at First Line* stoppt der Debugger in der ersten Zeile Ihrer
+  Datei *index.php*, anstatt am ersten Haltepunkt anzuhalten. Das kann nervig sein.
+  Sie können diese Option daher deaktivieren.
+  
+* Die Optionsgruppe *Watches and Balloon Evaluation* ist standardmäßig deaktiviert, da dies möglicherweise 
+  XDebug-Fehler verursacht. Sie können diese Optionen nur aktivieren, wenn Sie wissen, was Sie tun.
+  
+    * Der Parameter *Maximum Depth of Structures* legt fest, ob verschachtelte Strukturen
+      (wie geschachtelte Arrays, Objekte in Objekten usw.) sind sichtbar sind oder nicht. Standardmäßig,
+	  ist die Tiefe ist auf 3 eingestellt.
+ 
+    * Die Option *Maximum Number of Children* legt fest, wie viele Array-Elemente im Fenster *Variablen* angezeigt werden sollen.
+      Wenn Sie diesen Wert auf beispielsweise 30 setzen, werden nur die ersten 30 Elemente angezeigt,
+      wenn das Array mehr als 30 Elemente enthält.
+
+* Die Option *Show Requested URLs* zeigt, falls aktiviert, die derzeitige URL an, welche
+  gerade verarbeitet wird. Die URL wird im Fenster *Output* angezeigt.
+  
+* Mit der Option *Debugger Console* können Sie die Ausgabe der zu debuggenden PHP-Skripts anzeigen.
+  Die Ausgabe wird im Fenster *Output* angezeigt. Wenn Sie diese Funktion verwenden möchten, empfohlen wir den
+  den Parameter `output_buffering = Off` im Abschnitt `[xdebug]` Ihrer Datei *php.ini* hinzuzufügen.
+  Andernfalls kann die Ausgabe verzögert erscheinen.
+  
+## Profiling
+
+Wenn Ihre Website fertig ist und funktioniert, sind Sie normalerweise daran interessiert, sie so schnell wie möglich zu machen.
+Mit XDebug können Sie Ihre Website *profilieren*. Profiling bedeutet,
+welche Klassenmethoden (oder Funktionen) welche Ausführungszeit verwenden. So können Sie feststellen,
+wo ein "Flaschenhals" in Ihren Code sitzt und ist für die Leistungsprobleme verantwortlich.
+
+Für jeden HTTP-Request misst die Erweiterung XDebug, wie lange eine Funktion ausgeführt wird.
+Es schreibt die Profilinformationen in eine Datei. In der Regel werden die Profiling-Infodateien
+in das temporäre Systemverzeichnis (in Linux in das Verzeichnis */tmp*) und mit dem Namen wie
+`xdebug.out.<Zeitstempel>` geschrieben, wobei der Platzhalter `<Zeitstempel>` der Zeitstempel des HTTP-Request ist.
+Alles was Sie tun müssen, ist eine Profildatei zu öffnen und zu analysieren.
+
+W> Um XDebug Profiler zu aktivieren, sollten Sie den folgenden XDebug-Konfigurationsparameter in Ihrer Datei *xdebug.ini* festlegen:
+W>
+W> `xdebug.profiler_enable = 1`
+
+Leider verfügt NetBeans für PHP nicht über ein eingebettetes Werkzeug zur Visualisierung der Ergebnisse der Profilerstellung.
+Aus diesem Grund müssen Sie ein Visualizer-Tool eines Drittanbieters installieren. Im Folgenden stellen wir Ihnen
+Anweisungen zum Installieren eines einfachen webbasierten Tools mit dem Namen [Webgrind](https://github.com/jokkedk/webgrind) zur Verfügung.
+Webgrind arbeitet auf jeder Plattform, da dieses Tool selbst in PHP geschrieben ist.
+
+Die Installation von Webgrind ist sehr unkompliziert.
+
+Zunächst müssen Sie webgrind von der Projektseite herunterladen und in einen Ordner entpacken.
+In Linux können Sie dies mit den folgenden Befehlen tun:
+
+{line-numbers=off,lang="bash"}
+~~~
+$ cd ~
+
+$ wget https://github.com/jokkedk/webgrind/archive/master.zip
+
+$ unzip master.zip
+~~~
+
+Die obigen Befehle ändern Ihr Arbeitsverzeichnis in Ihr
+Home-Verzeichnis, lädt das Webgrind-Archiv aus dem Internet herunter und entpackt dann
+das Archiv.
+
+Als Nächstes müssen Sie dem Apache-Webserver mitteilen, wo er Webgrind-Dateien findt. Das heisst,
+Sie müssen einen separaten virtuellen Host konfigurieren. Wir haben bereits gelernt, wie wir einen virtuellen
+Hosts erstellten [Anhang A. Konfigurieren der Webentwicklungsumgebung](#devenv). Vergessen Sie nicht, den Apache-Webserver danach neu zu starten,
+nachdem Sie den virtuellen Host konfiguriert haben.
+
+Öffnen Sie schließlich Webgrind in Ihrem Browser, indem Sie die URL zu Webgrind in Ihren Browsers eingeben.
+Wenn Sie beispielsweise den virtuellen Host für die Überwachung auf Port 8080 konfiguriert haben,
+dann geben Sie "http://localhost: 8080" in die Navigationsleiste Ihres Browsers ein und drücken Sie die Eingabetaste.
+Die Webgrind-Webseite sollte erscheinen (siehe Abbildung B.13):
+
+![Abbildung B.13. Webgrind-Ausgabeseite](images/netbeans/webgrind.png)
+
+Oben auf der Webgrind-Seite können Sie den Prozentsatz des "längsten" Funktionsaufruf auswählen, der angezeigt werden soll (Abbildung B.14).
+Die Standardeinstellung ist 90%. Wenn Sie diesen Wert auf einen niedrigeren Prozentsatz setzen, werden die 
+weniger oft aufgerufenen Funktionen ausgeblendet.
+
+![Abbildung B.14. Webgrind Auswahl](images/netbeans/webgrind-select.png)
+
+Die Dropdown-Liste rechts neben dem Prozentfeld ermöglicht die Auswahl der zu analysierenden Profiling-Datei.
+Standardmäßig ist "Auto (neueste)" eingestellt, wodurch Webgrind die Datei mit dem aktuellsten
+Zeitstempel verwendet. Möglicherweise müssen Sie eine andere Datei auswählen, zum Beispiel, wenn Ihre Webseiten asynchrones AJAX
+Anfragen verwenden.
+
+In der Dropdown-Liste ganz rechts können die Einheiten festgelegt werden, die zum Messen der Daten verwendet werden sollen.
+Mögliche Optionen sind: Prozent (Standard), Millisekunden und Mikrosekunden.
+
+Wenn Sie den Prozentsatz, den Dateinamen und die Einheiten ausgewählt haben, klicken Sie auf die Schaltfläche *Update*, um Webgrind
+die Daten für Sie zu visualisieren (die Berechnung kann einige Sekunden dauern). Wenn die Berechnung beendet ist,
+sollten Sie die Tabelle der Funktionsaufrufe sehen können, sortiert nach der Funktion "weight" in absteigender Reihenfolge.
+Die längsten Funktionen werden oben angezeigt.
+
+Die Tabelle enthält folgende Spalten:
+
+* In der ersten Spalte (*Funktion*) wird der Klassenname gefolgt von dem Methodennamen (bei einem Methodenaufruf) oder
+  Funktionsname (bei regulärer Funktion) angezeigt.
+
+* Die zweite Spalte enthält die Icons *Paragraph* , auf die Sie klicken können, um das entsprechende PHP
+  Quelldatei zu öffnen, deren Funktion im Webbrowser definiert ist.
+  
+* *Invocation Count* zeigt an, wie oft die Funktion aufgerufen wurde.
+
+* In der Spalte *Total Self Cost* wird die Gesamtzeit angezeigt, die zur Ausführung des integrierten PHP-Codes
+  dr Funktion benötigt wurde (mit Ausnahme der Zeit, die für die Ausführung anderer nicht standardmäßiger Funktionen aufgewendet wurde).
+
+* *Total Inclusive Cost* enthält die gesamte Ausführungszeit für die Funktion.
+  Einschließlich integriertem PHP-Code und anderen aufgerufenen Benutzerfunktionen.
+
+Durch Klicken auf einen Spaltenkopf der Tabelle können Daten in aufsteigender oder absteigender Reihenfolge sortiert werden.
+
+Sie können auf das Dreieck neben einem Funktionsnamen anklicken, um eine Funktionsliste der Aufrufe zu erweitern.
+In dieser Liste können Sie sehen, wer diese Funktion aufgerufen hat und wie lange die Ausführung gedauert hat.
+Sie enthält folgende Spalten:
+
+* *Calls* sind die "übergeordneten" Funktionen oder Klassenmethoden, die diese (untergeordnete) Funktion aufrufen.
+* *Total Call Cost* ist die Gesamtzeit, in der diese Funktion ausgeführt wird, wenn sie von der übergeordneten Funktion aufgerufen wird.
+* *Count*, wie oft das übergeordnete Objekt die untergeordnete Funktion aufruft.
+
+Der farbigen Balken oben auf der Seite zeigen den Wert verschiedener Funktionstypen:
+
+* *Blau* kennzeichnet interne (eingebaute) Funktionen von PHP;
+* *Lavendel* ist die Zeit, um PHP-Dateien zu laden (oder zu benötigen);
+* *Grün* zeigt den Wert Ihrer eigenen Klassenmethoden;
+* *Orange* bezeichnet die Zeit, die für herkömmliche "prozedurale" Funktionen benötigt wird (Funktionen, die nicht Teil einer PHP-Klasse sind).
+
+T> Beachten Sie, dass der Profiler für jeden HTTP-Request an Ihre Website eine neue Datei in Ihrem Verzeichnis */tmp * erstellt.
+T> Dies kann zur Erschöpfung des Speicherplatzes führen, der nur durch einen Neustart des Systems behoben werden kann.
+T> Wenn Sie mit dem Profiling Ihrer Anwendung fertig sind, wird empfohlen, das Profiling
+T> durch Bearbeiten der Datei *php.ini* zu deaktivieren. Kommentieren Sie des Parameter `xdebug.profiler_enable` wie folgt aus:
+T>
+T> `; xdebug.profiler_enable = 0`
+T>
+T> Starten Sie anschließend den Apache Webserver erneut.
+
+## Zusammenfassung
+
+In diesem Anhang haben wir gelernt, wie Sie die Website mit der NetBeans-IDE ausführen und debuggen
+im interaktiven Schritt-für-Schritt-Modus können. Um eine Website betreiben zu können, müssen Sie zuerst
+die Eigenschaften der Seite (Konfiguration) bearbeiten.
+
+Um die Seite zu debuggen, muss die PHP-Erweiterung von XDebug installiert sein.
+Wenn Sie Ihre Website in NetBeans debuggen, hält die PHP-Engine das Programmausführung
+in jeder Zeile an, in der Sie einen Haltepunkt setzen. Sie sehen die Debugging-Informationen 
+(wie lokale Variablen und den Aufrufstack) im NetBeans-Fenster in
+grafischer Form.
+
+Neben dem Debugging bietet die Erweiterung XDebug auch die Möglichkeit, Websites zu profilieren. Mit dem Profilieren Sie
+sehen, wie viel Zeit für die Ausführung einer bestimmten Funktion oder Klassenmethode aufgewendet wurde. Das erlaubt Ihnen,
+die "Flaschenhälse" und Leistungsprobleme zu ermitteln.

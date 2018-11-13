@@ -28,7 +28,8 @@
         "en": "English",
         "ru": "Русский",
         "es": "Español",
-        "fr": "Français"
+        "fr": "Français",
+        "de": "Deutsch
     },
     "incomplete_translations": ["es", "fr"],
     "theme" : "default",

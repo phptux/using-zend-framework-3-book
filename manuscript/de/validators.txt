@@ -1,0 +1,1633 @@
+# Eingabedaten mit Validatoren überprüfen {#validators}
+
+In diesem Kapitel geben wir einen Überblick über die Standard-ZF-Validatoren geben.
+Diese können Sie in Ihren Formularen verwenden. Wir zeigen Ihnen auch, wie Sie einen benutzerdefinierten Validator schreiben.
+Ein Validator ist eine Klasse, die einige Eingabedaten aufnimmt, diese nach den jeweiligen Prüfregeln prüft und anschließend
+wird ein boolesches Ergebnis zurückgegeben, welches angibt, ob die Daten korrekt sind oder nicht
+(und Fehlermeldungen, wenn die Daten Fehler aufweisen).
+
+I> Im Allgemeinen können Sie Validatoren *außerhalb* Formulare verwenden, um beliebige Daten zu verarbeiten.
+I> Zum Beispiel können Validatoren in einer Controller-Aktion verwendet werden, um sicherzustellen, dass die Daten übergeben wurden und 
+I> einem bestimmten Format entsprechen. Das ist sicherer, als die Variablen GET- und/oder POST direkt zu verwenden.
+
+In diesem Kapitel behandelte ZF3-Komponenten:
+
+|-----------------------|-------------------------------------------------------|
+| *Komponente* 			| *Beschreibung* 										|
+|-----------------------|-------------------------------------------------------|
+| @`Zend\Validator` 	| Implementiert verschiedene Validator-Klassen. 		|
+|-----------------------|-------------------------------------------------------|
+| @`Zend\InputFilter`	| Implementiert einen Container für Filter/Validatoren.	|
+|-----------------------|-------------------------------------------------------|
+
+## Über Validatoren
+
+Ein *Validator* dient dazu, einige Eingabedaten aufzunehmen, diese auf Richtigkeit zu prüfen und ein boolesches
+Ergebnis zurückzugeben, welches angibt, ob die Daten korrekt sind. Wenn die Daten falsch sind, generiert der Validator eine Liste
+mit Fehlermeldungen. Diese beschreiben, warum die Prüfung nicht bestanden wurde.
+
+### ValidatorInterface
+
+In ZF3 ist ein Validator eine übliche PHP-Klasse, die die Schnittstelle @`ValidatorInterface`[Zend\Validator\ValidatorInterface] implementiert
+(gehört zum Namensraum @`Zend\Validator`). Die Definition der Schnittstelle wird unten dargestellt:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+namespace Zend\Validator;
+
+interface ValidatorInterface
+{
+  // Gibt true zurück, wenn $value die Validierungsanforderungen erfüllt.
+  public function isValid($value);
+
+  // Gibt ein Array mit Meldungen zurück, aus denen der Grund erläutert wird
+  // warum der Aufruf von isValid() false zurückgegeben hat.
+  public function getMessages();
+}
+~~~
+
+Wie Sie sehen, hat das @`ValidatorInterface`[Zend\Validator\ValidatorInterface] zwei Methoden: die Methode `isValid()`
+(Zeile 7) und die Methode `getMessages()` (Zeile 11).
+
+Die erste Methode, `isValid()`, dient zur Überprüfung des Übergabewertes
+(den Parameter `$value`). Wenn die Validierung von `$value` erfolgreich ist, gibt die Methode
+`isValid()` den booleschen Wert `true` zurück. Wenn die Prüfung vom Wert `$value` fehlschlägt, dann
+gibt Methode `false` zurück.
+
+T> Eine konkrete Validator-Klasse, die die Schnittstelle @`ValidatorInterface`[Zend\Validator\ValidatorInterface] implementiert, kann zusätzliche Methoden enthalten.
+T> Viele Validator-Klassen verfügen beispielsweise über Methoden, mit denen der Validator konfiguriert werden kann (Validierungsoptionen festlegen).
+
+## Übersicht der Standard-Validatoren
+
+Standard-ZF3-Validatoren werden von der Komponente @`Zend\Validator [^standard_validators] bereitgestellt. Die Vererbung von Klassen 
+der Standard-Validatoren ist in Abbildung 9.1 dargestellt. Wie Sie der Abbildung entnehmen können, sind die meisten davon
+von Basisklasse @`AbstractValidator` abgeleitet.
+
+[^standard_validators]: Hier betrachten wir nur die Standard-Validator-Klassen, die zum Namesraum @`Zend\Validator` gehören.
+    Tatsächlich gibt es jedoch mehr Validatoren, die als Standard betrachtet werden können. Wir werden sie in weiteren Kapiteln behandeln.
+
+![Abbildung 9.1. Vererbung der Validator-Klasse](images/validators/validator_inheritance.png)
+    
+Standard-Validatoren mit ihrer kurzen Beschreibung sind in Tabelle 9.1 aufgeführt. Wie Sie vielleicht aus der
+Tabelle entnehmen können, können sie grob in mehrere Gruppen unterteilt werden:
+
+ * Validatoren zur Überprüfung der Übereinstimmung des Werts mit einem bestimmten Format (IP-Adresse, Hostname, E-Mail-Adresse, Kreditkartennummer usw.);
+ * Validatoren, um zu überprüfen, ob ein numerischer Wert in einem bestimmten Bereich liegt (kleiner als, größer als, zwischen usw.);
+ * Validatoren, die als "Proxies" für andere Validatoren fungieren (@`ValidatorChain`[Zend\Validator\ValidatorChain], @`StaticValidator` und @`Callback`[Zend\Validator\Callback]).
+
+{title="Tabelle 9.1. Standard-Validatoren"}
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| *Klassenname* 						| *Beschreibung* 																	|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`EmailAddress`[Zend\Validator\EmailAddress]	| Gibt `true` zurück, wenn der Wert eine gültige E-Mail-Adresse ist.		|
+|												| Andernfalls wird "false" zurückgegeben. 									|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Hostname`[Zend\Validator\Hostname] 	| Überprüft, ob der Wert ein gültiger Hostname ist. 								|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Barcode`[Zend\Validator\Barcode] 	| Gibt `true` nur dann zurück, wenn der Wert einen gültigen Barcode enthält. 		|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`CreditCard` 						| Gibt nur dann `true` zurück, wenn der Wert dem üblichen Format der				|
+|										| Kreditkartennummer entspricht (Luhn-Algorithmus, mod-10-Prüfsumme). 				|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Iban` 								| Gibt `true` zurück, wenn der Wert eine gültige internationale Bankkontonummer		|
+|										| (IBAN) ist. Andernfalls wird `false` zurückgegeben. 								|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Isbn` 								| Gibt `true` zurück, wenn und nur wenn `$value` eine gültige						|
+|										| "International Standard Book Number" (ISBN) ist. 									|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Ip` 								| Gibt `true` zurück, wenn der Wert eine gültige IP-Adresse ist.					|
+|										| Andernfalls wird `false` zurückgegeben. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Uri`[Zend\Validator\Uri] 			| Gibt `true` zurück, wenn und nur wenn der Wert eine URI (Uniform Resource			|
+|										| Identifier) ​​ist. 																	|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Between`[Zend\Validator\Between] 	| Gibt `true` zurück, wenn der Wert in einem bestimmten Bereich liegt.				|
+|										| Andernfalls wird `false` zurückgegeben. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`LessThan` 							| Gibt `true` zurück, wenn der Wert unter einer bestimmten Anzahl liegt.			|
+|										| Andernfalls wird `false` zurückgegeben. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`GreaterThan` 						| Gibt nur dann `true` zurück, wenn der Wert größer als eine bestimmte Anzahl ist. 	|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Identical` 							| Gibt `true` zurück, wenn der Wert einem angegebenen Token entspricht. 			|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Step` 								| Überprüft, ob der Wert ein Skalar und ein gültiger Schrittwert ist. 				|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Csrf`[Zend\Validator\Csrf] 			| Dieser Prüfer überprüft, ob das bereitgestellte Token mit dem zuvor generierten	|
+|										| Token aus der PHP-Session übereinstimmt. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Date`[Zend\Validator\Date] 			| Gibt 'true' zurück, wenn der Wert ein gültiges Datum des bestimmten Formats ist. 	|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`DateStep` 							| Gibt `true` zurück, wenn ein Datum innerhalb eines gültigen Abschnitts liegt. 	|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`InArray` 							| Gibt `true` zurück, wenn der Wert im angegebenen Array enthalten ist.				|
+|										| Andernfalls wird `false` zurückgegeben. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Digits`[Zend\Validator\Digits] 		| Gibt nur dann boolesches `true` zurück, wenn `$value` nur Ziffern enthält. 		|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Hex` 								| Gibt nur dann `true` zurück, wenn der Wert nur hexadezimale Zeichen enthält. 		|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`IsInstanceOf` 						| Gibt `true` zurück, wenn der Wert eine Instanz einer bestimmten Klasse ist.		|
+|										| Andernfalls wird `false` zurückgegeben. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`NotEmpty` 							| Gibt `true` zurück, wenn `$value` kein leerer Wert ist. 							|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Regex`[Zend\Validator\Regex]		| Gibt `true` zurück, wenn der Wert mit dem angegebenen Muster übereinstimmt.		|
+|										| Andernfalls wird `false` zurückgegeben. 											|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`StringLength` 						| Gibt `true` zurück, wenn die Stringlänge innerhalb des angegebenen Bereichs liegt.|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Explode` 							| Teilt den angegebenen Wert in Teile und gibt `true` zurück, wenn alle Teile die	|
+|										| angegebene Prüfung bestehen. 														|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`StaticValidator` 					| Mit diesem Prüfer kann ein anderer Prüfer ausgeführt werden, ohne ihn explizit zu	|
+|										| instantiieren. 																	|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`Callback`[Zend\Validator\Callback]	| Dieser Prüfer ermöglicht die Ausführung eines	 benutzerdefinierten Überprüfungs-	|
+|										| algorithmus über die vom Benutzer bereitgestellte Callback-Funktion. 				|
+|---------------------------------------|-----------------------------------------------------------------------------------|
+| @`ValidatorChain`[Zend\Validator\ValidatorChain]	| Wrapper-Validator, der die Organisation mehrerer Validatoren in einer	|
+|													| Kette ermöglicht. Angehängte Validierer werden in der Reihenfolge 	|
+|													| ausgeführt, in der sie der Liste (FIFO) hinzugefügt wurden. 			|
+|---------------------------------------------------|-----------------------------------------------------------------------|
+
+## Verhalten von Validator bei ungültigen oder inakzeptablen Daten
+
+Wenn Sie einem Validator Daten übergeben, die die Prüfung nicht bestehen, erstellt der Validator
+intern eine Liste mit Fehlermeldungen, die wir mit der Methode `getMessages()` abrufen können.
+Zum Beispiel erhalten wir folgende Liste von Validierungsfehlern, wenn wir dem Validator @`EmailAdrress`[Zend\Validator\EmailAddress]
+den Wert "abc@ewr" zur Prüfung übergeben:
+ 
+{line-numbers=off, lang=text}
+~~~
+array(3) { 
+  ["emailAddressInvalidHostname"] => 
+    string(51) "'ewr' is not a valid hostname for the email address" 
+  ["hostnameInvalidHostname"] => 
+    string(66) "The input does not match the expected structure for a DNS hostname" 
+  ["hostnameLocalNameNotAllowed"] => 
+    string(84) "The input appears to be a local network name but local network names are not allowed" 
+}
+~~~
+   
+Die Methode `getMessages()` vom Validator gibt ein Array von Meldungen zurück, in dem erklärt wird, warum die Überprüfung fehlgeschlagen ist.
+Die Array-Schlüssel sind Kennungen der Validierungsfehler und die Array-Werte sind die entsprechenden
+von Menschen lesbaren Meldungstexte.
+
+Wenn Methode `isValid()` nie aufgerufen wurde oder der letzte Aufruf `isValid()`
+`true` zurückgegeben hat, dann gibt die Methode `getMessages()` ein leeres Array zurück. Wenn Sie `isValid()` mehrere aufrufen, werden
+in einigen Fällen die vorherigen Fehlermeldungen gelöscht, sodass nur die Fehlermeldungen, vom letzten Aufruf, angezeigt werden.
+
+Einige Validatoren arbeiten möglicherweise nur mit Eingabedaten in einem bestimmten Format (z.B. kann ein Validator fordern,
+dass die Eingabedaten ein String sind, aber kein Array). Wenn Sie Daten in einem nicht akzeptablen Format übergeben,
+kann der Validator eine Ausnahme @`Zend\Validator\Exception\RuntimeException` auslösen oder eine PHP-Warnung.
+
+I> Es wird empfohlen, die Dokumentation des Validators zu lesen, um dessen tatsächliches Verhalten
+I> bei inakzeptablen Daten zu kennen.
+
+## Einen Validator instanziieren
+
+In Zend Framework 3 gibt es mehrere Methoden zum Erstellen eines Validators:
+
+ * Manuelle Instanziierung (mit dem Operator `new`);
+ * Erstellen mit einer Factory-Klasse (durch Übergeben einer Array-Konfiguration);
+   Diese Methode wird am häufigsten verwendet, wenn Validierungsregeln einem Formular hinzugefügt werden.
+ * Ihn implizit mit der Wrapper-Klasse @`StaticValidator` instanziieren.
+
+Als Nächstes werden wir diese drei Methoden ausführlicher behandeln.
+
+### Methode 1. Manuelle Instantiierung eines Validators
+
+Ein Validator kann im Allgemeinen nicht nur für Formulare verwendet werden, sondern auch für die Validierung
+von beliebigen Daten. Dazu erstellen Sie einfach eine Instanz von
+der Validator-Klasse. Anschließend konfigurieren Sie den Validator mithilfe der von ihm bereitgestellten Methoden und
+rufen Sie die Methode `isValid ()` auf.
+
+Betrachten wir beispielsweise die Verwendung des Validators @`EmailAddress`. Dieser prüft
+eine E-Mail-Adresse zur Konformität mit dem Standard [RFC-2822](https://tools.ietf.org/html/rfc2822).
+Eine E-Mail-Adresse besteht normalerweise aus dem lokalen Teil (Benutzername),
+gefolgt von dem "at"-Zeichen (@) und dann dem Hostnamen. Zum Beispiel ist
+in der E-Mail-Adresse "name@example.com" der "name" der lokale Teil und "example.com" der Hostname.
+
+I> Der Validator @`EmailAddress` ist nützlich, um vom Benutzer eingegebene E-Mail-Adressen
+I> auf Richtigkeit in Formulare zu überprüfen.
+I> Der Validator überprüft die Richtigkeit des lokalen Teils und des Hostnamens.
+I> Auf das Vorhandensein des "at" -Zeichens (@) und stellt optional eine Verbindung zum Host des Empfänger her
+I> und fragt den DNS-Dienst nach dem Vorhandensein des MX-Datensatzes (Mail Exchanger)[^mx_record] ab.
+
+[^mx_record]: Ein MX-Datensatz ist ein Datensatz, der im Domain Name System (DNS) verwendet wird.
+              MX-Einträge definieren eine oder mehrere Mailserveradressen, die der Domäne des Empfängers zugewiesen sind.
+
+Die vom Validator @`EmailAddress` bereitgestellten Methoden sind in Tabelle 9.2 aufgeführt:
+
+{title="Tabelle 9.2. Öffentliche Methoden des Validators EmailAddress"}
+|-----------------------------------------------|---------------------------------------------------------------|
+| *Methodenname* 								| *Beschreibung* 												|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `__construct($ options)` 						| Konstrutor des Validators. Akzeptiert eine Liste von Optionen,|
+|												| die die Konfiguration zulassen. 								|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `isValid($value)` 							| Gibt `true` zurück, wenn der Wert eine gültige E-Mail-Adresse	|
+|												| gemäß RFC-2822 ist. Andernfalls wird `false` zurückgegeben. 	|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getMessages()` 								| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode	|
+|												| ein Array mit den Fehlermeldungen zurück. 					|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `useDomainCheck($domain)` 					| Weist den Validator an, den Hostnamenteil auf Richtigkeit		|
+|												| zu prüfen. 													|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getDomainCheck()` 							| Gibt `true` zurück, wenn die Überprüfung des Hostnamensteils	|
+|												| aktiviert ist. 												|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `setHostnameValidator($hostnameValidator)`	| Hängt den Prüfer an, der zur Überprüfung des Hostnamens der	|
+|												| E-Mail-Adresse verwendet werden soll. 						|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getHostnameValidator()` 						| Gibt den Validator zurück, der zur Überprüfung des Hostnamens	|
+|												| der E-Mail-Adresse verwendet wird. 							|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `setAllow($allow)`							| Setzt die zulässigen Typen des Hostnamens, die in einer		|
+|												| E-Mail-Adresse verwendet werden sollen. 						|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getAllow()` 									| Gibt die zulässigen Typen des Hostnamens zurück. 				|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `useMxCheck($mx)` 							| Legt fest, ob die Überprüfung auf einen gültigen MX-Eintrag	|
+|												| über den DNS-Dienst durchgeführt werden soll. 				|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getMxCheck($mx)` 							| Gibt `true` zurück, wenn der MX-Prüfmodus aktiviert ist. 		|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `useDeepMxCheck($deep)` 						| Legt fest, ob die Tiefenprüfung für MX-Datensätze verwendet	|
+|												| werden soll. 													|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getDeepMxCheck()` 							| Gibt 'true' zurück, wenn die Tiefenprüfung für MX-Datensätze	|
+|												| aktiviert ist. Andernfalls wird `false` zurückgegeben. 		|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `isMxSupported()` 							| Gibt 'true' zurück, ob die MX-Prüfung über die PHP-Funktion	|
+|												| `getmxrr()` vom System unterstützt wird. Andernfalls wird		|
+|												| `false` zurückgegeben. 										|
+|-----------------------------------------------|---------------------------------------------------------------|
+| `getMXRecord()` 								| Gibt nach der Überprüfung die gefundenen						|
+|												| MX-Datensatzinformationen zurück. 							|
+|-----------------------------------------------|---------------------------------------------------------------|
+
+Wie Sie der Tabelle entnehmen können, hat der Validator @`EmailAddress`, außer den
+Methoden `isValid()` und `getMessages()`, eine Konstruktormethode.
+Sie können dieser (optional) eine vollständige Liste mit Optionen zum Initialisieren des Validators übergeben.
+
+I> Alle Standardprüfer verfügen über die Konstruktormethode (optional), die ein Array von Optionen akzeptiert.
+I> Dieses konfiguriert den Validator, wenn er manuell instanziiert wird.
+
+Die Klasse @`EmailAddress` stellt auch eine Reihe von Methoden bereit, die verwendet werden können,
+um bestimmte Validator-Optionen zu setzen.
+
+Die Methode `useDomainCheck()` gibt an, ob der Hostname auf Richtigkeit überprüft werden soll oder nicht.
+Diese Prüfung ist standardmäßig aktiviert. Die Methode `setAllow()` bietet die Möglichkeit, anzugeben,
+welche Arten von Hostnamen erlaubt sind. Sie können eine ODER-Kombination
+von vorangestellten Konstanten `ALLOW_` [^allow_constants] der Methode `setAllow()` übergeben:
+
+  * `ALLOW_DNS` Erlaubt einen Domainnamen (dies ist die Standardeinstellung),
+  * `IP_ADDRESS` Erlaubt eine IP-Adresse,
+  * `ALLOW_LOCAL` Erlaube den Namen eines lokalen Netzwerknamens.
+  * `ALLOW_ALL` Erlaubt alle von oben.
+
+[^allow_constants]: Die Konstanten `ALLOW_` werden vom Validator @`Hostname`[Zend\Validator\Hostname] bereitgestellt.
+  
+I> Intern verwendet der Validator @`EmailAddress` den Validator @`Hostname`[Zend\Validator\Hostname] zum Überprüfen des Hostnamenteils
+I> einer E-Mail-Adresse. Optional können Sie einen benutzerdefinierten Hostnamen-Validator mithilfe der Methode `setHostnameValidator()` setzen.
+I> Diese Methode ist jedoch unwahrscheinlich, dass Sie dies tun müssen.
+
+Die Methode `useMxCheck()` gibt an, ob der Prüfer eine Verbindung zum Empfänger-Host herstellen soll
+und eine Anfrage an den DNS-Server nach den MX-Datensätzen stellen soll. Wenn der Server über keine MX-Datensätze verfügt, schlägt die Überprüfung fehl.
+Sie können zusätzlich die Methode `useDeepMxCheck()` verwenden, um den Validator anzuweisen, die E-Mail mitden 
+Serveradressen zu vergleichen, die aus den MX-Datensätzen gegen eine schwarze Liste der reservierten Domänennamen extrahiert wurde und führen
+zusätzliche Überprüfungen für jede erkannte Adresse durch.
+
+T> Es wird nicht empfohlen, eine MX-Prüfung (und eine tiefe MX-Prüfung) durchzuführen, da dies viel Zeit und in Anspruch nehmen kann) durchzuführen.
+T> Gleichzeitig erhöhen sich die Ladezeit der Webseite. Diese Prüfungen sind standardmäßig deaktiviert.
+
+Im Folgenden finden Sie Codebeispiele, die zwei äquivalente Methoden zum manuellen Erstellen einer Instanz des
+Validators @`EmailAddress` zeigt. Wir setzen die Optionen und prüfen einen Eingabewert:
+
+**Beispiel 1. Optionen an die Konstruktormethode übergeben.**
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+// Optionally, define a short alias for the validator class name.
+use Zend\Validator\EmailAddress;
+use Zend\Validator\Hostname;
+
+// Create an instance of the validator, passing options to the constructor.
+$validator = new EmailAddress([
+		'allow' => Hostname::ALLOW_DNS|Hostname::ALLOW_IP|Hostname::ALLOW_LOCAL,
+		'mxCheck' => true,
+		'deepMxCheck' => true
+	]);
+
+// Validate an E-mail address.
+$isValid = $validator->isValid('name@example.com'); // Returns true.
+$isValid2 = $validator->isValid('abc'); // Returns false.
+
+if(!$isValid2) {
+  // Get error messages in case of validation failure.
+  $errors = $validator->getMessages();
+}
+~~~
+
+Im obigen Code erstellen wir das Validator-Objekt @`EmailAddress` mit Hilfe des Operators `new` (Zeile 7).
+Wir übergeben das Array von Optionen an den Konstruktor. Wir verwenden den Schlüssel `allow`, dass es eine
+E-Mail-Adresse mit einem Domänenname, einer IP-Adresse oder einer lokale Netzwerkadresse sein soll. Auch verwenden wir
+die Schlüssel `mxCheck` und` deepMxCheck` zur Aktivierung der MX-Record-Prüfung und Deep-MX-Record-Prüfung.
+
+In Zeile 14 rufen wir die Methode `isValid()` auf und übergeben ihr den String "name@example.com", um diese zu prüfen.
+Die erwartete Ausgabe dieses Aufrufs ist das boolesche true`.
+
+In Zeile 15 übergeben wir den String "abc" an dem Validator. Das Validierungsverfahren
+wird voraussichtlich fehlschlagen (`false` wird zurückgegeben). Letztendlich rufen wir die Fehlermeldungen mit
+der Methode `getMessages()` ab (Zeile 19).
+
+**Beispiel 2. Ohne Optionen an den Konstruktor zu übergeben.**
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+// Optionally, define a short alias for the validator class name.
+use Zend\Validator\EmailAddress;
+use Zend\Validator\Hostname;
+
+// Create an instance of the validator.
+$validator = new EmailAddress();
+
+// Optionally, configure the validator
+$validator->setAllow(
+       Hostname::ALLOW_DNS|Hostname::ALLOW_IP|Hostname::ALLOW_LOCAL);
+$validator->useMxCheck(true);
+$validator->useDeepMxCheck(true);
+
+// Validate an E-mail address.
+$isValid = $validator->isValid('name@example.com'); // Returns true.
+$isValid2 = $validator->isValid('abc'); // Returns false.
+
+if(!$isValid2) {
+  // Get error messages in case of validation failure.
+  $errors = $validator->getMessages();
+}
+~~~
+
+Im obigen Code erstellen wir das Validator-Objekt @`EmailAddress` mit Hilfe von
+des Operators `new` (Zeile 7).
+
+In den Zeilen 10-13 konfigurieren wir den Validator. Wir rufen die Methode `setAllow()` auf, dass es eine
+E-Mail-Adresse mit einem Domänenname, einer IP-Adresse oder einer lokale Netzwerkadresse sein soll. Auch verwenden wir
+die Methoden `useMxCheck()` und `useDeepMxCheck()` zum Aktivieren der MX-Record-Prüfung und Deep-MX-Record-Prüfung.
+
+In Zeile 16 rufen wir die Methode `isValid()` auf und übergeben ihr den String "name@example.com", welcher geprüft werden soll.
+Die erwartete Rückgabe dieses Aufrufs ist das boolesche `true`.
+
+In Zeile 17 übergeben wir den String "abc" an den Validator. Das Validierungsverfahren wird - wie erwartet -
+scheitern. Dann werden die Fehlermeldungen mit der Methode `getMessages()` (Zeile 21) abgerufen.
+
+### Methode 2. Den Wrapper StaticValidator verwenden
+
+Eine alternative Möglichkeit zur manuellen Initialisierung von Validatoren besteht in der Verwendung der Klasse @`StaticValidator`.
+Die Klasse @`StaticValidator` ist eine Art "Proxy", der für die automatischeInstantiierung, Konfiguration und Ausführung
+eines Validator entwickelt wurde. Lassen Sie uns es an einem Beispiel zeigen, wie wir den gleichen Validator
+@`EmailAddress` konfigurieren können und anschließend seine Methode `isValid()` aufrufen:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+// Create and execute the EmailAddress validator through StaticValidator proxy.
+$validatedValue = \Zend\Validator\StaticValidator::execute('name@example.com', 
+                    'EmailAddress', 
+                    [
+                      'allow' => 
+                         Hostname::ALLOW_DNS|
+                         Hostname::ALLOW_IP|
+                         Hostname::ALLOW_LOCAL,
+                      'mxCheck' => true,
+                      'deepMxCheck' => true
+                    ]);
+						
+// The expected output is boolean true.
+~~~
+
+Die Klasse @`StaticValidator` stellt die statische Methode `execute()` bereit, die drei Argumente 
+benötigt: Den Prüfwert, den Namen des anzuwendenden Filters und ein Array von
+filterspezifische Optionen.
+
+In Zeile 3 rufen wir die Methode `execute()` auf, um den Validator @`EmailAddress` automatisch zu erstellen.
+Intern werden die die Methoden `setAllowDns()`, `useMxCheck()` und `useDeepMxCheck()` aufgerufen.
+Den Eingabewert wird an seine Methode `isValid()` übergeben. Das ist sehr praktisch, weil alles 
+kann in einem einzigen Aufruf durchgeführt werden.
+
+I> Die Klasse @`StaticValidator` bietet keine Möglichkeit, ein Liste von lesbaren Fehlermeldungen des Validators
+I> zurückzugeben. Die Klasse @ `StaticValidator` ist so erstellt erstellt worden, dass diese
+I> außerhalb von Formularen verwendet sollte und es nicht notwendig ist, die Fehlermeldungen anzuzeigen.
+I> Dies scheint kein großer Nachteil zu sein.
+
+### Methode 3. Verwenden einer Array-Konfiguration
+
+Wenn Sie Validatoren mit den Validierungsregeln für ein Formular verwenden, erstellen Sie normalerweise keine
+Validator-Objekte, wie im vorherigen Abschnitt. Stattdessen übergeben Sie eine
+Array-Konfiguration an die Factory-Klasse, die den Validator automatisch für Sie erstellt
+und (optional) konfiguriert. Wie das funktioniert, haben wir bereits beim Hinzufügen von
+Validierungsregeln für das Kontakt-Formular in [Sammeln von Benutzereingaben mit Formularen](#forms) gesehen.
+
+Lassen Sie uns beispielsweise zeigen, wie mit der Hilfe der gleiche Validator @`EmailAddress`
+mit einer Factory erstellt werden kann:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+// It is assumed that you call the following code inside of the form model's
+// addInputFilter() method.
+
+$inputFilter->add([
+  // ...  
+  'validators'  => [
+    [
+      'name' => 'EmailAddress',
+      'options' => [
+        'allow' => \Zend\Validator\Hostname::ALLOW_DNS,
+        'useMxCheck' => false,
+        'useDeepMxCheck' => false,
+      ],
+    ],
+  ],                
+  // ...
+]);
+~~~
+
+Im obigen Code rufen wir die Methode `add()` auf, die von der Containerklasse @`InputFilter`[Zend\InputFilter\InputFilter] (Zeile 5) bereitgestellt wird.
+Die Methode `add()` nimmt ein Array mit dem Schlüssel `validators` entgegen. In der Regel registrieren Sie die Validatoren
+unter diesem Schlüssel (Zeile 7). Die unter diesem Schlüssel registrierten Validatoren werden in der Reihenfolge in die Validator-Liste eingefügt.
+Sie erscheinen dann in der Liste.
+
+Eine Validator-Konfiguration besteht normalerweise aus dem Namen (Zeile 9) und Optionen (Zeile 10). Der Name
+ist ein vollständig Klassenname des Validators (z.B. @`\Zend\Validator\EmailAddress`) oder sein kurzer Aliasname (@`EmailAddress`).
+Der Schlüssel `options` ist ein Array, das aus validator-spezifischen Optionen besteht. Wenn die Factory-Klasse bei der Instantiierung
+die Liste der Optionen an den Konstruktor des Validators übergibt, wird der Konstruktor
+den Validator nach Bedarf initialisieren.
+
+## Über den Validator-Plugin-Manager
+
+Beim Erstellen eines Validators mit einer Factory können Sie entweder den vollständig Klassenamen des Validators verwenden
+oder seinen kurzen Alias. Die Kurznamen für die Standardprüfer werden durch die Klasse @`ValidatorPluginManager` definiert.
+
+I> Die Klasse @`ValidatorPluginManager` definiert die Validator-Aliasnamen.
+
+Der Alias ​​eines Standard-Validators stimmt normalerweise mit dem Klassennamen überein. Zum Beispiel hat die Klasse
+@`Zend\Validator\EmailAddress` den kurzen Alias ​​@`EmailAddress`.
+
+Der Validator-Plugin-Manager wird intern von der Containerklasse @`InputFilter`[Zend\InputFilter\InputFilter] verwendet,
+um die Standardprüfer zu instantiieren.
+
+## Verwendungsbeispiele für Validators
+
+Als nächstes werden wir die Verwendung der wichtigsten Standardprüfer betrachten. Diese
+Beschreiben Sie die Methoden (und Optionen) eines Validators,
+um den Validator zu instanziieren und auf Eingabedaten anzuwenden.
+
+### Validatoren zur Überprüfung der Wertkonformität mit einem bestimmten Format
+
+In diesem Abschnitt betrachten wir Verwendungsbeispiele der Validatoren aus der Gruppe von
+Validatoren zum Prüfen, ob der Eingabewert einem bestimmten Format entspricht.
+
+#### Validator Ip
+
+Die Validierungsklasse @`Ip` überprüft, ob der Eingabewert eine gültige IP-Adresse ist. Wenn der Eingabewert
+eine IPv4 [^ipv4_address]-Adresse ist, eine IPv6 [^ipv6_address]-Adresse, IPvFuture [^ipvfuture_address]-Adresse
+oder IPv6-Literaladresse [^ipv6literal_address], gibt der Prüfer den booleschen Wert `rtue` zurück. Andernfalls
+gibt er `false` zurück. Bei einem Fehler können Fehlermeldungen mit der Methode `getMessages()` - des Validators abgerufen werden.
+
+[^ipv4_address]: Eine IPv4-Adresse (Internet Protocol Version 4) besteht normalerweise aus vier Bytes der angegebenen Adresse
+                 getrennt durch Punkte wie "192.168.56.101".
+
+[^ipv6_address]: Eine IPv6-Adresse (Internet Protocol Version 6) besteht in der Regel aus acht Hexadezimalgruppen, welche
+                 durch Doppelpunkte getrennte Ziffern sind, wie "2001: 0db8: 85a3: 0000: 0000: 8a2e: 0370: 7334".
+
+[^ipvfuture_address]: IPvFuture ist in Abschnitt 3.2.2 von RFC 3986 definiert.
+
+[^ipv6literal_address]: Eine wörtliche IPv6-Adresse ist eine Änderung einer üblichen IPv6-Adresse für die Verwendung innerhalb einer URL.
+                  (Das Problem bei den ursprünglichen IPv6-Adressen besteht darin, dass die Zeichen ":" und "." in URLs Trennzeichen sind.)
+
+Öffentliche Methoden, die vom Validator @`Ip` bereitgestellt werden, sind in Tabelle 9.3 aufgeführt:
+
+{title="Tabelle 9.3. Öffentliche Methoden des Validators IP"}
+|---------------------------|---------------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 															|
+|---------------------------|---------------------------------------------------------------------------|
+| `__construct($options)`	| Konstrutor des Validator. Akzeptiert ein Liste von Optionen. 				|
+|---------------------------|---------------------------------------------------------------------------|
+| `isValid($value)` 		| Gibt `true` zurück, wenn und nur wenn value eine gültige IP-Adresse ist. 	|
+|---------------------------|---------------------------------------------------------------------------|
+| `getMessages()` 			| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein Array mit	|
+|							| Fehlermeldungen zurück. 													|
+|---------------------------|---------------------------------------------------------------------------|
+| `setOptions($ options)` 	| Setzt die Prüfoptionen. 													|
+|---------------------------|---------------------------------------------------------------------------|
+
+Die Methode `setOptions()` bietet die Möglichkeit, zulässige Arten von IP-Adressen festzulegen:
+ 
+  * `allowipv4`, um IPv4-Adressen zuzulassen;
+  * `allowipv6`, um IPv6-Adressen zuzulassen;
+  * `allowipvfuture`, um IPvFuture-Adressen zuzulassen;
+  * `allowliteral`, um IPv6-Literaladressen zuzulassen.
+  
+Standardmäßig sind alle der obigen Optionen zulässig, mit Ausnahme der IPv6-Literaladresse.
+  
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`Ip` veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\Ip;
+
+// Create Ip validator.
+$validator = new Ip();
+
+// Configure the validator.
+$validator->setOptions([
+    'allowipv4'      => true,  // Allow IPv4 addresses.
+    'allowipv6'      => true,  // Allow IPv6 addresses.
+    'allowipvfuture' => false, // Allow IPvFuture addresses.
+    'allowliteral'   => true,  // Allow IP addresses in literal format.
+  ]);
+
+// Check if input value is a valid IP address (IPv4).
+$isValid = $validator->isValid('192.168.56.101'); // Returns true
+
+// Check if input value is a valid IP address (IPv6).
+$isValid2 = $validator->isValid(
+       '2001:0db8:85a3:0000:0000:8a2e:0370:7334'); // Returns true
+
+// Pass an invalid string (not containing an IP address).       
+$isValid3 = $validator->isValid('abc'); // Returns false
+~~~
+
+#### Validator Hostname
+
+Der Validator @`Hostname`[Zend\Validator\Hostname] überprüft, ob ein bestimmter Wert ein Hostname ist, der zu einer Kategorie
+zulässiger Hostnamentypen gehört. Die Typen sind:
+
+  * ein DNS-Hostname (z. B. "example.com");
+  * eine IP-Adresse (z. B. "192.168.56.101");
+  * einen lokalen Hostnamen (z. B. "localhost").
+
+Die vom Validator bereitgestellten öffentlichen Methoden sind in Tabelle 9.4 aufgeführt:
+
+{title="Tabelle 9.4. Öffentliche Methoden des Validators für Hostnamen"}
+|-----------------------------------|-------------------------------------------------------------------------------|
+| *Methodenname* 					| *Beschreibung* 																|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `__construct($options)` 			| Konstruktor des Validator. Akzeptiert eine Liste der Optionen. 				|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `isValid($value)` 				| Gibt `true` zurück, wenn der Wert ein gültiger Hostname ist. Andernfalls		|
+|									| wird `false` zurückgegeben. 													|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `getMessages()` 					| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein Array mit		|
+|									| Fehlermeldungen zurück. 														|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `setIpValidator($ipValidator)`	| Optional können Sie einen eigenen IP-Adressprüfer festlegen. 					|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `getIpValidator()` 				| Gibt den angefügten IP-Adressvalidator zurück. 								|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `setAllow()`						| Definiert die Arten von Hostnamen, welche zulässig sind. 						|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `getAllow()` 						| Gibt die zulässigen Hostnamentypen zurück. 									|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `useIdnCheck()` 					| Definiert, ob die Prüfung Internationalized Domain Names (IDN) aktiviert ist.	|
+|									| Diese Option ist standardmäßig auf `true` gesetzt. 							|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `getIdnCheck()` 					| Gibt `true` zurück, wenn die IDN-Prüfung aktiviert ist. 						|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `useTldCheck()` 					| Definiert, ob die Prüfung der Top-Level-Domain (TLD) aktiviert ist. Diese		|
+|									| Option ist standardmäßig auf `true` gesetzt. 									|
+|-----------------------------------|-------------------------------------------------------------------------------|
+| `getTldCheck()` 					| Gibt `true` zurück, wenn die TLD-Prüfung aktiviert ist. 						|
+|-----------------------------------|-------------------------------------------------------------------------------|
+
+Mit der Methode `setAllow()` können Sie festlegen, welche Hostnamentypen zulässig sind. Es wird
+eine Kombination der folgenden Konstanten akzeptiert:
+
+  * `ALLOW_DNS` Erlaubt Internet-Domainnamen (z.B. *example.com*);
+  * `ALLOW_IP` Erlaubt IP-Adressen.
+  * `ALLOW_LOCAL` Erlaubt lokale Netzwerknamen (z.B. *localhost*, *www.localdomain*);
+  * `ALLOW_URI` Erlaubt URI-Hostnamen.
+  * `ALLOW_ALL` Erlaubt alle Arten von Hostnamen.
+
+Standardmäßig sind nur Internetdomänennamen zulässig.
+  
+Die Überprüfung des Hostnamens besteht aus mehreren Phasen, von denen einige möglicherweise weggelassen werden
+aufgrund der Validator-Optionen:
+
+1. Wenn der Eingabewert wie eine IP-Adresse aussieht, wird er mit dem internen IP-Adressprüfer überprüft. Es
+   kann der, von der Methode `setIpValidator()`, verwendeten IP-Adressprüfer außer Kraft setzen.
+   
+2. Der Hostname ist in Domänenteile (mit Punkt "." getrennt) getrennt.
+
+3. Die Top-Level-Domain wird anhand der Whitelist der verfügbaren TLDs geprüft. (Sie können diese
+   Überprüfenung mit der Methode `useTldCheck()` deaktivieren.)
+
+4. Jeder Domain-Teil wird anhand der Regeln auf akzeptable Domain-Namen geprüft. Wenn
+   der Domänenname ist eine IDN [^idn] ist, wird er anhand der Regeln für gültige IDNs geprüft. (Sie
+   können die IDN-Prüfung mit der Methode `useIdnCheck()` deaktivieren.)
+   
+[^idn]: Ein internationalisierter Domainname (IDN) ist ein Internetdomänenname,
+        der mindestens ein Etikett enthält, das ganz oder teilweise in einer sprachspezifischen
+		Schrift oder einem Alphabet, wie Arabisch, Chinesisch oder Russisch angezeigt wird.
+   
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`Hostname`[Zend\Validator\Hostname] veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\Hostname;
+
+// Create the Hostname validator.
+$validator = new Hostname();
+
+// Configure the validator.
+$validator->setAllow(Hostname::ALLOW_DNS|Hostname::ALLOW_IP);
+
+// Check a host name.
+$isValid = $validator->isValid('site1.example.com'); 
+// Returns true.
+$isValid2 = $validator->isValid('abc'); 
+// Returns false (not a valid host name).
+~~~
+
+#### Validator Uri
+
+Der Validator @`Uri`[Zend\Validator\Uri] überprüft, ob der Eingabewert eine ist
+URI (Uniform Resource Identifier)​​ [^uri]. Bei einem Fehler können die Fehlermeldungen
+mit der Methode `getMessages()` des Validators abgerufen und angezeigt werden.
+
+I> Verwechseln Sie bitte nicht den Begriff URI. In den meisten Fällen stellen Sie sich URI als eine gewöhnliche URL vor.
+
+[^uri]: Eine URI (Uniform Resource Identifier) ​​ist eine kompakte Folge von Zeichen, welche
+        eine abstrakte oder physische Ressource identifiziert. Ein Uniform Resource Locator (URL)
+        ist eine Art URI. Das bedeutet jedoch nicht, dass alle URIs URLs sind.
+
+Die öffentlichen Methoden, die vom Validator @`Uri`[Zend\Validator\Uri] bereitgestellt werden, sind in Tabelle 9.5 aufgeführt:
+
+{title="Tabelle 9.5. Öffentliche Methoden des Validators Uri"}
+|---------------------------------------|---------------------------------------------------------------|
+| *Methodenname* 						| *Beschreibung* 												|
+|---------------------------------------|---------------------------------------------------------------|
+| `__construct($options)` 				| Konstruktor des Validator. Akzeptiert eine Liste der Optionen.|
+|---------------------------------------|---------------------------------------------------------------|
+| `isValid($value)` 					| Gibt `true` zurück, wenn der Wert eine gültige URI ist.		|
+|										| Andernfalls wird `false` zurückgegeben. 						|
+|---------------------------------------|---------------------------------------------------------------|
+| `getMessages()` 						| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode	|
+|										| ein Array mit Fehlermeldungen zurück. 						|
+|---------------------------------------|---------------------------------------------------------------|
+| `setUriHandler($uriHandler)` 			| Legt das URI-Handler-Objekt für diesen Prüfer fest. 			|
+|---------------------------------------|---------------------------------------------------------------|
+| `getUriHandler()` 					| Gibt das URI-Handler-Objekt zurück. 							|
+|---------------------------------------|---------------------------------------------------------------|
+| `setAllowAbsolute($allowAbsolute)` 	| Sagt dem Prüfer, ob absolute URIs akzeptiert werden sollen.	|
+|---------------------------------------|---------------------------------------------------------------|
+| `getAllowAbsolute()` | Gibt `true` zurück, wenn absolute URIs akzeptiert werden. 						|
+|---------------------------------------|---------------------------------------------------------------|
+| `setAllowRelative($allowRelative)`	| Sagt dem Prüfer, ob relative URIs akzeptiert werden sollen. 	|
+|---------------------------------------|---------------------------------------------------------------|
+| `getAllowRelative()` 					| Gibt `true` zurück, wenn relative URIs akzeptiert werden. 	|
+|---------------------------------------|---------------------------------------------------------------|
+
+Intern verwendet der Validator @`Uri`[Zend\Validator\Uri] ein sogenanntes *URI-Handler-Objekt*. Dieses ist für das
+Analysieren einer URI-Zeichenfolge zuständig. Standardmäßig wird die Klasse @`Zend\Uri\Uri` als URI-Handler verwendet. (Sie können einen
+benutzerdefinierten URI-Handler mit der Methode `setUriHandler()` setzen, wenn Sie möchten.)
+
+Eine URI kann absolut oder relativ sein. Ein absoluter URI ist beispielsweise "http://example.com/blog/2014/02/02/edit", während
+eine relative URI "2014/02/02/edit" lautet. Sie können angeben, ob der Prüfer absolute und/oder relative
+URIs berücksichtigen soll. Dazu verwenden Sie die Methoden `setAllowAbsolute()` und `setAllowRelative()`. Standardmäßig
+werden beide als akzeptable URI-Typen behandelt.
+
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`Uri`[Zend\Validator\Uri] veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\Uri;
+
+// Create the Uri validator.
+$validator = new Uri();
+
+// Configure the validator.
+$validator->setAllowAbsolute(true);
+$validator->setAllowRelative(true);
+
+// Check an URI.
+$isValid = $validator->isValid('http://site1.example.com/application/index/index'); 
+// Returns true.
+$isValid2 = $validator->isValid('index/index'); 
+// Returns true.
+~~~
+
+#### Validator Date
+ 
+Der Validator @`Date`[Zend\Validator\Date] prüft, ob die Eingabedaten ein Datum
+in einem bestimmten Format sind. Bei einem Fehler können Fehlermeldungen des Validators mit der
+Methode `getMessages()` abgerufen werden.
+ 
+Öffentliche Methoden, die vom Validator @`Date`[Zend\Validator\Date] bereitgestellt werden, sind in Tabelle 9.6 aufgeführt:
+
+{title="Tabelle 9.6. Öffentliche Methoden des Validators Date"}
+|---------------------------|-------------------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 																|
+|---------------------------|-------------------------------------------------------------------------------|
+| `__construct($options)`	| Konstrutor des Validators. Akzeptiert eine Liste von Optionen. 				|
+|---------------------------|-------------------------------------------------------------------------------|
+| `isValid($value)` 		| Gibt `true` zurück, wenn der Wert ein String ist und ein Datum im erwarteten	|
+|							| Format enthält. Andernfalls wird `false` zurückgegeben. 						|
+|---------------------------|-------------------------------------------------------------------------------|
+| `getMessages()` 			| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein Array mit		|
+|							| Fehlermeldungen zurück. 														|
+|---------------------------|-------------------------------------------------------------------------------|
+| `setFormat($format)` 		| Setzt ein Datumsformat für die Prüfung. 										|
+|---------------------------|-------------------------------------------------------------------------------|
+| `getFormat()` 			| Gibt das Datumsformat für die Prüfung zurück. 								|
+|---------------------------|-------------------------------------------------------------------------------|
+
+Um das Datumsformat für die Prüfung zu setzen, können Sie die Methode `setFormat()` verwenden.
+
+I> Intern verwendet der Filter @`DateTimeFormatter` die Klasse `DateTime` aus der PHP-Standardbibliothek zum Konvertieren
+I> und Formatieren des Datums. Die verfügbaren Datumsformate finden Sie in der [PHP-Dokumentation](http://php.net/manual/de/datetime.formats.php) 
+der Klasse `DateTime`.
+ 
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`Date`[Zend\Validator\Date] veranschaulicht.
+ 
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\Date;
+
+// Create validator instance.
+$validator = new Date();
+
+// Configure validator.
+$validator->setFormat('Y-m-d');
+
+// Check if the input value is a date having expected format.
+$isValid = $validator->isValid('2014-04-04'); // Returns true.
+$isValid2 = $validator->isValid('April 04, 2014'); // Returns false (format is unexpected).
+~~~
+
+#### Validator Regex
+
+Mit diesem Validator können Sie überprüfen, ob eine bestimmte Zeichenfolge einem regulären Ausdruck entspricht.
+Der Validator gibt `true` zurück, wenn die Zeichenfolge mit dem regulären Ausdruck übereinstimmt. Andernfalls wird `false` zurückgegeben.
+Bei einem Fehler können Fehlermeldungen mit der Methode `getMessages()` abgerufen werden.
+
+Die vom Validator @`Regex`[Zend\Validator\Regex] bereitgestellten öffentlichen Methoden sind in Tabelle 9.7 aufgeführt:
+
+{title="Tabelle 9.7. Öffentliche Methoden des Validators Regex"}
+|---------------------------|-----------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 														|
+|---------------------------|-----------------------------------------------------------------------|
+| `__construct($options)`	| Konstruktor des Validators. Akzeptiert eine Liste von Optionen. 		|
+|---------------------------|-----------------------------------------------------------------------|
+| `isValid($value)` 		| Gibt genau dann `true` zurück, wenn `$value` mit dem angegebenen		|
+|							| Suchmuster eines regulären Ausdrucks übereinstimmt. 					|
+|---------------------------|-----------------------------------------------------------------------|
+| `getMessages()` 			| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein Array	|
+|							| mit Fehlermeldungen zurück. 											|
+|---------------------------|-----------------------------------------------------------------------|
+| `setPattern($pattern)` 	| Setzt das Suchmuster als regulären Ausdruck. 							|
+|---------------------------|-----------------------------------------------------------------------|
+| `getPattern()` 			| Gibt das das Suchmuster als regulären Ausdruck zurück. 				|
+|---------------------------|-----------------------------------------------------------------------|
+
+Mit der Methode `setPattern()` können Sie den regulären Ausdruck für die Prüfung setzen.
+
+T> Für Syntax und Beispiele für reguläre Ausdrücke wird empfohlen, sich den Abschnitt *PCRE Patterns*
+T> in der [PHP-Dokumentation](http://php.net/manual/de/pcre.pattern.php) anzuschauen.
+
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`Regex`[Zend\Validator\Regex] veranschaulicht. Es verwendet den
+regulärer Ausdruck, um zu überprüfen, ob die Eingabezeichenfolge eine gültige IPv4-Adresse ist (normalerweise eine solche Adresse
+besteht aus vier Gruppen von Ziffern, die durch Punkte getrennt sind).
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\Regex;
+
+// Create Regex validator.
+$validator = new Regex();
+
+// Set regular expression to check for an IP address.
+$validator->setPattern('\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b');
+
+// Check for regular expression match.
+$isValid = $validator->isValid("127.0.0.1"); // returns true.
+$isValid2 = $validator->isValid("123"); // returns false.
+~~~
+
+### Validatoren zur Überprüfung, ob ein numerischer Wert in einem bestimmten Bereich liegt
+
+In diesem Abschnitt betrachten wir Verwendungsbeispiele der Validatoren aus der Gruppe von
+Validatoren zum Prüfen, ob der Eingabewert in einem bestimmten Bereich liegt.
+
+#### Validator NotEmpty
+
+Der Validator @`NotEmpty` ermöglicht die Überprüfung, ob der Eingabewert nicht leer ist. Das ist oft
+nützlich bei der Arbeit mit Formularelementen oder anderen Benutzereingaben. So können Sie sicher gehen,
+dass erforderliche Elemente mit Werten gefüllt sind.
+
+Die vom Validator @`NotEmpty` bereitgestellten öffentlichen Methoden sind in Tabelle 9.8 aufgeführt:
+
+{title="Tabelle 9.8. Öffentliche Methoden des Validators NotEmpty"}
+|---------------------------|-------------------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 																|
+|---------------------------|-------------------------------------------------------------------------------|
+| `__construct($options)`	| Konstruktor des Validators. Akzeptiert eine Liste mit Optionen. 				|
+|---------------------------|-------------------------------------------------------------------------------|
+| `isValid($value)` 		| Gibt nur dann `true` zurück, wenn `$value` kein leerer Wert ist. 				|
+|---------------------------|-------------------------------------------------------------------------------|
+| `getMessages()` 			| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein Array mit		|
+|							| Fehlermeldungen zurück. 														|
+|---------------------------|-------------------------------------------------------------------------------|
+| `setType($type)` 			| Legen Sie die Werttypen fest, die als leere Werte betrachtet werden sollen. 	|
+|---------------------------|-------------------------------------------------------------------------------|
+| `getType()`				| Gibt die Typen zurück. 														|
+|---------------------------|-------------------------------------------------------------------------------|
+| `getDefaultType()` 		| Gibt die Standardtypen zurück. 												|
+|---------------------------|-------------------------------------------------------------------------------|
+
+Die Methode `setType()` gibt an, welche Variablentypen als leerer Wert betrachtet werden sollen. Diese Methode akzeptiert
+ein Argument `$type`, das entweder eine ODER-Verknüpfung der in Tabelle 9.9 aufgeführten Konstanten ist oder ein
+Array, das die literalen Entsprechungen dieser Konstanten enthält.
+
+{title="Tabelle 9.9. Typkonstanten"}
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| *Konstante*		| *Numerischer Wert*	| *Wörtliche Entsprechung*	| *Beschreibung* 													|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `BOOLEAN` 		| 1 					| "boolean" 				| Betrachtet boolean `false` als leeren Wert. 						|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `INTEGER` 		| 2 					| "integer" 				| Betrachtet die Ganzzahl 0 als leeren Wert. 						|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `FLOAT` 			| 4 					| "float" 					| Betrachtet die dezimale Zahl 0.0 als leeren Wert. 				|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `STRING` 			| 8 					| "string" 					| Betrachtet den leeren String '' als leeren Wert. 					|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `ZERO` 			| 16 					| "zero" 					| Betrachtet einen String, der das einzelne Zeichen Null ('0')		|
+|																		||| enthält, als leeren Wert. 										|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `EMPTY_ARRAY` 	| 32 					| "array" 					| Betrachtet ein leeres Array als leeren Wert. 						|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `NULL` 			| 64 					| "null" 					| Betrachtet `null` als leeren Wert. 								|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `PHP` 			| 127 					| "php" 					| Betrachtet den Wert als leer, wenn die PHP-Funktion `empty()`		|
+|																		||| `true` zurückgeben würde. 										|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `SPACE` 			| 128 					| "space" 					| Betrachtet einen String, der nur Leerzeichen enthält,				|
+|																		||| als leeren Wert. 												|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `OBJECT` 			| 256 					| "object" 					| Gibt `true` zurück. `false` wird zurückgegeben, wenn Objekt		|
+|																		||| nicht erlaubt ist, aber ein Objekt angegeben ist. 				|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `OBJECT_STRING` 	| 512 					| "objectstring" 			| Gibt `false` zurück, wenn ein Objekt angegeben wurde und die		|
+|																		||| Methode `__toString()` einen leeren String zurückgibt. 			|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `OBJECT_COUNT` 	| 1024 					| "objectcount" 			| Gibt `false` zurück, wenn ein Objekt angegeben wird, es hat eine	|
+|																		||| Schnittstelle `Countable` besitzt und die Anzahl der enthaltenen|
+|																		||| Elemente ist 0. 												|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+| `ALL` 			| 2047 					| "all" 					| Betrachtet alle obigen Typen als leere Werte. 					|
+|-------------------|-----------------------|---------------------------|-------------------------------------------------------------------|
+
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`NotEmpty` veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\NotEmpty;
+
+// Create validator instance.
+$validator = new NotEmpty();
+
+// Configure validator.
+$validator->setType(NotEmpty::ALL);
+
+// Check if input value not empty.
+$isValid1 = $validator->isValid('some string'); // returns true
+$isValid2 = $validator->isValid(''); // returns false 
+$isValid3 = $validator->isValid(0); // returns false
+~~~
+
+#### Validator Between
+
+Der Validator @`Between`[Zend\Validator\Between] prüft, ob eine Zahl in einem bestimmten Bereich (min, max) liegt, entweder inklusive
+(standardmäßig) oder ausschließlich.
+
+Die öffentlichen Methoden des Validators @`Between`[Zend\Validator\Between] sind in Tabelle 9.10 aufgeführt:
+
+{title="Tabelle 9.10. Öffentliche Methoden des Validators Between"}
+|-------------------------------|-------------------------------------------------------------------|
+| *Methodenname* 				| *Beschreibung* 													|
+|-------------------------------|-------------------------------------------------------------------|
+| `__construct($options)` 		| Konstruktor des Validators. Akzeptiert eine Liste von Optionen. 	|
+|-------------------------------|-------------------------------------------------------------------|
+| `isValid($value)` 			| Gibt genau dann `true` zurück, wenn die Länge des Werts innerhalb	|
+|								| des angegebenen Bereichs liegt. 									|
+|-------------------------------|-------------------------------------------------------------------|
+| `getMessages()` 				| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein	|
+|								| Array mit Fehlermeldungen zurück. 								|
+|-------------------------------|-------------------------------------------------------------------|
+| `setMin($min)` 				| Legt die Mindestgrenze fest. 										|
+|-------------------------------|-------------------------------------------------------------------|
+| `getMin ()` 					| Gibt die Mindestgrenze zurück. 									|
+|-------------------------------|-------------------------------------------------------------------|
+| `setMax($max)` 				| Legt die Höchstgrenze fest. 										|
+|-------------------------------|-------------------------------------------------------------------|
+| `getMax()` 					| Gibt die Höchstgrenze zurück. 									|
+|-------------------------------|-------------------------------------------------------------------|
+| `setInclusive($inklusive)`	| Legt fest, ob verglichen werden soll, wenn der Wert einschließlich|
+|								| der angegebenen Grenzen liegt. 									|
+|-------------------------------|-------------------------------------------------------------------|
+| `getInclusive()` 				| Gibt die Inclusive-Option zurück. 								|
+|-------------------------------|-------------------------------------------------------------------|
+
+Der Bereich kann mit den Methoden `setMin()` und `setMax()` festgelegt werden.
+
+Standardmäßig führt der Validator Inklusivvergleiche durch (um zu überprüfen, ob der Wert in dem angegebenen Bereich gehört, vergleicht er den Wert
+mit der unteren Grenze auf größer oder gleich und mit dem Wert der oberen Grenze). Sie
+können dies mit der Methode `setInclusive ()` ändern. Dem Validator wird mitgeteilt, ob er inklusiv vergelichen soll
+(übergeben Sie als Argument `true`) oder exklusive Vergleiche (übergeben Sie als Argument `false`).
+
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`Between`[Zend\Validator\Between] veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\Between;
+
+// Create validator instance.
+$validator = new Between();
+
+// Configure validator.
+$validator->setMin(1);
+$validator->setMax(10);
+$validator->setInclusive(true);
+
+$isValid1 = $validator->isValid(5); // returns true.
+$isValid2 = $validator->isValid(10); // returns true.
+$isValid3 = $validator->isValid(0); // returns false (value is too small).
+$isValid4 = $validator->isValid(15); // returns false (value is too big).
+~~~
+
+#### Validator InArray
+
+Der Validator @`InArray` überprüft, ob der Eingabewert in einem Array als Wert enthalten ist.
+Die vom Validator @`InArray` bereitgestellten öffentlichen Methoden sind in Tabelle 9.11 aufgeführt:
+
+{title="Tabelle 9.11. Öffentliche Methoden des Validators InArray"}
+|-------------------------------|---------------------------------------------------------------------------|
+| *Methodenname* 				| *Beschreibung* 															|
+|-------------------------------|---------------------------------------------------------------------------|
+| `__construct($options)` 		| Konstruktor des Validators. Akzeptiert eine Liste von Optionen. 			|
+|-------------------------------|---------------------------------------------------------------------------|
+| `isValid($value)` 			| Gibt `true` zurück, wenn der Wert in einem Array als Wert enthalten ist.	|
+|-------------------------------|---------------------------------------------------------------------------|
+| `getMessages()` 				| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein Array		|
+|								| mit Fehlermeldungen zurück. 												|
+|-------------------------------|---------------------------------------------------------------------------|
+| `setHaystack($haystack)` 		| Legt das Array fest, in dem gesucht werden soll. 							|
+|-------------------------------|---------------------------------------------------------------------------|
+| `getHaystack()` 				| Gibt das Array der zulässigen Werte zurück. 								|
+|-------------------------------|---------------------------------------------------------------------------|
+| `setStrict( strict)` 			| Stellt den strengen Vergleichsmodus ein. 									|
+|-------------------------------|---------------------------------------------------------------------------|
+| `getStrict()` 				| Gibt zurück, ob der strikte Vergleichsmodus aktiviert ist? 				|
+|-------------------------------|---------------------------------------------------------------------------|
+| `setRecursive($rekursive)`	| Weist den Prüfer an, rekursiv zu suchen. 									|
+|-------------------------------|---------------------------------------------------------------------------|
+| `getRecursive()` 				| Ist die rekursive Suche aktiviert? 										|
+|-------------------------------|---------------------------------------------------------------------------|
+
+Mit der Methode `setHaystack()` können Sie das Array der zulässigen Werte festlegen. Die Methode `isValid ()` wird
+dieses Array nach dem Vorhandensein der Eingabe `$value` durchsuchen.
+
+Wenn das Array verschachtelte Werte enthält und Sie rekursiv in den Array suchen möchten, verwenden Sie
+Methode die `setRecursive()`. Diese Methode nimmt als Argument ein boolesches Flag entgegen. Wenn das Flag `true` ist, dann
+wird die Suche rekursiv ausgeführt. Andernfalls werden die verschachtelten Ebenen ignoriert.
+
+Die Methode `setStrict()` bietet dem Validator die Möglichkeit, den Eingangswert auf geleichen Typ mit
+den Werten im Array zu vergleichen. Dies kann eine Kombination der folgenden Konstanten sein:
+
+  * `COMPARE_NOT_STRICT` Führt keine strenge Prüfung des Variablentyps durch.
+  * `COMPARE_NOT_STRICT_AND_PREVENT_STR_TO_INT_VULNERABILITY` Führt keine strikte Überprüfung von
+     Variablentyp durch, verhindert jedoch falsch positive Vergleiche von Zeichenfolge zu Ganzzahlen (z.B. `"asdf" == 0`).
+	Dies ist die Standardoption.
+  * `COMPARE_STRICT` Überprüft den Variablentyp und den Wert.
+
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`InArray` veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\InArray;
+
+// Create validator instance.
+$validator = new InArray();
+
+// Configure validator.
+$validator->setHaystack([1, 3, 5]);
+
+// Perform validation.
+$isValid1 = $validator->isValid(1); // returns true.
+$isValid2 = $validator->isValid(2); // returns false.
+~~~
+
+#### StringLength Validator
+
+Der Validator @`StringLength` prüft, ob die Länge des Eingabestrings einschließlich des angegebenen Bereichs liegt.
+Er gibt genau dann `true` zurück, wenn die Zeichenfolgenlänge mindestens die Option `min` entspricht und
+nicht größer als die Option `max` ist (wenn die Option `max` nicht Null ist).
+
+Die vom Validator @`StringLength` bereitgestellten öffentlichen Methoden sind in Tabelle 9.12 aufgeführt:
+
+{title="Tabelle 9.12. Öffentliche Methoden des Validators StringLength"}
+|---------------------------|-------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 													|
+|---------------------------|-------------------------------------------------------------------|
+| `__construct($options)` 	| Konstruktor des Validators. Akzeptiert eine Liste von Optionen.	|
+|---------------------------|-------------------------------------------------------------------|
+| `isValid($value)` 		| Gibt genau dann `true` zurück, wenn die Länge des Werts innerhalb	|
+|							| des angegebenen Bereichs liegt. 									|
+|---------------------------|-------------------------------------------------------------------|
+| `getMessages()` 			| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein	|
+|							| Array mit Fehlermeldungen zurück. 								|
+|---------------------------|-------------------------------------------------------------------|
+| `setMin($min)` 			| Legt die Mindestlänge fest. 										|
+|---------------------------|-------------------------------------------------------------------|
+| `getMin()` 				| Gibt das Mindestlänge zurück. 									|
+|---------------------------|-------------------------------------------------------------------|
+| `setMax($max)` 			| Legt die maximale Länge fest. 									|
+|---------------------------|-------------------------------------------------------------------|
+| `getMax()` 				| Gibt die maximale Länge zurück. 									|
+|---------------------------|-------------------------------------------------------------------|
+| `setEncoding($encoding)`	| Legt den zu verwendeten Zeichensatz fest. 						|
+|---------------------------|-------------------------------------------------------------------|
+| `getEncoding()` 			| Gibt den verwendeten Zeichensatz zurück. 							|
+|---------------------------|-------------------------------------------------------------------|
+
+Standardmäßig betrachtet der Validator @`StringLength` eine beliebige Stringlänge als gültig.
+Verwenden Sie die Methoden `setMin()` und/oder `setMax()`, um eine untere und obere Grenze für die zulässige Länge 
+einer Zeichenfolge festzulegen. Es gibt drei Möglichkeiten, dies zu tun:
+
+  * Verwenden Sie nur die Methode `setMin()`, um Strings mit einer Mindestlänge zu begrenzen. Die obere Grenze ist dann
+    frei;
+  * Verwenden Sie nur die Methode `setMax()`, um Strings mit einer Mindestlänge von Null und einer Obergrenze mit einer
+    maximale Länge zu zulassen;
+  * Verwenden Sie die Methoden `setMin()` und `setMax()`, um Strings mit einer Länge zwischen einer unteren und oberen Grenze
+    zu zulassen.
+
+Standardmäßig verwendet die PHP-Engine die UTF-8-Codierung für Strings. Wenn Ihre Eingabezeichenfolge eine andere
+Kodierung verwendet, sollten Sie die Kodierung mit der Methode des Validators `setEncoding()` angeben.
+
+Nachfolgend finden Sie ein Codebeispiel, das die Verwendung des Validators @`StringLength` veranschaulicht.
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+use Zend\Validator\StringLength;
+
+// Create validator instance.
+$validator = new StringLength();
+
+// Configure the validator.
+$validator->setMin(1);
+$validator->setMax(10);
+
+$isValid1 = $validator->isValid("string"); // returns true.
+$isValid2 = $validator->isValid(""); // returns false (value is too short).
+$isValid3 = $validator->isValid("a very long string"); // returns false (value is too long).
+~~~
+
+### Validatoren in einer Liste organisieren
+
+Validatoren können in einer Reihenfolge organisiert werden. Dies wird durch die Klasse @`ValidatorChain`[Zend\Validator\ValidatorChain] erreicht.
+Wenn ein solcher zusammengesetzter Validator ausgeführt wird, wird der Eingabewert der Reihe nach an alle Validatoren übergeben. Die Methode
+`isValid()` des Validators @`ValidatorChain`[Zend\Validator\ValidatorChain] gibt `true` zurück, wenn alle Validatoren in der Liste `true`
+zurückgeben. Andernfalls wird `false` zurückgegeben.
+
+I> Die Klasse @`ValidatorChain`[Zend\Validator\ValidatorChain] wird intern von der Klasse @`InputFilter`[Zend\InputFilter\InputFilter] zum Speichern der
+I> Instanzen der Validatoren verwendet, die an das Feld eines Formularmodells angehängt sind.
+
+Öffentliche Methoden, die von der Klasse @`ValidatorChain`[Zend\Validator\ValidatorChain] bereitgestellt werden, sind in Tabelle 9.13 dargestellt:
+
+{title="Tabelle 9.13. Öffentliche Methoden des Validators ValidatorChain"}
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| *Methodenname* 											| *Beschreibung* 												|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `isValid($value)` 										| Gibt `trie` zurück, wenn alle Validatoren in der Liste `true`	|
+|															| zurückgeben.													|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `getMessages()` 											| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode	|
+|															| ein Array mit Fehlermeldungen zurück.							|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `getValidators()` 										| Gibt das Array von Validatoren als Liste zurück. 				|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `count()`													| Gibt die Anzahl der Validatoren in der Liste zurück. 			|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `attach($validator, $breakChainOnFailure)` 				| Fügt einen Validator am Ende der Liste hinzu. 				|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `prependValidator($validator, $breakChainOnFailure)` 		| Fügt einen Validator am Anfang der Liste hinzu. 				|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `attachByName($name, $options, $breakChainOnFailure)` 	| Verwendet den Plugin-Manager, um einen Validator nach Namen	|
+|															| am Ende der Liste hinzu. 										|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `prependByName($name, $options, $breakChainOnFailure)`	| Verwendet den Plugin-Manager, um einen Validator nach Namen	|
+|															| am Anfang der Liste hinzu. 									|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+| `merge($validatorChain)` 									| Fügt die Validator-Liste mit dem in Parameter angegebenen		|
+|															| Validatoren zusammen. 										|
+|-----------------------------------------------------------|---------------------------------------------------------------|
+
+Ein Beispiel für eine Liste von Validatoren ist in Abbildung 9.2 dargestellt. Sie besteht aus dem Validator @`NotEmpty`, gefolgt von
+dem Validator @`StringLength`, auf den wiederum der Validator @`Date`[Zend\Validator\Date] folgt. In dieser Liste
+wird der Validator @`NotEmpty` ausgeführt, um zu prüfen, ob der Wert ein nicht leerer Wert ist.
+Der Validator @`StringLength` überprüft, ob die Länge des Eingabe-Strings im Bereich (1, 16) liegt.
+Und schließlich wird der Validator @`Date`[Zend\Validator\Date] ausgeführt, um zu prüfen, ob der Eingabewert ein Datum im Format "YYYY-MM-DD" ist.
+
+![Abbildung 9.2. Validator-Liste](images/validators/validator_chain.png)
+
+Um eine Liste von Validatoren, wie in Abbildung 9.2, aufzubauen, können wir den folgenden Code verwenden:
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+// Instantiate the validator chain.
+$validator = new \Zend\Validator\ValidatorChain();
+
+// Insert validators into validator chain.
+$validator->attachByName('NotEmpty');
+$validator->attachByName('StringLength', ['min'=>1, 'max'=>16]);
+$validator->attachByName('Date', ['format'=>'Y-m-d']);
+
+// Execute all validators in the chain.
+$isValid = $validator->isValid('2014-04-04'); // Returns true.
+~~~
+
+### Benutzerdefinierte Validierung mit dem Callback Validator
+
+Der Validator @`Callback`[Zend\Validator\Callback] kann ein Wrapper für Ihren benutzerdefinierten Validierungsalgorithmus sein. Zum Beispiel kann dieser
+nützlich sein, wenn ein Standardprüfer nicht geeignet ist und Sie Ihre eigene Prüfungregel an den Daten durchführen müssen.
+Die vom Validator @`Callback`[Zend\Validator\Callback] angegebenen öffentlichen Methoden sind in Tabelle 9.14 aufgeführt.
+
+{title="Tabelle 9.14. Öffentliche Methoden des Validators Callback"}
+|-----------------------------------|---------------------------------------------------------------|
+| *Klassenname* 					| *Beschreibung* 												|
+|-----------------------------------|---------------------------------------------------------------|
+| `isValid($value, $context)` 		| Führt die Callback-Funktion als Prüfung aus. 					|
+|-----------------------------------|---------------------------------------------------------------|
+| `getMessages()` 					| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode	|
+|									| ein Array mit Fehlermeldungen zurück. 						|
+|-----------------------------------|---------------------------------------------------------------|
+| `setCallback($callback)` 			| Setzt eine Callback-Funktion für diesen Validator. 			|
+|-----------------------------------|---------------------------------------------------------------|
+| `getCallback()` 					| Gibt die Callback-Funktion zurück. 							|
+|-----------------------------------|---------------------------------------------------------------|
+| `setCallbackOptions($options)`	| Setzt Options-Parameter für die Callback-Funktion. 			|
+|-----------------------------------|---------------------------------------------------------------|
+| `getCallbackOptions()` 			| Gibt die Options-Parameter für die Callback-Funktion zurück. 	|
+|-----------------------------------|---------------------------------------------------------------|
+
+Wie Sie der Tabelle entnehmen können, stellt der Validator @`Callback`[Zend\Validator\Callback] die Methoden `setCallback()` und `setCallbackOptions()` bereit,
+mit denen eine Callback-Funktion oder Klassenmethode festgelegt kann und (optional) ihr einen oder mehrere Parameter übergeben werden können.
+
+#### Beispiel
+
+Um die Verwendung des Validators @`Callback`[Zend\Validator\Callback] zu demonstrieren, fügen Sie den Validator für die Telefonnummer
+unserer Formularklasse `ContactForm` hinzu. Der Validator würde eine nach Standort eingegebene Telefonnummer des Besuchers überprüfen.
+
+Der Validator muss in der Lage sein, nach zwei gängigen Rufnummernformaten zu suchen:
+
+  * internationales Format mit der Bezeichnung "1 (234) 567-8901";
+  * und lokales Format, das wie "567-8901" aussieht.
+
+Da ZF3 keinen Standardvalidator für die Durchführung einer solchen Telefonfilterung bietet,
+verwenden wir den Wrapper-Validator @`Callback`[Zend\Validator\Callback]. Dazu nehmen wir folgende
+Änderungen am Code unserer Klasse `ContactForm` vor:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+// ...
+class ContactForm extends Form
+{    
+  // ..
+  protected function addElements() {
+    // ...
+	
+    // Add "phone" field
+    $this->add([
+        'type'  => 'text',
+        'name' => 'phone',
+        'attributes' => [                
+          'id' => 'phone'
+        ],
+        'options' => [
+          'label' => 'Your Phone',
+        ],
+      ]);
+  }
+    
+  private function addInputFilter() 
+  {
+    // ...
+        
+    $inputFilter->add([
+            'name'     => 'phone',
+            'required' => true,                
+            'validators' => [
+                [
+                  'name' => 'Callback',
+                  'options' => [
+                     'callback' => [$this, 'validatePhone'],
+                     'callbackOptions' => [
+                     'format' => 'intl'
+                  ]
+                ]                        
+              ]                    
+            ]
+        );
+  }
+        
+  // Custom validator for a phone number.
+  public function validatePhone($value, $context, $format) 
+  {
+    // Determine the correct length and pattern of the phone number,
+    // depending on the format.
+    if($format == 'intl') {
+      $correctLength = 16;
+      $pattern = '/^\d\ (\d{3}\) \d{3}-\d{4}$/';
+    } else { // 'local'
+      $correctLength = 8;
+      $pattern = '/^\d{3}-\d{4}$/';
+    }
+                
+    // Check phone number length.
+    if(strlen($value)!=$correctLength)
+      return false;
+
+    // Check if the value matches the pattern.
+    $matchCount = preg_match($pattern, $value);
+        
+    return ($matchCount!=0)?true:false;
+  }
+}
+~~~
+
+Im obigen Code erstellen wir das Feld `phone` in unserer Klasse `ContactForm`
+(Wenn Sie bereits ein solches Feld haben, ignorieren Sie dies einfach).
+
+In den Zeilen 26-40 fügen wir den Validator @`Callback`[Zend\Validator\Callback] mit dem Eingabefilter 
+der Validator-Liste für das Feld "phone" hinzu.
+
+In den Zeilen 44-64 haben wir die Callback-Methode `validatePhone()`. Die Methode akzeptiert drei
+Argumente: Der Parameter `$value` ist die zu überprüfende Telefonnummer, der Parameter `$context` enthält
+die Werte jedes Felds des Formulars (es kann für einige Validatoren erforderlich sein, die sich auf die Werte anderer Formularfelder beziehen);
+und den Parameter `$format` ist das erwartete Format der Telefonnummer ("intl" oder "local").
+
+Innerhalb der Callback-Methode führen wir Folgendes aus:
+
+ 1. Berechnen die korrekte Länge der Telefonnummers und prüfen diese, ob die Länge der Telefonnummer
+    für ausgewähltes Rufnummernformat korrekt ist.
+ 2. Wir vergleichen die Telefonnummer mit dem regulären Ausdruck für das ausgewählte Telefonformat.
+
+## Eigene Validator schreiben
+
+Eine Alternative zur Verwendung des Validators @`Callback`[Zend\Validator\Callback] ist das Schreiben einer eigenen Validator-Klasse.
+Diese muss die Schnittstelle @`ValidatorInterface`[Zend\Validator\ValidatorInterface] implementieren. Dann kann dieser Validator in
+Formularen Ihrer Webanwendung verwendet werden.
+
+Um zu zeigen, wie Sie Ihren eigenen Validator erstellen, schreiben wir die Klasse `PhoneValidator`, die die Kapselung
+des Algorithmus zur Überprüfung einer Telefonnummer enthält, den wir für das Validierungsbeispiel @`Callback`[Zend\Validator\Callback] verwendet haben.
+
+I> Wie Sie sich vielleicht erinnern, ist die Basisklasse für alle Standardprüfer die Klasse @`AbstractValidator`.
+I> In analoger Weise leiten wir auch unseren benutzerdefinierten Validator `PhoneValidator` von dieser Basisklasse ab.
+
+In unserer Validator-Klasse `PhoneValidator` planen wir die folgenden Methoden (siehe Tabelle 9.15):
+
+{title="Tabelle 9.15. Öffentliche Methoden des Validators PhoneValidator"}
+|---------------------------|-------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 													|
+|---------------------------|-------------------------------------------------------------------|
+| `__construct($options)`	| Konstruktor. Akzeptiert ein optionales Argument `$options`, das	|
+|							| zum sofortigen Festlegen der Validator-Optionen erforderlich ist. |
+|---------------------------|-------------------------------------------------------------------|
+| `setFormat($format)` 		| Setzt die Option für das Telefonformat. 							|
+|---------------------------|-------------------------------------------------------------------|
+| `getFormat()` 			| Gibt die Option für das Telefonformat zurück. 					|
+|---------------------------|-------------------------------------------------------------------|
+| `isValid($value)` 		| Gibt `true` zurück, wenn der Wert eine gültige Telefonnummer ist.	|
+|							| Ansonsten wird `false` zurückgegeben. 							|
+|---------------------------|-------------------------------------------------------------------|
+| `getMessages()` 			| Wenn die Überprüfung fehlgeschlagen ist, gibt diese Methode ein	|
+|							| Array mit Fehlermeldungen zurück.									|
+|---------------------------|-------------------------------------------------------------------|
+
+Für den `PhoneValidator` werden drei mögliche Fehlermeldungen angezeigt:
+
+  * Wenn ein nicht-skalarer Wert an den Validator übergeben wird, wird eine Fehlermeldung generiert
+    "Die Telefonnummer muss ein Skalarwert sein" ("The phone number must be a scalar value");
+  * Wenn das internationale Telefonformat ausgewählt ist und die eingegebene Telefonnummer nicht diesem Format entspricht,
+    wird die Meldung generiert: "Die Telefonnummer muss im internationalen Format sein"
+    ("The phone number must be in international format").
+  * Wenn das lokale Telefonformat ausgewählt ist und die eingegebene Telefonnummer nicht dem Format entspricht,
+    wird die Meldung generiert: "Die Telefonnummer muss im lokalen Format sein"
+    "The phone number must be in local format".
+
+Erstellen Sie zu Beginn die Datei *PhoneValidator.php* im Verzeichnis *Validator* im
+Quellverzeichnis des Moduls [^phone_validator_service]. Fügen Sie den folgenden Code
+in diese Datei ein:
+
+[^phone_validator_service]: Die Klasse `PhoneValidator` kann als Servicemodell betrachtet werden, da dies das Ziel hat
+       Daten verarbeiten und nicht zu speichern. Standardmäßig speichern wir benutzerdefinierte Validatoren im Verzeichnis `Validator`.
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+namespace Application\Validator;
+
+use Zend\Validator\AbstractValidator;
+
+// This validator class is designed for checking a phone number for 
+// conformance to the local or to the international format.
+class PhoneValidator extends AbstractValidator 
+{
+  // Phone format constants.
+  const PHONE_FORMAT_LOCAL = 'local'; // Local phone format.
+  const PHONE_FORMAT_INTL  = 'intl';  // International phone format.
+    
+  // Available validator options.
+  protected $options = [
+    'format' => self::PHONE_FORMAT_INTL
+  ];
+    
+  // Validation failure message IDs.
+  const NOT_SCALAR  = 'notScalar';
+  const INVALID_FORMAT_INTL  = 'invalidFormatIntl';
+  const INVALID_FORMAT_LOCAL = 'invalidFormatLocal';
+    
+  // Validation failure messages.
+  protected $messageTemplates = [
+    self::NOT_SCALAR  => "The phone number must be a scalar value",
+    self::INVALID_FORMAT_INTL => "The phone number must be in international format",
+    self::INVALID_FORMAT_LOCAL => "The phone number must be in local format",
+  ];
+    
+  // Constructor.
+  public function __construct($options = null) 
+  {
+    // Set filter options (if provided).
+    if(is_array($options)) {
+            
+      if(isset($options['format']))
+        $this->setFormat($options['format']);
+      }
+        
+      // Call the parent class constructor.
+      parent::__construct($options);
+  }
+    
+  // Sets phone format.
+  public function setFormat($format) 
+  {
+    // Check input argument.
+    if($format!=self::PHONE_FORMAT_LOCAL && 
+       $format!=self::PHONE_FORMAT_INTL) {            
+      throw new \Exception('Invalid format argument passed.');
+    }
+        
+    $this->options['format'] = $format;
+  }
+    
+  // Validates a phone number.
+  public function isValid($value) 
+  {
+    if(!is_scalar($value)) {
+      $this->error(self::NOT_SCALAR);
+      return false; // Phone number must be a scalar.
+    }
+            
+    // Convert the value to string.
+    $value = (string)$value;
+        
+    $format = $this->options['format'];
+    
+    // Determine the correct length and pattern of the phone number,
+    // depending on the format.            
+    if($format == self::PHONE_FORMAT_INTL) {
+      $correctLength = 16;
+      $pattern = '/^\d \(\d{3}\) \d{3}-\d{4}$/';
+    } else { // self::PHONE_FORMAT_LOCAL
+      $correctLength = 8;
+      $pattern = '/^\d{3}-\d{4}$/';
+    }
+        
+    // First check phone number length
+    $isValid = false;
+    if(strlen($value)==$correctLength) {            
+      // Check if the value matches the pattern.
+      if(preg_match($pattern, $value))                    
+        $isValid = true;
+    }
+       
+    // If there was an error, set error message.
+    if(!$isValid) {            
+      if($format==self::PHONE_FORMAT_INTL)
+        $this->error(self::INVALID_FORMAT_INTL);
+      else
+        $this->error(self::INVALID_FORMAT_LOCAL);
+    }
+        
+    // Return validation result.
+    return $isValid;
+  }
+}
+~~~
+
+In Zeile 2 können Sie sehen, dass die Validator-Klasse im Namesraum `Application\Validator` liegt.
+
+In Zeile 8 definieren wir die Klasse `PhoneValidator`. Wir leiten unsere Validierungsklasse von
+der Basisklasse `AbstractValidator` ab, um die bereitgestellte Funktionalität wiederzuverwenden. Zeile 4 enthält
+den kurzen Alias ​​für die Klasse @`AbstractValidator`.
+
+In den Zeilen 11-12 definieren wir der Einfachheit halber die Telefonformat-Konstanten (`PHONE_FORMAT_INTL` für das
+internationales Format und `PHONE_FORMAT_LOCAL` für das lokales Format). Dies sind die Gleich den Zeichenfolgen von
+"intl" und "local".
+
+In den Zeilen 15-17 definieren wir die private Array-Variable `$options`, bei der es sich um ein Array mit einem einzelnen Schlüssel
+"format" handelt. Dieser Schlüssel enthält die Option des Telefonformats für unseren Validator.
+
+In den Zeilen 20-22 definieren wir die Fehlermeldungen. Wir haben drei Schlüssel (`NOT_SCALAR`,
+`INVALID_FORMAT_INTL` und` INVALID_FORMAT_LOCAL`). Unser Validator kann drei verschiedene Fehlermeldungen erzeugen.
+Diese Schlüssel dienen dazu, verschiedene Fehlermeldungen maschinenlesbar zu machen.
+
+In den Zeilen 25-29 haben wir die Array-Variable `$messageTemplates`, die die Zuordnung der Fehlermeldungen nach
+Schlüssel und ihrem Text enthält. Die Textmeldungen sind für die Anzeige für Menschen gedacht.
+
+In den Zeilen 32-43 haben wir die Konstruktormethode, die das einzige Argument `$options` verwendet.
+Wenn Sie den Validator manuell erstellen, können Sie diesen Parameter weglassen. Aber wenn der Validator
+einer Factory-Klasse erstellt wird, übergibt die Factory die Validierungsoptionen an den Konstruktor des Validators
+durch dieses Argument.
+
+In den Zeilen 46-55 haben wir die Methode `setFormat()`, mit der das aktuelle Telefonformat gesetzt werden kann.
+
+In den Zeilen 58-98 haben wir die Methode `isValid()`. Diese Methode umfasst die Überprüfung der Telefonnummer. 
+Sie nimmt den Parameter `$value` und führt die Übereinstimmung des regulären Ausdrucks durch und gibt `true`
+bei Erfolg zurück.
+
+Bei einem Fehler gibt die Methode `isValid()` den booleschen Wert `false` zurück, und die Liste der Fehler kann angezeigt werden.
+Die Fehlermeldungen als Liste können wir mit der Methode `getMessages ()` abgerufen.
+
+I> Möglicherweise stellen Sie fest, dass wir die Methode `getMessages()` in unserer Klasse `PhoneValidator` nicht definiert haben.
+I> Dies liegt daran, dass wir diese Methode von der Basisklasse @`AbstractValidator` geerbt haben. In unserer
+I> Methode `isValid ()` erzeugen wir Fehlermeldungen, wofür wir die geschützte Methode `error()` verwenden.
+I> Diese Methode wird ebenso durch die Basisklasse bereitgestellt (Zeilen 61, 91, 93).
+
+T> Der `PhoneValidator` dient nur zur Demonstration, wie benutzerdefinierte Validatoren in ZF3 geschrieben werden.
+T> Eine Implementierung eines Validators, der für alle möglichen Telefonnummern der ganzen Welt funktioniert,
+T> würde den Rahmen dieses Buches sprengen. Wenn Sie diesen Validator in der Praxis einsetzen möchten,
+T> müssen Sie ihn auf jeden Fall verbessern. Schauen Sie sich zum Beispiel die `libphonennummer`
+T> PHP-Bibliothek von Google an.
+
+### Verwenden der Klasse PhoneValidator
+
+Wenn die Validator-Klasse `PhoneValidator` fertig ist, können Sie sie leicht im Kontakt-Formular
+(oder in anderer Formularen) wie folgt verwenden. Es wird davon ausgegangen, dass Sie den folgenden Code innerhalb der
+Methode `ContactForm::addInputFilter()` aufrufen:
+
+{line-numbers=off, lang=php}
+~~~
+$inputFilter->add([
+      'name'     => 'phone',
+      'required' => true,                
+      'validators' => [
+        [
+          [
+            'name' => PhoneValidator::class,
+            'options' => [
+              'format' => PhoneValidator::PHONE_FORMAT_INTL
+            ]                        
+          ],
+        ],
+        // ...
+      ],                
+      // ...
+    ]);
+~~~
+
+Wie der Validator ''PhoneValidator` funktioniert, sehen Sie in der Beispielanwendung *Form Demo*
+dieses Buch. Öffnen Sie die Seite "http://localhost/contactus" in Ihrem Webbrowser.
+Wenn Sie eine Telefonnummer in einem falschen Format eingeben, zeigt der Validator einen Fehler an (siehe Abbildung 9.3).
+
+![Abbildung 9.3. Fehler bei der Überprüfung der Telefonnummer](images/validators/phone_number_validation_error.png)
+
+Wenn Sie möchten, können Sie den `PhoneValidator` auch außerhalb von Formularen verwenden, wie im folgenden Codebeispiel gezeigt:
+
+{line-numbers=off, lang=php}
+~~~
+<?php 
+use Application\Validator\PhoneValidator;
+
+// Create PhoneValidator validator
+$validator = new PhoneValidator();
+
+// Configure the validator.
+$validator->setFormat(PhoneValidator::PHONE_FORMAT_INTL);
+
+// Validate a phone number
+$isValid = $validator->isValid('1 (234) 567-8901'); // Returns true.
+$isValid2 = $validator->isValid('12345678901'); // Returns false.
+
+if(!$isValid2) {
+  // Get validation errors.
+  $errors = $validator->getMessages();
+}
+~~~
+
+## Verwenden von Filtern & Validatoren außerhalb eines Formulars
+
+In diesem Abschnitt zeigen wir ein Beispiel, wie Sie Filter und/oder Validatoren in Ihrem Controller verwenden können.
+Sie können die Daten aus den Variablen GET- und/oder POST extrahierten und diese umwandeln und prüfen.
+
+Nehmen wir an, wir implementieren ein Zahlungs-Gateway-System und müssen eine Webseite erstellen,
+eine Zahlungshistorie für die angegebene Kreditkarte an einem bestimmten Zeitraum anzeigen soll. Diese Seite kann von einer
+Aktion `paymentHistoryAction()` einer Controllerklasse bearbeitet werden, die die Kreditkartennummer und das Datum
+aus GET-Variablen extrahiert und dann angezeigt. Für die Methode `paymentHistoryAction()`
+müssen wir einige Sicherheitsprüfungen implementieren:
+ 
+ * wir möchten sicherstellen, dass die Kreditkartennummer wie eine typische Kreditkartennummer "4532-7103-4122-1359" aussieht
+  (entspricht der Norm ISO / IEC 7812);
+ * und dass das Datum im Format 'JJJJ-MM-TT' ist.
+
+Unten finden Sie den Code der Aktionsmethode:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+namespace Application\Controller;
+
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
+use Zend\Filter\StaticFilter;
+use Zend\Validator\StaticValidator;
+
+class IndexController extends AbstractActionController 
+{
+  // An action which shows the history of a credit 
+  // card operations on certain date.
+  public function paymentHistoryAction() 
+  {
+    // Get parameters from GET.
+    $cardNumber = (string)$this->params()->fromQuery('card', '');
+    $date = (string)$this->params()->fromQuery('date', date("Y-m-d"));
+
+    // Validate credit card number.
+    $isCardNumberValid = StaticValidator::execute($cardNumber, 'CreditCard');
+    if(!$isCardNumberValid) {
+      throw new \Exception('Not a credit card number.');
+    }
+  
+    // Convert date to the right format.
+    $date = StaticFilter::execute($date, 'DateTimeFormatter', 
+	                              ['format'=>'Y-m-d']);  
+  
+    // The rest of action code goes here...  
+	
+	return new ViewModel();
+  }
+}
+~~~
+
+Innerhalb der Aktionsmethode verwenden wir das Controller-Plugin `params()` (Zeilen 16-17), um zwei
+Variablen aus dem super-globalen Array `$_GET` abzurufen: Die Variable `card` (Kreditkartennummer) und das `date`
+Variable (das Datum).
+
+In Zeile 20 überprüfen wir die Kreditkartennummer mit Hilfe des Validators `CreditCard`.
+Wenn die Kartennummer nicht akzeptabel ist, wird eine Ausnahme ausgelöst, die einen Fehler anzeigt (Zeile 22).
+
+In Zeile 26 verwenden wir den Filter `DateTimeFormatter`, um das Datum in das richtige Format zu konvertieren.
+
+## Zusammenfassung
+
+Validatoren nehmen Eingabedaten auf, überprüfen diese
+und geben Sie ein boolesches Ergebnis zurück, das angibt, ob die Daten korrekt sind
+(und Fehlermeldungen, wenn die Daten Fehler aufweisen).
+
+In Zend Framework 3 gibt es mehrere Gruppen von Standardprüfern:
+
+ * Validatoren zur Überprüfung der Übereinstimmung des Werts mit einem bestimmten Format;
+ * Validatoren zum Überprüfen, ob der Wert in einem bestimmten Bereich eines numerischen Wertes liegt;
+ * Validatoren, die als "Proxies" für andere Validatoren fungieren.
+ 
+In einigen Fällen ist ein Standardprüfer nicht geeignet, und Sie müssen Ihre eigenen Prüfregeln
+für die Eingabedaten durchführen. In diesem Fall können Sie entweder den Validator @`Callback`[Zend\Validator\Callback] verwenden oder
+Sie schreiben Ihre eigene Validator-Klasse.

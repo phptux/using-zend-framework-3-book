@@ -1,0 +1,1723 @@
+# Seitenauftritt und Layout {#appearance}
+
+In diesem Kapitel erfahren Sie, wie Sie Ihre Webseiten attraktiv und attraktiv professionell mit Hilfe
+von Twitter Bootstrap CSS Framework können. Wie man Elemente auf einer Seite unter Verwendung 
+des ZF3-Layout-Mechanismus positioniert. Sie werden auch mit den üblichen View-Helpern 
+vertraut gemacht, um Webseiten mit wiederverwendbaren Teilen zu erstellen. 
+Wenn Ihnen Twitter Bootstrap neu ist, ist es empfehlenswert sich den Anhang
+[Anhang C. Einführung in Twitter Bootstrap](#bootstrap) für eine erweiterte Beschreibung von Bootstrap anzusehen.
+ 
+ZF3-Komponenten in diesem Kapitel:
+
+|---------------|-------------------------------------------------------------------|
+| *Komponente* 	| *Beschreibung* 													|
+|---------------|-------------------------------------------------------------------|
+| @`Zend\Mvc` 	| Unterstützung des MVC-Patterns. 									|
+|				| Implementiert Basis-Controller-Klassen, Controller-Plugins usw. 	|
+|---------------|-------------------------------------------------------------------|
+| @`Zend\View`	| Implementiert die Funktionalität für Variablencontainer. Die 		|
+|				| Darstellung einer Webseite und häufig verwendete View-Helper. 	|
+|---------------|-------------------------------------------------------------------|
+ 
+## Über CSS Stylesheets und Twitter Bootstrap
+ 
+Um das Aussehen und den Stil der Webseiten in einer ZF3_anwendung zu definieren,
+werden CSS-Stylesheets verwendet. Diese CSS-Dateien [^css] werden normalerweise im Verzeichnis
+*APP_DIR/public/css* gespeichert.
+
+[^css]: Wenn Sie neu in CSS sind, lesen Sie bitte das ausgezeichnete W3Schools CSS-Tutorial.
+        Besuchen Sie hier für [diesen Link](http://www.w3schools.com/).
+
+Weil die CSS-Regeln recht komplex sein können und aufwändige Anpassungen
+die Fähigkeiten eines Designers erfordern kann, werden diese Dateien in einer "Bibliothek" (Framework) getrennt. Analog
+wie PHP-Frameworks ermöglichen CSS-Frameworks die Wiederverwendbarkeit des Codes.
+
+Heute existieren mehrere CSS-Frameworks auf dem Markt, und eines davon ist
+[Twitter Bootstrap](http://getbootstrap.com/) (oder kurz Bootstrap).
+Ursprünglich von Twitter entworfen, um den Auftritt von
+ihren eigenen Webtools. Doch Bootstrap wurde zu einem beliebten CSS-Framework, dass es ermöglicht, Ihre
+Website professionell aussehen zulassen sowie optisch ansprechend zu sein, auch wenn Sie nicht
+fortgeschrittene Designerfähigkeiten haben und ohne die Notwendigkeit, grundlegende CSS Regeln zu erstellen (aber natürlich
+können Sie Ihre eigenen benutzerdefinierten CSS-Regeln über Bootstrap definieren, um Ihre das Aussehen Website anzupassen). 
+Bootstrap wird frei unter der Lizenz
+[Apache-Lizenz v.2.0](http://www.apache.org/licenses/LICENSE-2.0.html) verteilt.
+
+T> Twitter Bootstrap wird mit Zend Skeleton Application geliefert. Sie
+T> können es sofort verwenden. Alternativ können Sie die neueste Version von
+T> Bootstrap von der [offiziellen Seite](http://getbootstrap.com/) des Projekts herunterladen.
+T> Zum Zeitpunkt der Erstellung dieses Buches ist die neueste Version v.3.x.
+
+Im Allgemeinen führt das Bootstrap folgenden Dinge aus:
+
+* Es bietet das *CSS-Reset*, das ein Stylesheet ist, das Stile für alle möglichen HTML-Elemente
+  definiert. Dadurch wird sichergestellt, dass Ihre Website in allen Webbrowsern gleich aussieht.
+  
+* Es stellt die *Basis-CSS-Regeln* zur Verfügung, die den Typ der Typografie definieren (Überschriften)
+  und Text), Tabellen, Formulare, Schaltflächen, Bilder und so weiter.
+
+* Es definiert das *Rastersystem*. Das Rastersystem erlaubt die Anordnung der Elemente als eine gitterartigen Struktur
+  auf Ihrer Webseite. Schauen Sie sich zum Beispiel, die Skeleton Application Hauptseite 
+  (Abbildung 6.1), wo wir das Raster haben bestehend aus drei Spalten.
+
+* Es definiert nützliche *Web-Interface-Komponenten* wie Dropdown-Menüs, Navigation
+  Bars, Breadcrumbs, Pagination und so weiter. Zum Beispiel in den Skeleton Application
+  Hauptseite, gibt es die Komponente Navigationsleiste am Beginn und die Header
+  (auch als "Hero Unit" oder "Jumbotron" bezeichnet) unter der Navigationsleiste. Diese Komponenten
+  sind auf jeder Website sehr praktisch.
+  
+* Es sind auch *JavaScript-Erweiterungen* enthalten, welche von Bootstrap bereitgestellt werden. Damit werden
+  Schnittstellenkomponenten interaktiver. Zum Beispiel wird JavaScript zum Animieren von
+  Dropdown-Menüs und zum Anzeigen von "Modal-Dialogs" verwendet.
+
+![Abbildung 6.1. Hauptseite der Skeleton Application und deren Layout](images/appearance/skeleton-layout.png)
+         
+T> Wenn Sie Twitter Bootstrap noch nicht kennen, empfehlen wir Ihnen, sich mit dem
+T> [Anhang C. Einführung in Twitter Bootstrap](#bootstrap) zu beschäftigen, wo Sie weitere Informationen zur Verwendung
+T> von Twitter Bootstrap und seine Komponenten finden können.
+
+## Seitenlayout in Zend Framework 3
+
+Seiten Ihrer Website weisen normalerweise eine gemeinsame Struktur auf, die von ihnen gemeinsam genutzt werden kann.
+Zum Beispiel hat eine typische Seite die Deklaration `<!DOCTYPE>`, um das HTML-Dokument zu identifizieren,
+und die `<head>` und `<body>` Elemente:
+
+{line-numbers=off, lang=html, title="Typical page structure"}
+~~~
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Welcome</title>
+    <!-- Include metas, stylesheets and scripts here -->  
+  </head>
+  <body> 
+    <!-- Include page content here -->  
+  </body>
+</html>
+~~~
+
+Das `<head>` Element enthält den Seitentiteltext, Metainformationen
+und Verweise auf enthaltene Stylesheets und Skripte. Das `<body>` Element
+enthält den Inhalt der Seite, wie das Logo als Bild, die Navigationsleiste,
+den Seitentext und die Fußzeile mit Copyright-Informationen.
+
+In Zend Framework 3 definieren Sie diese gemeinsame Struktur mit dem "master" View-Template 
+namens *layout*. Das Layout "dekoriert" andere View-Templates.
+
+Das Layout-Template hat typischerweise einen *Platzhalter*. Diesen legt ZF3
+als den Inhalt für eine bestimmte Seite fest (siehe Abbildung 6.2).
+
+![Abbildung 6.2. Inhaltsplatzhalter in einem Layout-Template](images/appearance/layout_placeholder.png)
+
+In der Skeleton-Application heißt das Standard-Layout-Template *layout.phtml*
+und befindet sich innerhalb des Verzeichnisses *view/layout* im Verzeichnis Modul *Application*
+(siehe Abbildung 6.3 zum Beispiel).
+
+![Abbildung 6.3. Layoutverzeichnis](images/appearance/layout_dir.png)
+
+Sehen wir uns das Template *layout.phtml* genauer an.
+Im Folgenden wird der vollständige Inhalt der Datei dargestellt:
+
+{line-numbers=on, lang=php}
+~~~  
+<?= $this->doctype() ?>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <?= $this->headTitle('ZF Skeleton Application')
+             ->setSeparator(' - ')->setAutoEscape(false) ?>
+
+    <?= $this->headMeta()
+          ->appendName('viewport', 'width=device-width, initial-scale=1.0')
+          ->appendHttpEquiv('X-UA-Compatible', 'IE=edge')
+    ?>
+
+    <!-- Le styles -->
+    <?= $this->headLink(['rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 
+                         'href' => $this->basePath() . '/img/favicon.ico'])
+        ->prependStylesheet($this->basePath('css/style.css'))
+        ->prependStylesheet($this->basePath('css/bootstrap-theme.min.css'))
+        ->prependStylesheet($this->basePath('css/bootstrap.min.css'))
+    ?>
+
+    <!-- Scripts -->
+    <?= $this->headScript()
+        ->prependFile($this->basePath('js/bootstrap.min.js'))
+        ->prependFile($this->basePath('js/jquery-2.2.4.min.js'))
+    ?>
+    </head>
+    <body>
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" 
+                    data-target=".navbar-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="<?php echo $this->url('home') ?>">
+              <img src="<?= $this->basePath('img/zf-logo.png') ?>" 
+                   alt="Zend Framework <?= \Application\Module::VERSION ?>"/>
+                   &nbsp;Skeleton Application
+            </a>
+          </div>
+          <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+              <li class="active">
+                <a href="<?= $this->url('home') ?>">Home</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <div class="container">
+        <?= $this->content; ?>
+        <hr>
+        <footer>
+          <p>&copy; 2005 - <?= date('Y') ?> by Zend Technologies Ltd. 
+            All rights reserved.
+          </p>
+        </footer>
+      </div>
+      <?= $this->inlineScript() ?>
+  </body>
+</html>
+~~~
+
+Sie können sehen, dass die Datei *layout.phtml* (als normales View-Template) aus HTML-Tags besteht
+und mit PHP-Code-Fragmenten gemischt ist. Wenn das Template gerendert wird, wird ZF3 die
+Inline-PHP-Fragmente ausgewerten und erzeugt daraus die resultierende HTML-Seite, die für die Seiten-Benutzer sichtbar ist.
+
+Die obige Zeile 1 generiert die Deklaration `<! DOCTYPE>` [^doctype] der HTML-Seite
+mit dem View-Helper @`Doctype'.
+
+[^doctype]: Die Deklaration `<! DOCTYPE>` steht zuerst in einem HTML-Dokument,
+            vor dem `<html>`-Tag. Die Deklaration stellt eine Anweisung für das Web
+            Browser bereit, über welche Version von HTML die Seite geschrieben wurde (auf unserer Website verwenden wir
+            HTML5-konforme Dokumenttyp-Deklaration).
+         
+Zeile 3 definiert das `<html>`-Element, das den Stamm des HTML-Dokuments darstellt.
+Auf den `<html>`-Tag folgt normalerweise der `<head>`-Tag (Zeile 4).
+Dieser enthält den Titel für das Dokument und kann weitere Informationen wie Skripte,
+CSS-Stile und Metainformationen enthalten.
+
+In Zeile 5 gibt das `<meta>`-Tag dem Browser einen Hinweis auf das Dokument
+mit welcher Zeichencodierung UTF-8 [^utf8] das Dokument codiert.
+
+[^utf8]: UTF-8 ermöglicht es, jedes beliebige Zeichen in einem beliebigen Alphabet der Welt zu codieren.
+         Deshalb wird empfohlen, die Webseiten in dem Zeichensatz zu kodieren.
+
+In Zeile 6 haben wir den View-Helper @`HeadTitle`, der den Titel für die
+Seite ("ZF Skeleton Application") setzt. Der Titel wird in der Beschriftung des Webbrowsers angezeigt.
+Die Methode `setSeparator()` wird verwendet, um das Trennzeichen für den zusammengesetzte Titel der Seite zu definieren
+[^compound]; Die Methode `setAutoEscape()` verbessert die Sicherheit, indem sie unsichere Zeichen
+im Seitentitel maskiert.
+
+[^ compound]: Ein "zusammengesetzter" Seitentitel besteht aus zwei Teilen: dem ersten Teil ("ZF Skeleton Application")
+             der durch das Layout definiert wird und den zweite Teil - definiert durch eine bestimmte Seite - wird
+             dem ersten vorangestellt. Zum Beispiel für die Seite *About* Ihrer Website
+             "About - ZF Skeleton Application" und für die Seite *Dokumentation*, die Sie später haben werden,
+             "Dokumentation - ZF Skeleton Application".
+          
+In Zeile 9 erlaubt der View-Helper @`HeadMeta` den `<meta name = "viewport">`-Tag zu definieren, 
+welcher die Metainformationen für den Webbrowser enthält, um das Layout auf verschiedenen Displays der Geräte
+zu steuern, einschließlich mobiler Browser. Die Eigenschaft `width` steuert die Größe vom
+Viewport, während die Eigenschaft 'initial-scale' die Zoomstufe steuert bis die Seite
+geladen ist. Dadurch reagiert das Webseitenlayout auf die Größe des Geräte-Viewports.
+
+In Zeile 15 erlaubt der View-Helper @`HeadLink` die Definition des`<link>`-Tags.
+Mit den `<link>`-Tags definieren Sie normalerweise das "favicon" für die Seite
+(es ist die Datei `APP_DATA/public/img/favicon.ico`)
+und die CSS-Stylesheets.
+
+In den Zeilen 17 bis 19 werden die Stylesheets für alle Seiten.
+durch die Methode `prependStylesheet()` des View-Helpers @`HeadLink` gesetzt. Für jede Seite
+unserer Website werden drei CSS-Stylesheet-Dateien geladen: *bootstrap.min.css*
+(die verkleinerte Version vom Twitter Bootstrap CSS Framework),
+*bootstrap-theme.min.css * (das minimierte Bootstrap Theme Stylesheet)
+und *style.css* (eine CSS-Datei, mit unseren eigenen CSS-Regeln, um die
+Bootstrap-CSS-Regeln zu überschreiben).
+
+Zeilen 23-25 ​​enthalten die JavaScript-Dateien, die alle Ihre Webseiten geladen werden.
+Die Skripte werden vom Webbrowser des Clients ausgeführt,
+um einige interaktive Funktionen für Ihre Seiten einzuführen. Wir benutzen die `bootstrap.min.js`
+(verkleinerte Version von Twitter Bootstrap) und `jquery-2.2.4.min.js` (verkleinerte Version der
+jQuery-Bibliothek)-Skripten. Alle Skripte befinden sich im Verzeichnis *APP_DIR/public/js*.
+
+Zeile 28 definiert den <body>-Tag, den Textkörper, der alles enthält -
+den Inhalt des Dokuments, wie Navigationsleiste, Text, Hyperlinks,
+Bilder, Tabellen, Listen usw.
+
+In den Zeilen 29-52 können Sie die Bootstrap-Navigationsleisten erkennen.
+Die Skeleton-Application verwendet die reduzierbare Navigationsleiste mit dunklem inversen Thema.
+Die Navigationsleiste enthält den einzelnen Link *Home*.
+
+Wenn Sie sich die Zeilen 53-61 ansehen, sollten Sie das Element `<div>` mit der Klasse "container" erkennen,
+dass das Containerelement für das Grid-System bezeichnet. Sie können also das Bootstrap-Grid-System 
+verwenden, um den Inhalt Ihrer Seiten zu ordnen.
+
+Zeile 54 ist sehr wichtig, da diese Zeile den Inline - PHP - Code definiert, der den
+Platzhalter für den Seiteninhalt beinhaltet. Diesen haben wir am Anfang dieses Abschnitts besprochen. Wenn der ZF3-Seitenrenderer
+das Layout-Template auswertet, wird der tatsächlichen Seiteninhalt hier wieder gegeben.
+
+Die Zeilen 56-60 definieren den Seitenfußbereich. Die Fußzeile enthält Copyright
+Informationen wie "2016 von Zend Technologies Ltd. Alle Rechte vorbehalten." Sie
+können diese Information durch Ihren eigenen Firmennamen ersetzen.
+
+Zeile 62 ist der Platzhalter für JavaScript's, die von einer
+konkrete Seite. Der View-Helper @`InlineScript` wird hier eingesetzt, um
+alle Skripte, die Sie registriert haben, auszugeben (zum Registrieren von JavaScript,
+werden Sie es später in diesem Kapitel sehen).
+
+Und schließlich enthalten die Zeilen 63-64 die schließenden Tags für den Body und das HTML-Dokument.
+
+## Ändern des Standard-Seitenlayouts
+
+Um zu demonstrieren, wie Sie Ihr eigenes Seitenlayout definieren können, ändern wir das ursprüngliche Layout von
+der Zend Skeleton Application Webseite. Wir möchten, dass es den Seitentitel "Hello world" anzeigt,
+"Hallo Welt!" als Header-Text am oberen Rand, die Navigationsleiste und Breadcrumbs unter der Überschrift,
+Seiteninhalt via Platzhalter in der Mitte der Seite und die Fußzeile mit den Copyright-Informationen
+ganz unten (siehe Abbildung 6.4 für ein Beispiel dessen, was wir erreichen wollen).
+
+![Abbildung 6.4. Resultierendes Seitenlayout](images/appearance/mainpage.png)
+
+Beginnen wir mit dem Seitentitel "Hello World". Wir ersetzen die Zeilen 6-7 in der Datei *layout.phtml*
+wie folgt:
+
+{line-numbers=off,lang=php}  
+~~~
+<?= $this->headTitle('Hello World')->setSeparator(' - ')->setAutoEscape(false) ?>
+~~~
+
+Als nächstes werden wir das von Bootstrap bereitgestellte Grid-System zum Anordnen der Hauptblöcke auf der Seite verwenden.
+Ersetzen Sie den HTML-Code des Elements <body> (Zeilen 28-63) durch das folgende:
+
+{line-numbers=on,lang=php}  
+~~~
+<body>  
+  <div class="container">               
+    <div class="row">
+      <!-- Page header -->
+      <div class="col-md-4">
+        <div class="app-caption">Hello World!</div>
+      </div>                
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- Navigation bar -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- Breadcrumbs -->        
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- Page content placeholder -->
+        <?= $this->content; ?>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <hr>                
+        <p>&copy; 2005 - <?= date('Y') ?> by Your Company. All rights reserved.</p>
+    </div>
+  </div> <!-- /container -->
+  <?php echo $this->inlineScript() ?>
+</body>
+~~~
+
+Im obigen Code haben wir das Element `<div>` mit der Klasse "container" definiert und
+die `<div>` Elemente des Gitters darin eingefügt. Das Raster besteht aus 5 Zeilen:
+
+  * Der Seitenkopf mit dem Text "Hallo Welt!" (Zeilen 3-8). Der Header-Text
+    umfasst vier Rasterspalten. Zum Formatieren des Textes verwenden wir unsere benutzerdefinierte CSS-Klasse `app-caption`
+    (Wir werden diese Klasse die Datei *style.css* ein wenig später definieren).
+    
+  * Wir haben den Platz für die Navigationsleisten in Zeile 11 gelassen.
+  
+  * In Zeile 16 haben wir den Platz für Breadcrumbs.
+  
+  * In Zeile 22 haben wir den Seiteninhalt als Platzhalter. Wenn der Renderer
+    die Seite auswertet, es der Wert der Variable `$content` dem tatsächlichen, zurückgegeben
+    Seiteninhalt und er wird hier ersetzt.
+    
+  * Und in den Zeilen 25-29 haben wir den Seitenfuß mit dem Text "(c) 2013 by Your Company. All rights reserved." versehen.
+    Sie können diesen Text ändern und Ihren Firmennamen hier ersetzen,
+    wenn Sie es wünschen.
+
+Als nächstes setzen wir die Navigationsleiste in die entsprechende Rasterzeile:
+
+{line-numbers=off, lang=php}  
+~~~
+<!-- Navigation bar -->
+<nav class="navbar navbar-default" role="navigation">
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav">
+      <li class="active">
+        <a href="<?= $this->url('home') ?>">Home</a>
+      </li>
+      <li>
+        <a href="<?= $this->url('application', ['action'=>'downloads']) ?>">
+          Downloads
+        </a>
+      </li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+          Support <b class="caret"></b>
+          <ul class="dropdown-menu">
+            <li>
+              <a href="<?= $this->url('doc', ['page'=>'contents']) ?>">
+                Documentation
+              </a>
+            </li>
+            <li>
+              <a href="<?= $this->url('static', ['page'=>'help']) ?>">
+                Help
+              </a>
+            </li>
+          </ul>
+        </a>
+      </li>
+      <li>
+        <a href="<?= $this->url('about') ?>">About</a>
+      </li>
+    </ul>     
+    </div>
+</nav>
+~~~
+
+Im obigen Code verwendeten wir die vom Bootstrap bereitgestellte Komponente für die Navigationsleiste.
+Wir haben auch den View-Helper @`Url`[Zend\View\Helper\Url] verwendet, um die Links zu den Navigationselementen zu erstellen.
+
+I> Wir haben die Verwendung des View-Helpers @`Url`[Zend\View\Helper\Url] im Abschnitt *Generieren von URLs aus Route*
+I> in [Routing](#routing) besprochen.
+
+Fügen Sie als nächstes die Breadcrumbs-Komponente in die entsprechende Rasterzeile ein:
+
+{line-numbers=off, lang=php}  
+~~~
+<!-- Breadcrumbs -->
+<ol class="breadcrumb">
+  <li class="active">Home</li>
+</ol>
+~~~
+
+Schließlich müssen wir ein paar benutzerdefinierte CSS-Regeln zur Feinabstimmung des
+Aussehen machen. Wir definieren unsere eigenen CSS-Regeln im Stylesheet *style.css*.
+
+Wir wollen den für den Header-Text "Hallo Welt!" größere Fettschrift verwenden und eine schönere Farbe verwenden.
+Öffnen Sie dazu die Datei *style.css* und hängen Sie die folgenden Zeilen an das Ende an:
+
+{line-numbers=off,lang=css}  
+~~~
+div.app-caption {
+  padding: 25px 0px;    
+  font-size: 3.0em;
+  font-weight: bold;
+  color: #6aacaf
+}
+~~~
+
+Im obigen CSS-Code haben wir die Klasse `app-caption` erstellt, die auf das Element `<div>`
+angewendet wird und definieren die 25 Pixel für den oberen Innenabstand, größe Schriftgröße, Fettschrift und die
+hexadezimale Darstellung der Textfarbe.
+
+Standardmäßig ist in der Skeleton-Application die Navigationsleiste an die Seite gebunden und die CSS-Regel
+für den Seiten-Body definiert und der obere Innenabstand mit 20 Pixel angegeben, um Platz dafür zu lassen.
+Da wir in unserem Hello-World-Beispiel die Navigationsleiste oben auf der Seite deaktiviert haben,
+wird sie im Seitenfluss paltziert. Darum müssen wir die Angabe zum Innenabstand des Seiten-Body entfernen. Um dies zu tun, bearbeiten Sie
+die CSS-Regel `body` in der Datei `style.css` und sieht wie folgt aus:
+
+{line-numbers=off,lang=css}  
+~~~
+body {
+  padding-bottom: 40px;
+}
+~~~
+
+Großartig, wir haben das Layout-Template fertig gestellt! Um das Ergebnis unserer Änderungen zu sehen,
+öffnen Sie die Website in Ihrem Browser. Sie sollten die Seite wie in Abbildung 6.4 sehen. Sie können die
+die Links in der Navigationsleiste anklicken, um die Seiten wie *About* oder *Documentation* usw. zu besuchen.
+Der Inhalt einer bestimmten Seite wird in den Inhalts-Platzhalter unseres Layouts eingefügt.
+
+T> Das Ergebnis kann in Aktion der Beispielanwendung 
+T> *Hello World* gesehen werden, welches Teil des Beispiels dieses Buchs ist.
+T> Der Code ist auf GitHub verfügbar.
+
+## Wechsel zwischen Layouts
+
+ZF3 bietet Ihnen standardmäßig ein einziges Layout-Template *layout.phtml*.
+In realen Anwendungen werden Sie wahrscheinlich mehrere Layouts benötigen,
+wenn Sie das Layout für bestimmte Controller/Aktionen wechseln.
+
+Beispielsweise haben Sie möglicherweise eine Front-End und einen Back-End in Ihrer Site. Das Frontend
+besteht aus Teilen von Webseiten, die für alle Benutzer öffentlich sichtbar sind und das Standardlayout
+für all diese Seiten verwenden. Das Back-End würde aus Seiten bestehen, die nur für den Administrator Ihrer Seite
+sichtbar sind und Sie verwenden eine anderes Layout-Template, die das Verwaltungsmenü enthält.
+
+Bereiten Sie zuerst eine anderes Layout-Template vor. Zum Beispiel, Sie rufen es mit *layout2.phtml* auf.
+Um die Vorbereitung der Datei zu vereinfachen, kopieren Sie den Inhalt der Standarddatei *layout.phtml* und
+wir nehmen daran die notwendigen Änderungen vor.
+
+Wenn das zweite Layout-Template bereit ist, können Sie zwischen den Layouts
+in einer Aktion eines bestimmten Controllers mit dem folgenden Code wechseln:
+
+{line-numbers=on, lang=php}  
+~~~
+// A controller's action method that uses an alternative
+// layout template.
+public function indexAction() 
+{
+  //...
+
+  // Use the Layout plugin to access the ViewModel
+  // object associated with layout template.
+  $this->layout()->setTemplate('layout/layout2');
+  
+  //...
+}
+~~~
+
+In der obigen Beispiel-Aktionsmethode verwenden wir das Controller-Plugin @`Layout`[Zend\Mvc\Controller\Plugin\Layout] (Zeile 9).
+Dies ermöglicht uns den Zugriff auf die Instanz der Klasse @`ViewModel`[Zend\View\Model\ViewModel].
+Sie ermöglicht es uns, das Layout eine bestimmte Aktionsmethode zu ändern.
+Wir rufen die Methode `setTemplate()` der Klasse `ViewModel` auf und setzen mit ihr unser neues Layout-Template.
+
+T> Zusätzlich zu dem Controller-Plugin @`Layout`[Zend\Mvc\Controller\Plugin\Layout] gibt es den View-Helper @` Layout`[Zend\View\Helper\Layout].
+T> Dieser bietet die gleichen Fähigkeiten. Mit Hilfe des View-Helpers @`Layout`[Zend\View\Helper\Layout] können Sie z.B.
+T> das Layout von der "statischen" Seite wechseln, zu einer die keine spezifische Controller-Aktion hat.
+
+### Einstellung des Layouts für alle Aktionen eines Controllers
+
+Wenn alle Aktionsmethoden einer Controller-Klasse dasselbe alternative Layout verwenden müssen,
+können Sie die Methode `onDispatch()` der Klasse @`AbstractActionController` überschreiben
+und rufen dort die Methode `setTemplate()` auf, wie im folgenden Beispiel gezeigt:
+
+{line-numbers=off, lang=php}  
+~~~
+// Add this alias in the beginning of the controller file
+use Zend\Mvc\MvcEvent;
+
+// ...
+
+class IndexController extends AbstractActionController 
+{
+  /** 
+   * We override the parent class' onDispatch() method to
+   * set an alternative layout for all actions in this controller.
+   */
+  public function onDispatch(MvcEvent $e) 
+  {
+    // Call the base class' onDispatch() first and grab the response
+    $response = parent::onDispatch($e);        
+	
+    // Set alternative layout
+    $this->layout()->setTemplate('layout/layout2');                
+	
+    // Return the response
+    return $response;
+  }
+}
+~~~
+
+## Partial Views
+
+Eine *partial* View ist eine *.phtml* View-Template-Datei, die von einem anderen View-Template gerendert werden kann.
+Partial-Views (Teilansichten) ermöglichen es Ihnen, Ihre Seite aus Stücken zu komponieren und Stücke
+über View-Rendering-Logik in verschiedenev View-Templates wiederzuverwenden.
+
+Für ein einfaches Beispiel für die Verwendung von Partial-Views, stelle wir uns vor, dass wir eine Tabelle
+von einigen Produkten rendern müssen. Jedes Produkt hat eine ID, einen Namen und einen Preis. Wir können Partial-Views verwenden, 
+um eine einzelne Zeile der Tabelle mehrmals zu rendern.
+
+Zuerst fügen wir dem Index-Controller die Methode `partialDemoAction()` hinzu:
+
+{line-numbers=off, lang=php}  
+~~~
+// An action that demonstrates the usage of partial views.
+public function partialDemoAction() 
+{
+  $products = [
+    [
+      'id' => 1,
+      'name' => 'Digital Camera',
+      'price' => 99.95,
+    ],
+    [
+      'id' => 2,
+      'name' => 'Tripod',
+      'price' => 29.95,
+    ],
+    [
+      'id' => 3,
+      'name' => 'Camera Case',
+      'price' => 2.99,
+    ],
+    [
+      'id' => 4,
+      'name' => 'Batteries',
+      'price' => 39.99,
+    ],
+    [
+      'id' => 5,
+      'name' => 'Charger',
+      'price' => 29.99,
+    ],
+  ];
+	
+  return new ViewModel(['products' => $products]);
+}
+~~~
+
+Die obige Aktionsmethode bereitet nur eine Reihe von Produkten zum Rendern vor
+und übergibt es an das View-Template mit Hilfe des
+Variablencontainers @`ViewModel`[Zend\View\Model\ViewModel].
+
+Erstellen Siw als nächstes das View-Template *partial-demo.phtml* und fügen folgendes ein:
+
+{line-numbers=on, lang=php}  
+~~~
+<?php
+$this->headTitle('Partial View Demo');
+?>
+
+<h1>Partial View Demo</h1>
+<p>
+    Below, the table of products is presented. It is rendered with the help of
+    partial views.
+</p>
+<table class="table table-striped table-hover">
+  <tr>
+    <th>ID</th>
+    <th>Product</th>
+    <th>Price</th>
+  </tr>
+
+  <?php 
+    foreach ($this->products as $product) {
+      echo $this->partial('application/index/table-row', ['product'=>$product]);
+    }    
+  ?>    
+</table>
+~~~
+
+In dem obigen View-Template definieren wir das Markup für die Produkttabelle
+(Zeilen 10-22). In Zeile 18 gehen wir durch das Array der Produkte
+und renderen jede Zeile für einen Artikel mit dem View-Helper @`Partial`.
+
+Das erste Argument des View-Helpers @`Partial` ist der Name der Datei des
+View-Templates ("application/index/table-row").
+
+Das zweite Argument des View-Helpers @`Partial` sollte ein Array von Argumenten sein,
+welche an das View-Template übergeben wird. Sie werden auf die gleiche Weise zugänglich sein, als würden
+Sie sie mit dem Variablencontainer @`ViewModel`[Zend\View\Model\ViewModel] übergeben.
+
+Erstellen Sie schließlich das View-Template *table-row.phtml*, die als Teil-Template
+in den View-Template verwendet wird:
+
+{line-numbers=off, lang=php}  
+~~~
+<tr>
+  <td> <?= $this->product['id'] ?> </td>
+  <td> <?= $this->product['name'] ?> </td>
+  <td> <?= $this->product['price'] ?> </td>
+</tr>
+~~~
+
+In dem obigen View-Template rendern wir nur eine einzelne Zeile der Tabelle.
+
+Um die resultierende Webseite anzuzeigen, geben Sie die URL "http://localhost/application/partial-demo"
+in der Navigationsleiste Ihres Browsers ein. Sie sollten etwas wie in Abbildung 6.5 sehen.
+
+![Abbildung 6.5. Tabellenzeilen werden in Teil-View-Templates gerendert](images/appearance/partial_demo.png)
+
+## View-Helper: Placeholder
+
+Der @`Placeholder`[Zend\View\Helper\Placeholder] ist ein weiterer nützlicher View-Helper, der es erlaubt HTML-Inhalt zu erfassen
+und speichert [^store] ihn für die spätere Verwendung. Analog zum View-Helper @`Partial`
+ermöglicht er es, Ihre Seite aus mehreren Teilen zu komponieren.
+
+[^store]: Der View-Helper @`Placeholder`[Zend\View\Helper\Placeholder] speichert die Daten im PHP Session Speicher. So,
+          können Sie, theoretisch sogar, Inhalte auf einer Seite erfassen und anschließend auf einer anderen Seite rendern oder verwenden.
+
+Zum Beispiel können Sie den View-Helper @`Placeholder`[Zend\View\Helper\Placeholder] mit dem View-Helper @`Partial` verwenden,
+um den Inhalt eines View-Templates mit einem anderen View-Template zu "dekorieren". Eine nützliche
+praktische Anwendung hierfür ist die "Vererbung" eines Layouts.
+
+Stellen Sie sich die Situation vor, wenn Sie ein alternatives Layout erstellen müssen, das genau das gleiche ist, mit
+Kopfbereich, Kopfzeile und Fußzeile, hat aber Unterschiede im mittleren Seitenbereich. Der "gewaltsame" Weg
+wäre, ein solches Layout zu erstellen, den Inhalt des ursprünglichen Layout-Templates zu kopieren und einzufügen,
+und an dann notwendige Änderungen vorzunehmen. Ein anderer (besserer) Weg ist das "vererben" des ursprünglichen Layouts, wenn das neue
+Layout, gemeinsamen Teile wiederverwenden kann.
+
+Um zu demonstrieren, wie ein Layout übernommen wird, erstellen wir das View-Template *layout2.phtml*.
+Das Standard-Layout *layout.phtml* wird vererbt und eine Anzeigenleiste wird rechts
+der Seite hinzufügt. Das Anzeigen von Anzeigen im Layout wäre nützlich, wenn Sie vom Anzeigen
+kommerzielle Anzeigen auf allen (oder auf den meisten) Seiten Ihrer Website profitieren möchten.
+
+Fügen Sie den folgenden Code in das Layout-Template *layout2.phtml* ein:
+
+{line-numbers=on, lang=php}  
+~~~
+<?php $this->placeholder('content')->captureStart(); ?>
+
+<div class="row">
+    <div class="col-md-8">
+    <?= $this->content; ?>
+    </div>
+    <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Ads</h3>
+          </div>
+          <div class="panel-body">
+            <strong>Zend Framework 3 Book</strong>
+            <p>Learn how to create modern web applications with PHP 
+                and Zend Framework 3</p>            
+            <a target="_blank" 
+               href="https://github.com/olegkrivtsov/using-zend-framework-3-book">
+               Learn More
+            </a>
+          </div>
+        </div>
+    </div>
+</div>
+
+<?php 
+  $this->placeholder('content')->captureEnd(); 
+  echo $this->partial('layout/layout', 
+          ['content'=>$this->placeholder('content')]); 
+?>
+~~~
+
+Im obigen Code rufen wir die  Methode`captureStart()` (Zeile 1) und die Methode `captureEnd()`
+(Zeile 26) des View-Helpers @`Platzhalter`[Zend\View\Helper\Placeholder] auf. Das dazwischenliegende HTML-Markup
+wird vom View-Helper erfasst und in seinem internen Speicher gespeichert (statt es
+nach dem rendern von PHP ausgegebn zu lassen).
+
+In den Zeilen 3-23 setzen wir das Markup des "geerbten" Layouts. Das abgeleitete Layout
+verwendet das Zwei-Zellen-Raster. Die erste Zelle des Gitters (mit 8 Spalten) enthält den tatsächlichen
+Inhalt einer bestimmten Seite, und die zweite Zelle (übergeifend mit 4 Spalten) wird die
+Werbung enthalten. Für die Gestaltung der Anzeigen verwenden wir die Komponente *Panel*,
+die von Twitter-Bootstrap bereitgestellt wird.
+
+In Zeile 27 verwenden wir den Helper @`Partial`, der zum Rendern des "übergeorneten" Layout (*layout.phtml*)
+verwendet wird. Wir übergeben den Inhalt, der vom View-Helper @`Placeholder`[Zend\View\Helper\Placeholder] erfasst wurde
+an den View-Helper @`Partial` als zweites Argument.
+
+Auf diese Weise haben wir das gut aussehende Layout erstellt, das das Standardlayout erbt
+und damit verbesser wir die Wiederverwendbarkeit unseres Codes.
+
+Wenn Sie nun die *layout2.phtml* in alle Aktionen im Index-Controller verwenden,
+sollten Sie das Ergebnis wie in Abbildung 6.6 sehen können.
+
+![Abbildung 6.6. Vererbtes Layout](images/appearance/inherited_layout.png)
+
+## Hinzufügen von Skripts zu einer Webseite
+
+JavaScript-Code kann in HTML-Seiten eingefügt und interaktiv gestaltet werden.
+Skripte sollten in eine HTML-Datei zwischen den Tags `<script>` und `</script>` eingefügt werden.
+Im Folgenden wird ein Beispiel für JavaScript-Code dargestellt:
+
+{line-numbers=off, lang=js}  
+~~~
+<script type="text/javascript">
+  // Show a simple alert window with the "Hello World!" text.
+  $(document).ready(function() { 
+    alert('Hello World!');
+  });
+</script>
+~~~
+
+Im obigen Beispiel haben wir das Element `<script>` erstellt und die jQuery-Callback-Funktion darin eingefügt.
+jQuery bindet eine Funktion, die ausgeführt wird, wenn das DOM vollständig geladen wurde. Wenn die Funktion ausgeführt wird, ein einfaches
+Alertfenster mit dem Text "Hello World!" und mit einem OK-Button angezeigt.
+
+Da Sie diesen JavaScript-Code in die HTML-Datei einfügen, werden wird dieses als *inline*-Skript bezeichnet.
+Eine alternative Möglichkeit zum Speichern von JavaScript-Code, ist das Einfügen in einer *externen* `.js`-Datei.
+Externe Dateien enthalten normalerweise Code, der von mehrere Webseiten verwendet werden soll.
+In der Regel werden externe JavaScript-Dateien im Verzeichnis *APP_DIR/public/js/* gespeichert. Verlinken
+Sie eine externe JS-Datei zu Ihrer HTML-Seite, dann fügen Sie das `<script>` Element wie folgt hinzu:
+
+{line-numbers=off, lang=php}  
+~~~
+<script type="text/javascript" src="/js/yourscript.js"></script>
+~~~
+
+Wenn der Browser auf ein solches Element `<script>` stößt, liest er die externe JS-Datei
+und führt den Code aus.
+
+Im Allgemeinen gibt es zwei Stellen innerhalb einer HTML-Datei, in die Sie das Skript einfügen können:
+
+* JavaScript-Code kann in den Bereich `<head>` einer HTML-Seite eingefügt werden.
+  Diese Methode wird empfohlen, wenn JavaScript vor dem Inhalt der Seite geladen werden soll. 
+  Wir haben diese Methode benutzt, um die JavaScript Erweiterungen von Twitter Bootstrap zu laden
+  und die jQuery-Bibliothek.
+
+* Scripte können nur am unteren Rand des Bereichs `<body>` einer HTML-Seite platziert werden und
+  vor dem schließenden `</body>` Tag. Dieser Weg ist empfehlenswert, wenn Sie das gesamte geladene DOM[^dom] benötigen,
+  bevor das Skript mit der Ausführung beginnen kann.
+ 
+[^dom]: Das DOM (Document Object Model) ist eine praktische Darstellung eines HTML-Dokuments,
+        in der die Elemente die Struktur eines Baumes haben.
+
+Wenn eine bestimmte JavaScript-Datei auf allen (oder auf den meisten) Webseiten verwendet werden muss,
+ist es besser, sie in das Layout-Template zu platzieren. Aber wenn ein Skript
+nur auf einer einzelnen Seite verwendet wird, ist es nicht die beste Idee, sie in das Layout-Template zu übernehmen.
+Wenn Sie ein solches Skript in das Layout-Template einfügen, wird das Skript auf alle Seiten geladen.
+Dies kann unnötigen Datenverkehr verursachen und die Ladezeit für die gesamte Seite erhöhen.
+Um dies zu vermeiden, fügen Sie ein solches Skript nur für die gewünschte Seite hinzu.
+
+Um ein seitenspezifisches Skript hinzuzufügen, das in den Abschnitt `<head>` der Webseite eingefügt wird,
+verwenden Sie den View-Helper @`HeadScript`. Seine Methoden sind in Tabelle 6.1 zusammengefasst:
+
+{title="Tabelle 6.1. Methoden, die vom View-Helper HeadScript bereitgestellt werden"}
+|-----------------------|---------------------------------------------------------------------------|
+| *Methodenname* 		| *Beschreibung* 															|
+|-----------------------|---------------------------------------------------------------------------|
+| `appendFile()` 		| Fügt nach allen anderen eine Verknüpfung zur externen JS-Datei ein. 		|
+|-----------------------|---------------------------------------------------------------------------|
+| `offsetSetFile()` 	| Fügt eine Verknüpfung zu einer externen JS-Datei an einer bestimmten 		|
+|						| Position ein. 															|
+|-----------------------|---------------------------------------------------------------------------|
+| `prependFile()` 		| Fügt eine Verknüpfung zu einer externen JS-Datei vor allen anderen hinzu. |
+|-----------------------|---------------------------------------------------------------------------|
+| `setFile()` 			| Löscht die Liste der Skripte und fügt eine einzelne externe JS-Datei ein. |
+|-----------------------|---------------------------------------------------------------------------|
+| `appendScript()` 		| Fügt ein Inline-Skript nach allen anderen ein. 							|
+|-----------------------|---------------------------------------------------------------------------|
+| `offsetSetScript()`	| Fügt ein Inline-Skript an einer bestimmten Position ein. 					|
+|-----------------------|---------------------------------------------------------------------------|
+| `prependScript()` 	| Fügt ein Inline-Skript vor allen anderen ein. 							|
+|-----------------------|---------------------------------------------------------------------------|
+| `setScript()` 		| Löscht die Liste der Inline-Skripts und fügt den ein Inline-Skript ein. 	|
+|-----------------------|---------------------------------------------------------------------------|
+
+Um einen Link zur externen JS-Datei in den Abschnitt `<head>` einer Seite einzufügen, fügen Sie dden folgende PHP
+Code am Anfang einer Template-Datei (*.phtml*) hinzu:
+
+{line-numbers=off, lang=php}
+~~~
+<?php
+$this->headScript()->appendFile('/js/yourscript.js', 'text/javascript');
+?>
+~~~
+
+Im obigen Code haben wir die Methode `appendFile()` des View-Helpers @`HeadScript` aufgerufen.
+Diese Methode benötigt zwei Argumente. Der erste ist der Pfad zur externen JS - Datei (wenn
+die Datei im Verzeichnis *APP_DIR/public/js* liegt oder eine URL einer JS-Datei, wenn die Datei
+sich auf einem anderen Webserver befindet). Das zweite Argument ist der Typ des Skripts
+(Es ist normalerweise "text/javascript").
+
+Andere Methoden vom View-Helper @`HeadScript` (wie `prependFile()`, `offsetSetFile()` und
+`setFile()`) unterscheiden sich nur anhand der Positionierung der Skripte in der Liste, 
+in die das neue Skript eingefügt werden soll.
+
+Die Methoden `prependScript()`, `appendScript()`, `offsetSetScript()` und `setScript()`
+sind dafür gedacht, um einen Inline-JavaScript-Code einzufügen. Sie werden selten benutzt, weil
+normalerweise externe JS-Skripts in den Kopfbereich des Dokuments eingefügt werden.
+
+Um ein Skript am Ende des Tags `<body>` einzufügen, können Sie den View-Helper
+@`InlineScript` [^inlinescript] verwenden. Er bietet Ihnen genau die gleichen Methoden an, wie der
+View-Helper @`HeadScript`. Im Folgenden wird ein Beispiel vorgestellt, mit dem
+Inline-JavaScript-Code am Ende des Dokumententexts angehängt werden kann:
+
+[^inlinescript]: Der Name @`InlineScript` spiegelt nicht vollständig die Fähigkeiten dieses View-Helpers wieder.
+                 Tatsächlich kann er sowohl Inline- als auch externe Skripte einfügen. Der bessere Name für diesen
+                 View-Helper wäre `BodyScript`, weil es zum Einfügen von Skriptenin den
+                 Dokumentkörper gedacht ist.
+
+{line-numbers=off, lang=php}
+~~~
+<?php 
+$script = <<<EOT
+  $(document).ready(function() {
+    alert('Hello World!');
+  });
+EOT;
+$this->inlineScript()->appendScript($script);
+~~~
+
+Im obigen Beispiel verwendeten wir die PHP-Heredoc-Syntax[^heredoc], um das Variable `$script`
+mit dem Inline-JavaScript-Code einzufügen. Dann rufen wir die Funktion `appendScript()` des
+View-Helper @`InlineScript` auf und übergeben den Code als Argument.
+
+[^heredoc]: Heredoc ist eine alternative String-Definitionsmethode von PHP.
+            Es funktioniert gut mit mehrzeiligen Strings.
+
+Die Verwendung des View-Helpers @`InlineScript` ist jedoch im Hinblick auf die Lesbarkeit nicht sehr praktisch.
+Darüber hinaus bleibt der IDE-Syntax-Checker von Netbeans in der Heredoc-Notation stecken
+und erkennt den JavaScript-Code nicht. Um dies zu beheben, können Sie einfach das Element `<script>`
+am unteren Rand Ihres View-Templates setzen, wie im folgenden Beispiel gezeigt:
+
+{line-numbers=off, lang=php}
+~~~
+<!-- Page content goes first -->
+
+<!-- Inline script goes last -->
+<script type="text/javascript">
+  $(document).ready(function() {
+    // Show a simple alert window with the "Hello World!" text.
+    alert("Hello World!");
+  });
+</script>
+~~~
+
+Dies stellt sicher, dass der gleiche Effekt wie mit dem View-Helper @`InlineScript` erreicht wird, aber
+es berücksichtigt die bessere Skriptlesbarkeit und die automatische Syntaxprüfung in NetBeans IDE.
+
+I> Damit die View-Helpers @`HeadScript` und @`InlineScript` funktionieren, sollten Sie deren Inhalt sicherstellen,
+I> dass deren Inhalt im Layout-Template wiedergegeben wird (siehe Zeilen 23 und 62 der Datei *layout.phtml*).
+I> Wenn Sie diese Zeilen aus dem Layout-Template entfernen, werden die Skript nicht auf der Webseite eingefügt.
+
+### Beispiel
+
+Um ein Beispiel für das Einfügen eines JavaScript-Codes in Ihre Webseite zu erhalten, fügen wir eine Seite
+mit einer Auto-Vervollständigen-Funktion hinzu. Mit dieser Funktion wird der Webbrowser
+ein Wort oder eine Phrase vorhersagen, die der Benutzer mit mehreren Anfangsbuchstaben eingibt,
+ohne dass er den Text tatsächlich vollständig eingegeben hat. Wir benutzen hierfür die
+JavaScript-Bibliothek namens *Twitter Typeahead*.
+Analog zu Twitter Bootstrap wurde die Typeahead-Bibliothek in Twitter Inc. dafür entwickelt
+und ist frei verteilt.
+
+Herunterladen können Sie sich die Datei *typeahead.min.js* (eine verkleinerte Version der Typeahead-Bibliothek)
+von der offiziellen [Projektseite](http://twitter.github.io/typeahead.js/). Wenn der Download abgeschlossen ist,
+legen Sie die Datei in Ihr Verzeichnis *APP_DIR/public/js*.
+
+Erstellen Sie dann die Datei *typeahead.phtml* in Ihrem Unterverzeichnis *application/index/static*
+unter dem Verzeichnis *view* des Moduls.
+Dieses Verzeichnis wird vom Routentyp `StaticRoute` verwendet, den wir vorher im Kapitel [Routing](#routing)
+erstellt und konfiguriert haben und alle hier platzierten "statischen" Seiten
+für alle Site-Benutzer automatisch verfügbar sind.
+
+Fügen Sie in die View-Template-Datei *typeahead.phtml* folgenden Inhalt ein:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+$this->headTitle('Typeahead');
+// Add a JavaScript file
+$this->headScript()->appendFile('/js/typeahead.min.js', 'text/javascript');
+?>
+
+<h1>Typeahead</h1>
+<p>Type a continent name (e.g. Africa) in the text field below:</p>
+<input type="text" class="typeahead" title="Type here"/>
+
+<script type="text/javascript">
+  $(document).ready(function() { 
+    $('input.typeahead').typeahead({
+       name: 'continents',
+       local: [
+            'Africa', 
+            'Antarctica',
+            'Asia',
+            'Europe',
+            'South America', 
+            'North America'            
+        ]
+    });
+  });
+</script>
+~~~
+
+Im obigen Code legen wir den Titel für die Seite (Zeile 2) fest.
+Wir fügen die Datei *typeahead.min.js* an den Abschnitt <head> der
+Seite mit dem View-Helper @`HeadScript` ein (Zeile 4).
+
+In Zeile 9 erstellen wir ein Texteingabefeld, in das der Benutzer seinen Text
+eingeben kann. Wir markieren das Eingabefeld mit der CSS-Klasse `typeahead`.
+
+Die Zeilen 11-25 enthalten Inline-JavaScript-Code, der am unteren Rand des
+View-Templates platziert ist (wir verwenden nicht den View-Helper @`InlineScript` für besseren Code
+Lesbarkeit).
+
+In Zeile 12 haben wir den jQuery-Event-Handler an das Event "document is ready" gebunden.
+Dieses Event wird ausgelöst, wenn der DOM-Baum vollständig geladen wurde.
+
+In Zeile 13 haben wir den jQuery-Selektor ("input.typeahead"), der selektiert
+alle Eingabefelder, die mit der CSS-Klasse `typeahead` markiert sind und die Funktion `typeahead()`
+wird auf diesen ausführt werden.
+
+Die Funktion `typeahead()` bindet den Change-Event-Handler an das Texteingabefeld. 
+Sobald der Benutzer ein Zeichen in das Feld eingibt, wird der Handler ausgeführt
+und prüft die eingegebenen Buchstaben. Es zeigt dann das Dropdown-Menü mit Vorgeschlägen der 
+Varianten für die Auto-Vervollständigung an.
+
+Die Funktion `typeahead ()` benötigt zwei Argumente: Das Argument `name` identifiziert
+das Dataset und das Argument `local` ist ein JSON-Array, das die verfügbaren
+Varianten der Auto-Vervollständigung enthält.
+
+Um dem Autovervollständigungsfeld und seinem Dropdown-Menü ein besseres Aussehen zu geben, 
+fügen Sie die folgenden CSS-Regeln zu Ihrer Datei *style.css* hinzu.
+
+{line-numbers=off, lang=css}
+~~~
+.typeahead,
+.tt-query,
+.tt-hint {
+  width: 396px;
+  height: 30px;
+  padding: 0px 12px;
+  font-size: 1.1em;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+.tt-dropdown-menu {
+  width: 422px;
+  margin-top: 12px;
+  padding: 8px 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px; 
+}
+
+.tt-suggestion {
+  padding: 3px 20px;
+  font-size: 1.1em;
+  line-height: 24px;
+}
+
+.tt-suggestion.tt-is-under-cursor {
+  color: #fff;
+  background-color: #0097cf;
+}
+
+.tt-suggestion p {
+  margin: 0;
+}
+~~~
+
+Um die Funktion zum automatischen Vervollständigen in Arbeit zu sehen, geben Sie die URL
+"http://localhost/typeahead" in Ihrem Browser ein und drücken Sie die Eingabetaste.
+Die Seite *Typeahead* erscheint mit der Aufforderung, einen Kontinentnamen einzugeben.
+Geben Sie beispielsweise den Buchstaben *a* ein, um zu sehen, was Typeahead Ihnen für
+Varianten vorschlägt (Abbildung 6.7).
+
+![Abbildung 6.7. Automatische Vervollständigung](images/appearance/typeahead.png)
+
+T> Sie können dieses Beispiel in dem Beispiel *Hello World* sehen, das mit diesem Buch mitgeliefert wird.
+T> Durch die Eingabe der URL "http://localhost/typeahead" in Ihrem Browser, wird es Ihnen angezeigt.
+
+## Hinzufügen von CSS Stylesheets zu einer Webseite
+
+CSS-Stylesheets werden normalerweise in den Abschnitt `<head>` eines HTML-Dokuments eingefügt, entweder als Link zu einer
+externen Datei (externe CSS-Stylesheet-Dateien werden normalerweise im Verzeichnis `APP_DIR/public/css` gespeichert.)
+
+{line-numbers=off, lang=html}
+~~~
+<link rel="stylesheet" type="text/css" href="/css/style.css">
+~~~
+
+oder mit dem Inline-Element `<style>`
+
+{line-numbers=off, lang=html}
+~~~
+<style>
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+ }
+</style>
+~~~
+
+Zum Speichern der CSS-Regeln werden externe CSS-Stylesheets empfohlen. Zum Beispiel die Dateien vom Twitter Bootstrap CSS Framework
+*bootstrap.min.css* und *bootstrap-theme.min.css*. Sie stellen grundlegende CSS-Regeln zur Verfügung.
+Benutzerdefinierte seitenspezifische CSS-Regeln können in der Datei *style.css* gespeichert werden. Da diese
+CSS-Stylesheets die meisten Ihrer Seiten sie benötigen, wenn sie sie im Kopfbereich des
+Layout-Templates platzieren. Wenn Sie jedoch ein bestimmtes CSS-Stylesheet nur für eine einzelne Seite laden müssen,
+platzieren Sie es im View-Template dieser Seite.
+
+Um ein externes CSS-Stylesheet zu einem View-Template hinzuzufügen, verwenden Sie den View-Helper @`HeadLink`:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+$this->headLink()->appendStylesheet('/css/style.css'); 
+$this->headLink()->appendStylesheet(
+       '//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css'); 
+~~~
+
+Im obigen Beispielcode haben wir die Methode `appendStylesheet()` des View-Helper @`HeadLink` verwendet.
+Mit ihr fügen wir dem Kopfbereich des Dokuments ein externes CSS-Stylesheet hinzu. Die Methode akzeptiert
+ein Pfad zur lokalen CSS-Datei (Zeile 2) oder eine URL zur CSS-Datei auf einem anderen Server (Zeile 3).
+
+Die Zusammenfassung der Methoden des View-Helpers @`HeadLink` finden Sie in Tabelle 6.2.
+
+{title="Tabelle 6.2. Vom View-Helper HeadLink bereitgestellte Methoden"}
+|---------------------------|---------------------------------------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung*																		|
+|---------------------------|---------------------------------------------------------------------------------------|
+| `appendStylesheet()` 		| Fügt nach allen anderen eine Verknüpfung zur CSS-Stylesheet-Datei ein. 				|
+|---------------------------|---------------------------------------------------------------------------------------|
+| `offsetSetStylesheet()`	| Fügt einen Link zur CSS-Stylesheet-Datei an einer bestimmten Position der Liste ein.	|
+|---------------------------|---------------------------------------------------------------------------------------|
+| `prependStylesheet()` 	| Fügt vor allen anderen eine Verknüpfung zur externen CSS-Stylesheet-Datei ein. 		|
+|---------------------------|---------------------------------------------------------------------------------------|
+| `setStylesheet()` 		| Löscht die Liste und setzt stattdessen die einzelne CSS-Datei ein. 					|
+|---------------------------|---------------------------------------------------------------------------------------|
+
+Wenn Sie das Inline-Element `<style>` im Kopfbereich des Dokuments hinzufügen möchten, können Sie dazu
+den View-Helper @`HeadStyle` verwenden. Die Methoden hierfür sind in der folgenden Tabelle 6.3 aufgeführt:
+
+{title="Tabelle 6.3. Methoden des View-Helper HeadStyle"}
+|-----------------------|-----------------------------------------------------------------------------------|
+| *Methodenname* 		| *Beschreibung*																	|
+|-----------------------|-----------------------------------------------------------------------------------|
+| `appendStyle()` 		| Fügt ein CSS-Stylesheet inline nach allen anderen hinzu. 							|
+|-----------------------|-----------------------------------------------------------------------------------|
+| `offsetSetStyle()`	| Fügt ein CSS-Stylesheet inline an einer angegebenen Position in der Liste ein. 	|
+|-----------------------|-----------------------------------------------------------------------------------|
+| `prependStyle()` 		| Fügt ein CSS Stylesheet inline vor allen anderen ein. 							|
+|-----------------------|-----------------------------------------------------------------------------------|
+| `setStyle()` 			| Löscht die Liste und setzt das einzelne CSS-Stylesheet stattdessen inline ein.	|
+|-----------------------|-----------------------------------------------------------------------------------|
+
+### Beispiel
+
+Um zu demonstrieren, wie Sie Ihrer Webseite ein CSS-Stylesheet hinzufügen, werden wir an einem Beispiel aus dem Leben
+zeigen. Angenommen, Sie müssen dem Benutzer die Möglichkeit geben, dass er ein Datum (im Format JJJJ-MM-TT).
+in einem Texteingabefeld eingeben kann. Sie möchten die Benutzerfreundlichkeit verbessern, indem er dass Datum
+einfach eingeben kann, aber auch, indem er es aus einem Popup eines auswählen kann.
+
+Um dieses Ziel zu erreichen, können Sie die Bibliothek eines Drittanbieters von jQuery UI [^jqueryui] verwenden.
+Wenn Sie jQuery UI in Ihre Seite integrieren, müssen Sie zwei Dateien von der [offiziellen Projektseite](http://jqueryui.com/) herunterladen:
+
+* *jquery-ui.min.js* - die verkleinerte Version des JavaScript-Codes von jQuery UI;
+
+* *jquery-ui.min.css* - die verkleinerte Version der jQuery UI Theme.
+
+[^jqueryui]: jQuery UI bietet eine Reihe von "Interaktionen, Effekte, Widgets,
+             und Themen"; es basiert auf der jQuery-Bibliothek. jQuery UI ist analog zu Twitter
+             Bootstrap in dem Sinne, dass beide wiederverwendbare Benutzerschnittstellenkomponenten bereitstellen.
+
+Speichern Sie die Datei *jquery-ui.min.js* in die Datei in das Verzeichnis *APP_DIR/public/js* und die Datei *jquery-ui.min.css*
+in das Verzeichnis *APP_DIR/public/css*. Fügen Sie schließlich das View-Template *tempicker.phtml* dem Verzeichnis *application/index/static*
+unter dem Verzeichnis *view* des Moduls hinzu:
+
+{line-numbers=on, lang=php}
+~~~
+<?php
+$this->headTitle('Datepicker');
+
+$this->headScript()->appendFile('/js/jquery-ui.min.js', 'text/javascript'); 
+$this->headLink()->appendStylesheet('/css/jquery-ui.min.css'); 
+?>
+
+<h1>Datepicker</h1>
+
+<p>
+    Click the edit box below to show the datepicker.
+</p>
+
+<input type="text" class="datepicker" title="Type here"/>
+
+<script>      
+    $(document).ready(function() {
+        $("input.datepicker").datepicker({ dateFormat: 'yy-mm-dd' });     
+    });
+</script>
+~~~
+
+Im obigen Beispiel verwenden wir aus dem View-Helper @`HeadScript` die Methode `appendFile()`
+(Zeile 4), um die Datei *jquery-ui.min.js* zum Kopfbereich des Dokuments hinzuzufügen.
+
+In Zeile 5 verwendeten wir aus dem View-Helper @`HeadLink` die Methode `appendStylesheet()`, 
+um die CSS-Stylesheet-Datei *jquery-ui.min.css* zum Kopfbereich des Dokuments hinzuzufügen.
+
+In Zeile 14 haben wir das Texteingabefeld hinzugefügt, das zur Eingabe des Datums verwendet wird.
+
+In Zeile 16-20 haben wir einen Inline-JavaScript-Code eingebunden, welches den jQuery-Event-Handler für das
+Texteingabefeld hinzugefügt. Wenn der Benutzer auf das Texteingabefeld klickt,
+erscheint das Datepicker-Widget, um das Datum auszuwählen.
+
+Um das Ergebnis zu sehen, geben Sie die URL "http://localhost/datepicker" in die
+Navigationsleiste Ihres Browser ein (siehe Abbildung 6.8).
+
+![Abbildung 6.8. Datepicker](images/appearance/datepicker.png) 
+
+## Eigene Viwe-Helper schreiben
+
+Zuvor in diesem Kapitel haben wir das Layout für alle Seiten der Website erstellt.
+Aber wir haben noch ein paar Dinge zu tun, um das Layout voll funktionsfähig zu machen.
+Wenn Sie sich erinnern, enthält das Layout-Template die Navigationsleiste
+und das Breadcrumpb. Aber die beiden Twitter-Bootstrap-Komponenten Navigationsleiste
+und Breadcrumbsind derzeit "statisch", doch sie sollten
+interaktiv sein.
+
+Zum Beispiel sollte das aktive Element der Navigationsleiste davon der Aktion
+des Controllers abhängen, die gerade ausgeführt wird. Und in den Breadcrumbs
+sollte der Pfad zur aktuell angezeigten Seite anzeigen werden. In diesem Abschnitt werden wir
+diese Widgets mit Hilfe unseres eigenen View-Helpers komplett für die Website bereit stellen.
+
+Ein typischer View-Helper ist eine PHP-Klasse, die von der Basisklasse
+@`Zend\View\Helper\AbstractHelper` abgeleitet wird, die wiederum implementiert die Schnittestelle
+@`Zend\View\Helper\HelperInterface` (Klassenvererbungsdiagramm wird in
+Abbildung 6.9 dargestellt).
+
+![Abbildung 6.9. View-Helper-Klassendiagramm](images/appearance/view_helper_inheritance.png)
+
+### Menu
+
+Zuerst implementieren wir die View-Helper-Klasse `Menu`, die den HTML-Code der
+Navigationsleiste rendert. Die Klasse `Menu` wird mehrere Methoden besitzen,
+um Menüelemente in einem Array festzulegen, einen aktiven Menüeintrag fest zulegen und das Menü
+zu rendern (siehe Tabelle 6.4 zur Methodenübersicht).
+
+{title="Tabelle 6.4. Methoden des View-Helper Menu"}
+|-----------------------------------|-------------------------------------------------------|
+| *Methodenname* 					| *Beschreibung* 										|
+|-----------------------------------|-------------------------------------------------------|
+| `__construct($items)` 			| Klassenkonstruktor. 									|
+|-----------------------------------|-------------------------------------------------------|
+| `setItems($items)` 				| Methode zum Setzen mehrerer Menüpunkte. 				|
+|-----------------------------------|-------------------------------------------------------|
+| `setActiveItemId($activeItemId)`	| Methode zum Setzen des gerade aktiven Menüpunktes. 	|
+|-----------------------------------|-------------------------------------------------------|
+| `render()` 						| Rendert das Menü. 									|
+|-----------------------------------|-------------------------------------------------------|
+| `renderItem($item)` 				| Rendert einen einzelnen Menüeintrag. 					|
+|-----------------------------------|-------------------------------------------------------|
+
+Die Informationen, die einen einzelnen Menüpunkt beschreiben, werden durch
+ein Array, wie unten, dargestellt (zum Beispiel, der Eintrag *Home* wird eine `id`, einen Text `label`
+und eine URL für einen Hyperlink `link` haben):
+
+{line-numbers=off,lang=php}  
+~~~
+[
+  'id' => 'home',
+  'label' => 'Home',
+  'link' => $this->url('home')
+]
+~~~
+
+Wir möchten auch die Unterstützung für Dropdown-Menüs als Navigationselemente hinzufügen. Zum Beispiel,
+im Fall des Dropdown-Menüs *Support* mit den Unterpunkten *Documentation* und *Help*.
+Das Array wird folgende Form annehmen:
+
+{line-numbers=off,lang=php}  
+~~~
+[
+  'id' => 'support',
+  'label' => 'Support',
+  'dropdown' => [
+    [
+      'id' => 'documentation',
+      'label' => 'Documentation',
+      'link' => $this->url('doc', ['page'=>'contents'])
+    ],
+    [
+      'id' => 'help',
+      'label' => 'Help',
+      'link' => $this->url('static', ['page'=>'help'])
+    ]
+  ]                        
+]
+~~~
+
+Wir wollen die Klasse `Menu` mit dem Namensraum `Application\View\Helper` erstellen. Somit ertellen wir
+eine Datei `Menu.php` im Verzeichnis *View/Helper * unter dem Verzeichnis *Application* im
+Quellverzeichnis unseres Moduls (Abbildung 6.10).
+
+![Abbildung 6.10. View-Helper-Verzeichnis](images/appearance/view_helper_dir.png)
+
+Q> **Warum platzieren wir die View-Helper-Klasse im Quellverzeichnis des Moduls?**
+Q>
+Q> View-Helper (im Gegensatz zu den View-Templates `.phtml`) sind im Verzeichnis `src/` des Moduls gespeichert,
+Q> da sie übliche PHP-Klassen sind und von einer Autoload-Funktion von PHP geladen werden müssen.
+Q> Auf der anderen Seite werden View-Templates durch die spezielle ZF3-Klasse *View Resolver* geladen.
+Q> Deshalb werden dir View-Templates im Verzeichnis `view/` des Moduls gespeichert.
+
+Als nächstes fügen Sie folgenden Code an die Klasse `Menu` ein:
+
+{line-numbers=on,lang=php}  
+~~~
+<?php
+namespace Application\View\Helper;
+
+use Zend\View\Helper\AbstractHelper;
+
+// This view helper class displays a menu bar.
+class Menu extends AbstractHelper 
+{
+  // Menu items array.
+  protected $items = [];
+    
+  // Active item's ID.
+  protected $activeItemId = '';
+    
+  // Constructor.
+  public function __construct($items=[]) 
+  {
+    $this->items = $items;
+  }
+    
+  // Sets menu items.
+  public function setItems($items) 
+  {
+    $this->items = $items;
+  }
+    
+  // Sets ID of the active items.
+  public function setActiveItemId($activeItemId) 
+  {
+    $this->activeItemId = $activeItemId;    
+  }  
+}
+~~~
+
+Im obigen Code haben wir mehrere private Klassenvariablen für die Klasse `Menü` definiert.
+Die Klassenvariablen "$items" (Zeile 10) ist ein Array, in dem die Informationen für die
+Menüpunkte gespeichert werden; und die Klassenvariablen "$activeItemId" (Zeile 13) ist die ID eines aktiven
+Menüpunktes. Der aktive Menüpunkt wird optisch hervorgehoben.
+
+In den Zeilen 16-19 haben wir den Klassenkonstruktor definiert, dem (optional)
+ein Array von Elementen zum Initialisieren des Menüs übergeben werden kann. Eine alternative Methode
+zum initialisieren des Menüs erfolgt über die Methode `setItems ()` (Zeilen 22-25). Und die Methode 
+`setActiveItemId()` (Zeilen 28-31) legt die ID des gerade aktiven Menüpunktes fest.
+
+Als nächstes fügen wir die Methode `render()` hinzu. Sie erzeugt den HTML-Code erzeugt
+der gesamten Navigationsleiste und gibt diesen als Textstring zurück:
+
+{line-numbers=on,lang=php}  
+~~~
+// Renders the menu.
+public function render() 
+{
+  if (count($this->items)==0)
+    return ''; // Do nothing if there are no items.
+        
+  $result = '<nav class="navbar navbar-default" role="navigation">';
+  $result .= '<div class="navbar-header">';
+  $result .= '<button type="button" class="navbar-toggle" ';
+  $result .= 'data-toggle="collapse" data-target=".navbar-ex1-collapse">';
+  $result .= '<span class="sr-only">Toggle navigation</span>';
+  $result .= '<span class="icon-bar"></span>';
+  $result .= '<span class="icon-bar"></span>';
+  $result .= '<span class="icon-bar"></span>';
+  $result .= '</button>';
+  $result .= '</div>';
+       
+  $result .= '<div class="collapse navbar-collapse navbar-ex1-collapse">';
+  $result .= '<ul class="nav navbar-nav">';
+        
+  // Render items
+  foreach ($this->items as $item) {
+    $result .= $this->renderItem($item);
+  }
+        
+  $result .= '</ul>';
+  $result .= '</div>';
+  $result .= '</nav>';
+        
+  return $result;
+}
+~~~
+
+Im obigen Code wird das HTML-Markup für die Bootstrap-Navigationsleistenkomponente erstellt.
+Die Navigationsleiste verwendet die Standard-Theme und wird sich verschiedene Bildschirmbreiten
+anpassen. Die Navigationsleiste hat nicht den Logo-Text (brand) in der Header.
+In den Zeilen 22-24 durchlaufen wir die Menüpunkte und rendern diese jeweils mit der Methode
+`renderItem()`. Schließlich gibt die Methode `render()` den generierten HTML-Code als String zurück.
+
+Um das Erstellen der Klasse `Menu` zu beenden, implementieren wir die Methode 
+`renderItem()`. Diese Methode erzeugt den HTML-Code für einen einzelnen Menüeintrag:
+
+{line-numbers=on,lang=php}  
+~~~
+// Renders an item.
+protected function renderItem($item) 
+{
+  $id = isset($item['id']) ? $item['id'] : '';
+  $isActive = ($id==$this->activeItemId);
+  $label = isset($item['label']) ? $item['label'] : '';
+        
+  $result = ''; 
+        
+  if(isset($item['dropdown'])) {
+            
+    $dropdownItems = $item['dropdown'];
+            
+    $result .= '<li class="dropdown ' . ($isActive?'active':'') . '">';
+    $result .= '<a href="#" class="dropdown-toggle" data-toggle="dropdown">';
+    $result .= $label . ' <b class="caret"></b>';
+    $result .= '</a>';
+           
+    $result .= '<ul class="dropdown-menu">';
+ 
+    foreach ($dropdownItems as $item) {
+      $link = isset($item['link']) ? $item['link'] : '#';
+      $label = isset($item['label']) ? $item['label'] : '';
+                
+      $result .= '<li>';
+      $result .= '<a href="'.$link.'">'.$label.'</a>';
+      $result .= '</li>';
+    }
+    
+    $result .= '</ul>';
+    $result .= '</a>';
+    $result .= '</li>';
+            
+  } else {        
+    $link = isset($item['link']) ? $item['link'] : '#';
+            
+    $result .= $isActive?'<li class="active">':'<li>';
+    $result .= '<a href="'.$link.'">'.$label.'</a>';
+    $result .= '</li>';
+  }
+    
+  return $result;
+}
+~~~
+
+In dem obigen Code der Methode `renderItem()` haben wir folgendes gemacht.
+Zuerst haben wir überprüft, ob es sich bei dem Element um ein Dropdown-Menü oder um einen einfachen Menüeintrag handelt
+(Zeile 10). Wenn es sich bei dem Element um ein Dropdown-Menü handelt, durchlaufen wir die Elemente 
+das Drop-Down-Menüs, und rendern alle Elemente nacheinander (Zeilen 21-28). Zeilen 35-39 enthalten den
+Rendering-Code für den Fall eines einfachen Elements.
+
+Um den View-Helper `Menu` in einem View-Template verwenden zu können, ist nötig,
+ihn in der Konfiguration zu registrieren. Fügen Sie in der Datei *module.config.php*
+in den Schlüssel `view_helpers` folgendes ein:
+
+{line-numbers=off,lang=php}  
+~~~
+<?php
+return [
+
+    // ...
+    
+    // The following registers our custom view 
+    // helper classes in view plugin manager.
+    'view_helpers' => [
+        'factories' => [
+            View\Helper\Menu::class => InvokableFactory::class,                    
+        ],
+       'aliases' => [
+            'mainMenu' => View\Helper\Menu::class
+       ]
+    ],    
+];
+~~~
+
+Im obigen Beispiel haben wir unsere Klasse `Menu` als View-Helper `mainMenu` registriert.
+So kann er von jedem View-Template aus aufgerufen werden.
+
+Da wir den View-Helper `Menu` im Layout-Template verwenden möchten,
+ersetzen Sie das Navigationsmenü-Markup in der Datei *layout.phtml* durch den folgenden Code:
+
+{line-numbers=on,lang=php}  
+~~~
+<!-- Navigation bar -->
+<?php      
+  $this->mainMenu()->setItems([
+    [
+      'id' => 'home',
+      'label' => 'Home',
+      'link' => $this->url('home')
+    ],
+    [
+      'id' => 'downloads',
+      'label' => 'Downloads',
+      'link' => $this->url("application", ['action'=>'downloads'])
+    ],
+    [
+      'id' => 'support',
+      'label' => 'Support',
+      'dropdown' => [
+        [
+          'id' => 'documentation',
+          'label' => 'Documentation',
+          'link' => $this->url('doc', ['page'=>'contents'])
+        ],
+        [
+          'id' => 'help',
+          'label' => 'Help',
+          'link' => $this->url('static', ['page'=>'help'])
+        ]
+      ]                        
+    ],
+    [
+      'id' => 'about',
+      'label' => 'About',
+      'link' => $this->url('about')
+    ],
+  ]);
+
+  echo $this->mainMenu()->render(); 
+?>
+~~~
+
+Im obigen Code greifen wir auf den registrierten View-Helper `mainMenu` zu und setzen
+die Elemente der Navigationsleiste mit Hilfe der Methode `setItems()` (Zeile 3).
+Als Parameter der Methode übergeben wir ein Array von Elementen.
+Dann rendern wir die Navigationsleiste mit der Methode `render()`.
+
+Um das aktive Element für die Navigationsleiste festzulegen, können wir die Methode `setActiveItemId()`
+aus einem beliebigen View-Template aus aufrufen. Fügen Sie beispielsweise den folgenden Code zum Anfang
+des View-Templates für die Seite About* (*application/index/about.phtml *) wie folgt hinzu:
+
+{line-numbers=off,lang=php}  
+~~~
+<?php
+$this->mainMenu()->setActiveItemId('about');
+?>
+~~~
+
+Wenn Sie nun die Seite *About* in Ihrem Browser öffnen, sollten Sie das Element *About* 
+im Navigationsmenüs sehen und es ist mit einer anderen Farbe markiert. Um das aktive Objekt anzuzeigen
+müssen sie die Methode `setActiveItemId()` für jede Seite, die im Navigationsmenü
+(*Home*, *Downloads*, *Dokumentation*, etc.) angezeigt wird, im jeweiligen View-Template aufrufen.
+Sie können dies im Beispiel *Hallo Welt* nachvollziehen.
+
+### Breadcrumbs
+
+Jetzt, da Sie wissen, wie Sie einen View-Helper implementieren, erstellen wir den zweiten
+View-Helper für das Rendern der Breadcrumbs. Dieser ist völlig analog zum View-Helper Menü.
+Den kompletten Code für den die View-Helper Klasse `Breadcrumbs` sieht wie folgt aus:
+
+{line-numbers=on,lang=php}  
+~~~
+<?php
+namespace Application\View\Helper;
+
+use Zend\View\Helper\AbstractHelper;
+
+// This view helper class displays breadcrumbs.
+class Breadcrumbs extends AbstractHelper 
+{
+  // Array of items.
+  private $items = [];
+    
+  // Constructor.
+  public function __construct($items=[]) 
+  {                
+    $this->items = $items;
+  }
+    
+  // Sets the items.
+  public function setItems($items) 
+  {
+    $this->items = $items;
+  }
+    
+  // Renders the breadcrumbs.
+  public function render() 
+  {
+    if(count($this->items)==0)
+      return ''; // Do nothing if there are no items.
+        
+    // Resulting HTML code will be stored in this var
+    $result = '<ol class="breadcrumb">';
+        
+    // Get item count
+    $itemCount = count($this->items); 
+        
+    $itemNum = 1; // item counter
+        
+    // Walk through items
+    foreach ($this->items as $label=>$link) {
+            
+      // Make the last item inactive
+      $isActive = ($itemNum==$itemCount?true:false);
+            
+      // Render current item
+      $result .= $this->renderItem($label, $link, $isActive);
+                        
+      // Increment item counter
+      $itemNum++;
+    }
+        
+    $result .= '</ol>';
+        
+    return $result;
+  }
+    
+  // Renders an item.
+  protected function renderItem($label, $link, $isActive) 
+  {
+   $result = $isActive?'<li class="active">':'<li>';
+       
+    if(!$isActive)
+      $result .= '<a href="'.$link.'">'.$label.'</a>';
+    else
+      $result .= $label;
+                    
+    $result .= '</li>';
+    
+    return $result;
+  }
+}
+~~~
+
+Um den View-Helper `Breadcrumbs` in einem View-Template verwenden zu können, ist nötig,
+ihn in der Konfiguration zu registrieren. Fügen Sie in der Datei *module.config.php*
+in den Schlüssel `view_helpers` folgendes ein:
+
+{line-numbers=on,lang=php}  
+~~~
+<?php
+return [
+
+  //...
+    
+  // The following registers our custom view helper classes.
+  'view_helpers' => [
+    'factories' => [      
+      View\Helper\Breadcrumbs::class => InvokableFactory::class,          
+    ],
+    'aliases' => [
+        'pageBreadcrumbs' => View\Helper\Breadcrumbs::class,
+    ]
+  ],
+];
+~~~
+
+Da wir den View-Helper `Breadcrumbs` in dem Layout-Template verwenden möchten,
+ersetzen Sie den Code des Breadcrumbs in der Datei *layout.phtml* durch folgenden Code:
+
+{line-numbers=off,lang=php}  
+~~~
+<!-- Breadcrumbs -->
+<?= $this->pageBreadcrumbs()->render(); ?>
+~~~
+
+Im obigen Code greifen wir auf den View-Helper `pageBreadcrumbs()` zu
+und rufen ihn mit der Methode `render()` auf. Der PHP-Befehl `echo` gibt dann
+der HTML-Code der Breadcrumbs aus.
+
+Schließlich müssen Sie die Breadcrumbs-Elemente in jedem View-Template übergeben.
+Fügen Sie beispielsweise folgendene Zeilen in das View-Template für die Seite *About* hinzu:
+
+{line-numbers=off,lang=php}  
+~~~
+<?php
+$this->pageBreadcrumbs()->setItems([
+            'Home'=>$this->url('home'),
+            'About'=>$this->url('about'),
+            ]);
+?>
+~~~
+
+Wenn Sie nun die About-Seite öffnen, sollten Sie Breadcrumbs wie in Abbildung 6.11 sehen.
+Die Benutzer der Website sehen sofort, welche Seite sie gerade besuchen und gehen Ihnen nicht verloren.
+
+![Abbildung 6.11. Breadcrumbs für die About-Seite](images/appearance/about_breadcrumbs.png)
+
+## View Models und Page Composition
+
+Früher, als wir die Action-Methoden für die Controller-Klassen geschrieben haben, haben wir die Klasse @`ViewModel`[Zend\View\Model\ViewModel]
+als Variablencontainer verwendet, zum ÜVariablen vom Controller an ein View-Template zu übergeben.
+Außerdem verwendeten wir das @`ViewModel`[Zend\View\Model\ViewModel], um den Namen des Standard-View-Templates zu überschreiben.
+
+Tatsächlich ist die Klasse @`ViewModel`[Zend\View\Model\ViewModel] mehr als nur ein Variablencontainer und ein Ort
+um den Namen zu überschreiben. In der Tat ist er eng mit dem Layout und der Seitenzusammensetzung verbunden.
+
+Die dritte große Fähigkeit der View-Model-Klasse besteht darin, dass *mehrere* kombiniert werden können.
+Betrachten wir die Modelle in einer baumartigen Struktur. Jedes View-Model in der Baumstruktur ist mit
+dem Namen des View-Templates und der Datenvariablen verknüpft, die an das zu steuernde View-Template
+des Prozesses des Renderings übergeben werden können.
+
+Diese Funktion wird intern von Zend Framework 3 beim "Kombinieren" des Layout-Templates verwendet und
+das View-Template, welches der Aktionsmethode des Controllers zugeordnet ist. ZF3 erstellt intern das
+View-Modell für das Layout-Template und weist ihm den Namen des Layout-Temlates `layout/layout` zu. Wenn
+die Aktionsmethode Ihres Controllers das Objekt @`ViewModel`[Zend\View\Model\ViewModel] zurück gibt, wird dieses Objekt
+als Kind zum Layout-View-Modell hinzufügt (siehe Abbildung 6.12 für ein Beispiel).
+
+![Abbildung 6.12. Zeigt die Baumstruktur eines View-Models (images/appearance/viewmodel_tree.png)
+
+Der resultierende Prozess des Seitenrenderings ist der folgender:
+
+* Das Kind-View-Modell wird zuerst aufgerufen und das zugehörige View-Template wird gerendert.
+  Das daraus resultierende HTML-Markup wird in einem temporären Speicher gespeichert;
+* Das Ausgabe-HTML-Markup des untergeordneten View-Models wird an das Layout-View-Model
+  als `$content`-Variable übergeben. Auf diese Weise kann der Inhalt des Layout-View-Template gerendert werden,
+  welcher für eine bestimmte Seite spezifisch ist.
+
+Tabelle 6.5 enthält eine Zusammenfassung der Methoden, die von der Klasse @`ViewModel`[Zend\View\Model\ViewModel] für die
+Seitenkomposition zur Verfügung gestellt werden:
+
+{title="Tabelle 6.5. Methoden der ViewModel-Klasse für die Seitenkomposition"}
+|-------------------|-----------------------------------------------------------------------|
+| *Methodenname* 	| *Beschreibung*														|
+|-------------------|-----------------------------------------------------------------------|
+| `addChild()` 		| Fügt ein untergeordnetes ViewModel hinzu. 							|
+|-------------------|-----------------------------------------------------------------------|
+| `getChildren()` 	| Ruft die Liste der untergeordneten ViewModel ab. 						|
+|-------------------|-----------------------------------------------------------------------|
+| `hasChildren()` 	| Prüft, ob das ViewModel untergeordnete Elemente enthält oder nicht.	|
+|-------------------|-----------------------------------------------------------------------|
+| `clearChildren()`	| Entfernt alle untergeordneten ViewModels. 							|
+|-------------------|-----------------------------------------------------------------------|
+| `count()` 		| Gibt die Anzahl der untergeordneten ViewModels zurück. 				|
+|-------------------|-----------------------------------------------------------------------|
+| `getIterator()` 	| Gibt den Iterator für untergeordnete ViewModels zurück. 				|
+|-------------------|-----------------------------------------------------------------------|
+| `setTerminal()` 	| Setzt das Terminal-Flag. 												|
+|-------------------|-----------------------------------------------------------------------|
+| `terminate()` 	| Prüft, ob das ViewModel ein Terminal ist. 							|
+|-------------------|-----------------------------------------------------------------------|
+| `setCaptureTo()` 	| Legt den Namen der Variablen zum Erfassen der Ausgabe fest. 			|
+|-------------------|-----------------------------------------------------------------------|
+| `setAppend()` 	| Setzt das Append-Flag. 												|
+|-------------------|-----------------------------------------------------------------------|
+| `isAppend()` 		| Prüft, ob das ViewModel an ein anderes angehängt werden soll. 		|
+|-------------------|-----------------------------------------------------------------------|
+
+Im Folgenden geben wir eine kurze Beschreibung der Methoden aus der obigen Tabelle.
+
+Die Methoden `addChild()`, `getChild()`, `hasChildren()` und `clearChildren()` werden zum
+Hinzufügen eines Kind-View-Models zu dem Elternmodell (bzw.) zum Abrufen von View-Models als Array,
+zum prüfen, ob das View-Model Kind-View-Models enthält (oder nicht) und zum löschen aller Kind-View-Models.
+
+Die Methode `setCaptureTo()` erlaubt es, im übergeordneten View-Template die Variable zu setzen, in welcher
+der erzeugte HTML-Markup-Code des Kind-View-Templates eingefügt werden soll. Wenn zwei Kind-View-Models
+die gleiche Variable verwenden, wird die Zweite die Erste überschreiben.
+Die Methode `setAppend()` kann verwendet werden, wenn Sie die Ergebnisse von zwei oder mehr View-Templates
+in einer einzelnen Platzhaltervariablen injizieren müssen. Das nächste gerenderte View-Template wird
+an den vorhandenen Inhalt der Variablen angehängt werden. Das vom Controller zurückgegebene View-Model
+wird der Capture-Variable `$content` zugewiesen.
+
+Ein View-Modell kann mit der Methode `setTerminal()` als *terminal* markiert werden. Die Methode `setTerminal()`
+nimmt einen einzelnen Flag-Parameter entgegen. Wenn `true`, wird das View-Model als Terminal betrachtet (oberste Ebene).
+Der Renderer gibt andernfalls die Ausgabe des View-Templates an die Anwendung zurück,
+um vom übergeordneten View-Template wiedergegeben zu werden. Die Methode `terminate()` testet, ob das View-Modell als *terminal* markiert
+worden ist oder nicht.
+
+T> Die `setTerminal )` Methode ist in einigen Situationen sehr nützlich, weil sie Ihnen hilft
+T> das Rendern des Layout-View-Templates zu deaktivieren. Wenn Sie vom Controller ein als *terminal* markiertes View-Model zurückgeben,
+T> wird das Layout nicht angewendet. Dies kann zum Beispiel verwendet werden,
+T> wenn Sie einen Teil einer Seite asynchron durch einen AJAX-Request[^ajax] laden möchten und den
+T> HTML-Code im DOM-Baum einer vorhandenen Seite einfügen wollen.
+ 
+[^ajax]: AJAX (steht für Asynchronous JavaScript und XML) ist eine Funktion, die von modernen Browsern bereitgestellt wird.
+         Die Daten werden asynchron an einen Server gesendet und erhalten die Antwort-Daten von ihm wieder zurück
+         (im Hintergrund), ohne die Anzeige und das Verhalten der vorhandenen Seite zu beeinträchtigen.
+  
+## Zusammenfassung
+
+Zend Framework 3 wird mit Twitter Bootstrap ausgeliefert, ein CSS Framework,
+welches die Erstellung visuell ansprechender und professionell aussehender Web-Anwendungen 
+ermöglicht. Es enthält die grundlegenden CSS-Regeln, ein einfaches Layout-Grid-System und
+nützliche Interface-Komponenten (wie Navigationsleisten, Breadcrumbs, Paginierung,
+usw.)
+
+In einer typischen Website haben Seiten eine gemeinsame Struktur (z.B. eine typische Seite)
+kann eine Navigationsleiste im Header haben, einen Body mit Seiteninhalt und eine Fußzeile mit
+den Copyright-Informationen am unteren Rand). In Zend Framework 3 definieren Sie
+diese allgemeine Struktur mit einer Template-Datei namens layout. Das Layout-Template
+kann Platzhalter haben, in denen ZF3 den Inhalt für eine
+bestimmte Webseite einfügt.
+
+View-Helper sind (relativ) einfache PHP-Klassen, die einen Teil der Seite des 
+Renderings kapseln. Zum Beispiel erlauben sie das Zusammensetzen der Seite aus mehreren Teilen,
+festlegen von Seitentitel und Meta-Tags und erstellen der wiederverwendbaren Widgets wie Navigationmenü
+oder Breadcrumbs.
+

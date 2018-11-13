@@ -1,0 +1,491 @@
+# Anhang E. Installieren einer ZF3-Webanwendung auf Amazon EC2 {#ec2-tutorial}
+
+Nachdem Sie eine ZF3-basierte Website entwickelt haben, müssen Sie diese auf einem öffentlich zugänglichen Webserver installieren
+um es für andere Menschen sichtbar zu machen.
+
+Wenn Sie eine auf Zend Framework 3 basierende Webanwendung installieren möchten, aber noch keinen Webserver haben,
+ist dieses Tutorial für Sie genau richtig. In diesem Tutorial zeigen wir Ihnen, wie Sie eine virtuelle Linux-Maschine
+auf *Amazon Web Services Cloud* kostenlos erstellen und wie die Anwendung *Hello World* dort installiert wird.
+
+## Was sind Amazon Web Services?
+
+[Amazon Web Services (AWS)](https://aws.amazon.com) ist eine Cloud-Plattform, die skalierbare
+zuverlässige Webhosting-Dienste hat. Cloud Computing ist die Bereitstellung von Rechen-und Speicherkapazitäten
+als Dienst für eine Gemeinschaft von Endempfängern. Mit AWS können Sie ganz einfach einen Webserver einrichten und
+in wenigen Minuten darauf zugreifen. Für neue Benutzer bietet Amazon eine kostenlose Nutzungsebene: Sie können eine
+Webserver für ein Jahr absolut kostenlos mieten.
+
+Mit der kostenlosen Nutzungsebene von AWS haben Sie also:
+
+  * virtuellen Linux-Server (613 MB Arbeitsspeicher sowie Unterstützung für 32-Bit-und 64-Bit-Plattformen);
+  * 30 GB Speicherplatz;
+  * 15 GB Datenverkehr pro Monat;
+  * eine dedizierte externe IP-Adresse.
+  
+Sie können sich registrieren und alles können Sie in einer halben Stunde erhalten und sich auf die Arbeit vorbereiten. Sie müssen bei Amazone Ihre Kreditkarte hinterlegen
+(Amazon berechnet bei der Registrierung $ 2) und eine Telefonnummer (Amazon prüft Ihre Identität.).
+
+## Erstellen eines Amazon Web Services-Kontos
+
+Um ein neues AWS-Konto zu erstellen, müssen Sie die Seite *Amazon Web Services *in Ihrem Browser öffnen und auf den Button
+*Sign Up * klicken. Die Seite *Sign In or Create an AWS Account* wird angezeigt (siehe Abbildung unten):
+
+![Abbildung E.1. Seite zum Anmelden oder Erstellen eines AWS-Kontos](images/ec2_tutorial/aws_create_account.png)
+
+Sie müssen Ihre E-Mail-Adresse eingeben, die Option *I am a new user* auswählen und auf den Button *ign in 
+using our secure server* klicken. Dann müssen Sie mehrere Registrierungsschritte durchlaufen: Konto
+Erstellung, Auswahl der Zahlungsmethode, Identitätsprüfung und Bestätigung.
+
+Wenn Sie mit der Registrierung fertig sind, melden Sie sich bei Ihrem AWS-Konto an und klicken Sie auf den Button *My Account/Console*
+und wählen Sie im Dropdown-Menü  *AWS Management Console* aus. Die Seite *AWS Management Console* wird angezeigt
+(siehe Abbildung unten):
+
+![Abbildung E.2. AWS Management Console](images/ec2_tutorial/aws_management_console.png)
+
+Die *AWS Management Console* zeigt die Produkte an, auf die Sie aktuell zugreifen können. Sie interessieren sich für das EC2
+Produkt (Elastic Compute Cloud, kurz EC2). Da EC2 den Betrieb eines virtuellen Linux-Servers ermöglicht. In den Nutzungsbedingugen
+wird ein solcher virtueller Server von AWS auch als EC2-Instanz bezeichnet.
+
+## Ein Schlüsselpaar erstellen
+
+AWS verwendet ein Schlüsselpaar, um Sie zu authentifizieren, wenn Sie eine Verbindung zur virtuellen Maschine EC2 herstellen. Das Schlüsselpaar
+besteht aus zwei Schlüsseln: dem öffentlichen und einem privaten Schlüssel. Der private Schlüssel sollte in an einen
+geheimer Ort gespeichert werden und Sie sollten ihn niemandem geben.
+
+Klicken Sie im Fenster *WS Management Console* auf das Symbol EC2. Die Seite *EC2 Console* wird angezeigt. Die Seite hat ein Menü in der Seitenleiste,
+in dem Sie verschiedene Bereiche wie *INSTANCES*, *IMAGES*, *ELASTIC BLOCK STORE*, *NETWORK & SECURITY* finden.
+
+Um eine sichere Verbindung zu Ihrem virtuellen Server über das SSH-Protokoll herzustellen, müssen Sie ein Schlüsselpaar erstellen.
+Klicken Sie dazu im Seitenleistenmenü der EC2-Konsole im Abschnitt *NETWORK & SECURITY* auf den Link *Key Pairs*.
+
+![Abbildung E.3. AWS-Schlüsselpaare](images/ec2_tutorial/aws_keypairs.png)
+
+Klicken Sie auf der angezeigten Seite auf den Button *Create Key Pair* und geben Sie den Namen für Ihr neues Schlüsselpaar ein (z.B.
+geben Sie ‘test’ ein) und drücken Sie den Button *Create*. Wenn Ihr Schlüsselpaar generiert wurde, können Sie den
+Schlüssel als PEM-Datei herunterladen. Speichern Sie die Datei in einem Ordner - den Schlüssel benötigen Sie später.
+
+## Starten der EC2 Linux-Instanz
+
+Klicken Sie im Seitenleistenmenü der EC2-Konsole im Abschnitt *INSTANCES* auf den Link *Instances* und dann auf der nächsten Seite
+klicken Sie auf den Button *Launch Instance*. Dann müssen Sie mehrere assistentenähnliche Seiten durchlaufen.
+
+### Schritt 1 - Wählen Sie ein Amazon Machine Image (AMI)
+
+Die erste davon ist die Seite *Choose an Amazon Machine Image (AMI)* (siehe Abbildung unten).
+
+![Abbildung E.4. Seite - Wählen Sie eine Amazon Machine Image (AMI)](images/ec2_tutorial/aws_create_new_instance.png)
+
+Auf der angezeigten Seite müssen Sie eine Linux-Distribution auswählen, die Sie auf dem virutalen Computer ausführen möchten.
+In diesem Tutorial wählen wir *Amazon Linux AMI, 64-Bit*.
+
+I> Amazon Linux ist eine Distribution aus der Red Hat Linux-und Cent-OS-Familie. Die Installationsanweisungen sind
+I> zwischen diesen Distributionen gleich. Zum Beispiel verwenden alle diese Distributionen den Paketmanager von yum. Also wenn
+I> wenn Sie wissen, wie Sie ein Programm unter Cent OS installieren, können Sie dieselben Schritte ausführen, um es in Amazon Linux zu installieren.
+
+T> In diesem Lernprogramm verwenden wir Amazon Linux. Wenn Sie möchten, können Sie jedoch auch eine andere Distribution auswählen.
+
+Klicken Sie auf den Button *Select* auf der rechten Seite der Option *Amazon Linux AMI*.
+
+### Schritt 2 - Wählen Sie einen Instanztyp
+
+Als Nächstes wird die Seite *Choose an Instance Type* angezeigt (siehe Abbildung unten).
+
+![Abbildung E.5. Seite - Wählen Sie einen Instanzentyp](images/ec2_tutorial/aws_choose_instance_type.png)
+
+Auf dieser Seite können Sie die Parameter der virtuellen Maschine auswählen und damit die Leistung beeinflussen. In diesem Tutorial
+verwenden wir den Typ *Micro Instance*, welcher kostenlos zur Verfügung steht. Bitte beachten Sie, dass bei dem Typ *Micro Instance*
+die CPU-und Speicherressourcen begrenzt sind. Damit eignet er sich nicht für Produktionssysteme mit hoher Last.
+
+Klicken Sie nun auf die Schaltfläche *Next*, um zur nächsten Seite zu gelangen.
+
+### Schritt 3 - Instanz konfigurieren
+
+Die Seite *Configure Instance* wird angezeigt (siehe Abbildung unten).
+
+![Abbildung E.6. Seite - Instanz konfigurieren](images/ec2_tutorial/aws_configure_instance_details.png)
+
+Auf dieser Seite können Sie Details der Instanz bearbeiten. Es reicht aus, *Enable termination protection* durch das.
+Kontrollkästchen zu aktivieren (dies schützt die virtuelle Maschine vor versehentlichem Abbruch).
+
+Schritt 4 - Speicher hinzufügen
+
+Klicken Sie auf die Schaltfläche *Next*, um zur Seite *Add Storage* zu wechseln (siehe Abbildung unten).
+
+![Abbildung E.7. Seite - Speicher hinzufügen](images/ec2_tutorial/aws_add_storage.png)
+
+Auf dieser Seite können Sie die Größe des virtuellen Festplattenlaufwerks anpassen, das an Ihre virtuelle Maschine angeschlossen ist.
+Bei freier Nutzung können Sie bis zu 30 GB Speicherplatz zuweisen. Dieses Laufwerk ist Teil des EBS-Dienstes
+(Elastic Block Storage). Er ist sehr zuverlässig und wird automatisch gesichert, um Ihre Daten vor versehentlichem Verlust zu schützen.
+
+### Schritt 5 - Tag-Instanz
+
+Klicken Sie auf die Schaltfläche *Next*, um zur nächsten Seite mit dem Namen *Tag Instance* zu gelangen.
+
+![Abbildung E.8. Tag-Instanzseite](images/ec2_tutorial/aws_tag_instance.png)
+
+Auf dieser Seite können Sie ein oder mehrere Tags hinzufügen, um diese EC2-Instanz von den anderen zu unterscheiden
+(In der Zukunft können Sie weitere Instanzen in Ihrem Konto starten). Fügen Sie beispielsweise den Tag Name hinzu, und legen Sie
+Wert auf "Webserver" fest. Dadurch können Sie sich daran erinnern, dass der Zweck dieser Instanz darin besteht, den Apache-Webserver auszuführen.
+
+Schritt 6 - Sicherheitsgruppe
+
+Klicken Sie auf die Schaltfläche *Next*, um zur nächsten Seite mit dem Namen *Security Group* (siehe unten) zu gelangen.
+
+![Abbildung E.9. Seite - Sicherheitsgruppe](images/ec2_tutorial/aws_security_group.png)
+
+Auf der Seite *Security Group* müssen Sie die Sicherheitsgruppenregeln (Firewall) für die EC2-Instanz konfigurieren.
+Die Regeln definieren, welche Ports für den eingehenden Zugriff geöffnet sind. Standardmäßig erlaubt Ihre EC2-Instanz den Zugriff
+über SSH (Port 22). Sie müssen auch eine Regel hinzufügen, die den Zugriff auf Port 80 (HTTP) ermöglicht. Klicken Sie dazu auf
+auf den Button *Add Rule* und geben Sie 80 in das Feld *Port range* ein.
+
+### Schritt 7 - Instanzstart überprüfen
+
+Klicken Sie auf die Schaltfläche *Next*, um zur letzten Seite mit dem Namen *Review Instance* zu wechseln.
+
+![Abbildung E.10. Seite - Instanzstart überprüfen](images/ec2_tutorial/aws_review_instance_launch.png)
+
+Auf dieser Seite können Sie die Einstellungen der virtuellen Maschine überprüfen, bevor Sie sie starten. Wenn Sie fertig sind,
+klicken Sie auf den Button *Launch*. Das Fenster *Select an existing keypair of create a new keypair* wird angezeigt.
+
+![Abbildung E.11. Seite - Schlüsselpaar auswählen](images/ec2_tutorial/aws_select_keypair.png)
+
+Wählen Sie in diesem Fenster das Schlüsselpaar 'test' aus der Liste der vorhandenen Schlüsselpaare aus (wir haben das Schlüsselpaar
+'test' zuvor erstellt) und klicken Sie auf die Schaltfläche *Launch Instances*, um den Startvorgang der Instanz auszulösen.
+
+Nun sollten Sie Ihre Instanz auf der Seite *Instances* sehen können (siehe Abbildung unten).
+
+![Abbildung E.12. Instanzseite](images/ec2_tutorial/aws_instances.png)
+
+## Zuweisen einer IP-Adresse zur Instanz
+
+Jeder Webserver im Internet verfügt über eine dedizierte IP-Adresse, über die andere darauf verweisen können.
+Als Nächstes müssen Sie der soeben erstellten EC2-Instanz eine IP-Adresse zuweisen. Um dies zu tun,
+klicken Sie im Seitenleistenmenü auf den Link *Elastic IPs* (im Abschnitt *NETWORK & SECURITY*). Auf dieser Seite
+klicken Sie dann auf den Button *Allocate New Address* (Neue Adresse zuweisen). Klicken Sie im angezeigten Fenster auf den Button *Allocate*.
+Die neue IP-Adresse wird jetzt in der Liste der Elastic IPs angezeigt.
+
+![Abbildung E.13. Seite - Elastic IPs](images/ec2_tutorial/aws_elastic_ips.png)
+
+Sie müssen die erstellte IP-Adresse sofort Ihrer Instanz zuweisen. Klicken Sie dazu links auf das
+Kontrollkästchen links vor Ihrer IP-Adresse und klicken Sie auf den Button *Associate Address* über dem Button der Liste der
+IP-Adressen. Wählen Sie im angezeigten Fenster den Instanznamen aus und klicken Sie auf
+*Yes, Associate*.
+
+## Verbindung zur EC2-Instanz über SSH herstellen
+
+Als Nächstes möchten wir eine Verbindung zu dem soeben erstellten virtuellen Server herstellen. In diesem Tutorial verwenden wir
+PuTTY - eine kostenlose Implementierung von Telnet und SSH für Windows-und Unix-Plattformen.
+
+Laden Sie das PuTTY-Archiv von [diesem Link](http://the.earth.li/~sgtatham/putty/latest/x86/putty.zip) herunter.
+Dann entpacke Sie es in einen Ordner.
+
+Sie müssen das zuvor heruntergeladene Schlüsselpaar als PEM-Datei importieren. Um dies zu tun, starten Sie sie
+*PUTTYGEN.EXE*. Das Fenster *PuTTY Key Generator* erscheint. In diesem Fenster
+klicken Sie auf den Button *Load* und wählen Ihre PEM-Datei aus, um Ihr vorhandenes Schlüsselpaar zu laden. Dann geben Sie
+ein Passwort zum Schutz Ihres Schlüssels ein (siehe Abbildung unten). Merke Sie sich das Passwort, weil
+Sie es später benötigen.
+
+![Abbildung E.14. Schlüsselimport](images/ec2_tutorial/putty_key_import.png)
+
+Klicken Sie anschließend auf die Schaltfläche * Save private key *, um Ihren kennwortgeschützten Schlüssel als PPK-Datei zu speichern.
+
+Nun können Sie sich mit Ihrer EC2-Instanz verbinden. Führen Sie * PUTTY.EXE * aus der PuTTY-Distribution aus.
+Das PuTTY-Konfigurationsfenster wird angezeigt. Wählen Sie in diesem Fenster die Kategorie * Connection-> SSH-> Auth * aus
+Geben Sie im Menü der Seitenleiste den Pfad zu Ihrer PPK-Datei in den * privaten Schlüssel für die Verbindung * ein.
+Feld (siehe Abbildung unten).
+
+![Abbildung E.15. Privater Schlüssel](images/ec2_tutorial/putty_ssh_key.png)
+
+Wählen Sie im Menü der Seitenleiste *Window->Translation* aus und wählen Sie die Kodierung UTF-8
+aus der Dropdown-Liste (siehe Abbildung unten):
+
+![Abbildung E.16. Übersetzung](images/ec2_tutorial/putty_translation.png)
+
+Wählen Sie aus dem Seitenleistenmenü *Session* aus. Geben Sie in das Feld *Hostname (oder IP-Adresse)* die
+IP-Adresse ein, welche Sie Ihrer EC2-Instanz zugewiesen haben. Geben Sie im Feld *Saved sessions* den Namen 'Webserver' ein.
+Klciken Sie anschließend den Button *Save*. Nun sind die eingegebenen Informationen gespeichert, sodass Sie sie nicht
+bei jedem Verbindungsaufbau eingeben müssen.
+
+![Abbildung E.17. Session](images/ec2_tutorial/putty_session.png)
+
+Doppelklicken Sie nun auf das Webserverelement in der Liste der gespeicherten Sitzungen. Terminalfenster erscheint.
+Sie müssen als Login "ec2-user" eingeben und die Eingabetaste drücken. Dann geben Sie das Passwort ein
+die Sie beim Erstellen der PPK-Datei verwendet haben, und drücken Sie erneut die Eingabetaste. Wenn alles in Ordnung ist, solltest du
+Sie können die Eingabeaufforderung wie in der folgenden Abbildung sehen:
+
+![Abbildung E.18. Terminalfenster](images/ec2_tutorial/putty_login.png)
+
+Im Shell-Terminalfenster können Sie Befehle eingeben und die Ergebnisse der Befehlsausführung anzeigen.
+
+## Installation von Apache HTTP Server und der PHP-Engine
+
+Damit eine auf Zend Framework 3 basierende Website ausgeführt werden kann, benötigen Sie einen Webserver und die PHP-Engine.
+Als nächstes planen wir die Installation von Apache Web Server und PHP.
+
+Zunächst wird empfohlen, das System zu aktualisieren, indem Sie den folgenden Shell-Befehl eingeben:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum update
+~~~
+
+T> Sie müssen nicht alle Befehle manuell eingeben, sondern können sie kopieren und einfügen.
+T> Wählen Sie den Befehl in diesem Fenster aus und kopieren Sie ihn in die Zwischenablage (STRG + C). Klicken Sie dann
+T> mit der rechten Maustaste auf das PuTTY-Terminalfenster, um den Text einzufügen.
+
+Geben Sie den folgenden Befehl ein, um Apache HTTP Server zu installieren:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum install httpd
+~~~
+
+Installieren Sie die PHP-Engine:
+
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum install php
+~~~
+
+Installieren Sie schließlich die GD-Erweiterung der PHP-Engine (diese Erweiterung wird von der
+Webanwendung *Hello World* benötigt, damit diese ordnungsgemäß ausgeführt zu wird):
+
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum install php-gd
+~~~
+
+Fügen Sie den Apache HTTP-Server zum Autorun hinzu und starten Sie ihn:
+
+
+{line-numbers=off,lang=bash}
+~~~
+sudo chkconfig --level 235 httpd on
+
+sudo service httpd start
+~~~
+
+Um zu überprüfen, ob der Apache-Webserver funktioniert, geben Sie die IP-Adresse Ihrer EC2-Instanz in Ihre
+Navigationsleiste des Webbrowsers ein. Wenn alles in Ordnung ist, sollten Sie die folgende Seite sehen:
+
+![Abbildung E.19. Apache-Standardwebseite](images/ec2_tutorial/apache_test_page.png)
+
+Als Nächstes bearbeiten wir die PHP-Konfigurationsdatei, um die Zeitzoneneinstellungen festzulegen (in diesem Lernprogramm
+werden wir unseren bevorzugten Editor Midnight Commander für diesen Zweck verwenden.
+
+MC installieren:
+
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum install mc
+~~~
+
+Öffnen Sie die Datei php.ini mit MC:
+
+
+{line-numbers=off,lang=bash}
+~~~
+sudo mcedit /etc/php.ini
+~~~
+
+Stellen Sie Ihre Zeitzoneneinstellungen ein (ersetzen Sie den Platzhalter YOUR_TIMEZONE durch Ihre Zeitzone, zum
+Beispiel, UTC oder Europe/Berlin):
+
+{line-numbers=off,lang=ini}
+~~~
+date.timezone = YOUR_TIMEZONE
+~~~
+
+Wenn Sie fertig sind, speichern Sie Ihre Änderungen, indem Sie die Taste F2 drücken und dann die Taste F10 drücken, um den
+Editor des Mitternachtskommandanten zu beenden.
+
+## Installieren der Webanwendung Hello World
+
+Um den Code der Webanwendung *Hello World* zu erhalten, laden wir das Archiv desCodebeispiels herunter,
+welches an das Buch mit GitHub gebunden ist.
+
+Die folgenden Shell-Befehle erstellen ein Verzeichnis für Downloads und machen es aktuell:
+
+{line-numbers=off,lang=bash}
+~~~
+mkdir ~ /downloads
+
+cd ~ /downloads
+~~~
+
+Laden Sie das Archiv des Codebeispiels herunter, indem Sie folgendes eingeben:
+
+{line-numbers=off,lang=bash}
+~~~
+wget https://github.com/olegkrivtsov/using-zf3-book-samples/archive/master.zip
+~~~
+
+Entpacken Sie das Archiv mit dem Befehl `unzip` und verschieben Sie die Dateien in das Dokumentstammverzeichnis des Webservers:
+
+{line-numbers=off,lang=bash}
+~~~
+unzip master.zip
+
+sudo mv using-zf3-book-samples-master/* /var/www/html
+~~~
+
+Legen Sie anschließend die Datei-und Verzeichnisberechtigungen fest, um Apache Lese-und Schreibzugriff auf die Anwendungsdateien von *Hello World* zu gewähren:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo chmod -R 755 /var/www/html/helloworld
+
+sudo chown -R apache:apache /var/www/html/helloworld
+~~~
+
+### Virtuellen Host erstellen
+
+Jetzt sind wir fast bereit, unsere Website *Hello World* live zu machen! Das letzte, was wir tun werden, ist
+einen virtuellen Apache-Hosts zu konfigurieren. Dazu bearbeiten wir die Datei *httpd.conf*:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo mcedit /etc/httpd/conf/httpd.conf
+~~~
+
+Wenn Sie die Datei bis an das Ende rollen, können Sie den kommentierten Textblock wie folgt finden:
+
+{line-numbers=off,lang=apacheconf}
+~~~
+#
+# Use name-based virtual hosting.
+#
+#NameVirtualHost *:80
+#
+# NOTE: NameVirtualHost cannot be used without a port specifier.
+# (e.g. :80) if mod_ssl is being used, due to the nature of the
+# SSL protocol.
+#
+ 
+#
+# VirtualHost example:
+# Almost any Apache directive may go into a VirtualHost container.
+# The first VirtualHost section is used for requests without a known
+# server name.
+#
+#<VirtualHost *:80>
+#    ServerAdmin webmaster@dummy-host.example.com
+#    DocumentRoot /www/docs/dummy-host.example.com
+#    ServerName dummy-host.example.com
+#    ErrorLog logs/dummy-host.example.com-error_log
+#    CustomLog logs/dummy-host.example.com-access_log common
+#</VirtualHost>
+~~~
+
+Um einen virtuellen Host hinzuzufügen, müssen Sie diesen Block auskommentieren und einige Regeln hinzufügen.
+Nach Ihren Änderungen sieht dieser Textblock wie folgt aus:
+
+{line-numbers=off,lang=apacheconf}
+~~~
+#
+# Verwenden Sie ein namenbasiertes virtuelles Hosting.
+#
+NameVirtualHost *: 80
+#
+# HINWEIS: NameVirtualHost kann nicht ohne Portbezeichner verwendet werden.
+# (z. B. 80), wenn mod_ssl verwendet wird, aufgrund der Art der
+# SSL-Protokoll.
+#
+ 
+#
+# VirtualHost-Beispiel:
+# Nahezu jede Apache-Direktive kann in einen VirtualHost-Container gehen.
+# Der erste VirtualHost-Abschnitt wird für Anforderungen ohne Bekanntes verwendet
+# Servername.
+#
+<VirtualHost *: 80>
+    ServerAdmin IhrName@Ihreserver.com
+    DocumentRoot / var / www / html / helloworld / public
+    <Verzeichnis / var / www / html / helloworld / public>
+        DirectoryIndex index.php
+        AllowOverride All
+        Erfordert alle Gewähr
+    </ Directory>
+</ VirtualHost>
+~~~
+
+Wenn Sie fertig sind, drücken Sie F2, um die Änderungen zu speichern, und F10, um den Midnight Commander zu verlassen.
+
+Starten Sie Apache neu, um Ihre Änderungen zu übernehmen:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo service httpd restart
+~~~
+
+### Zend Framework 3 mit Composer installieren
+
+Jetzt verwenden wir Composer, um Code Zend Framework 3 zu installieren und den Autoloader zu initialisieren.
+Wechseln Sie zunächst in das Verzeichnis, in dem Sie die Webanwendung *Hello World* installiert haben
+und geben Sie den Selbstaktualisierungsbefehl ein, um den Composer zu aktualisieren:
+
+{line-numbers=off,lang=bash}
+~~~
+cd /var/www/html/helloworld
+
+sudo php composer.phar self-update
+~~~
+
+Die erwartete Ausgabe dieses Befehls ist folgende:
+
+~~~
+Updating to version 604a65cc31f3e5d8a2b96802135ac24434e87678.
+    Downloading: 100%
+~~~
+
+Geben Sie als Nächstes den Installationsbefehl ein, damit Composer den Code vom Zend Framework 3 herunterlädt und installieren kann:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo php composer.phar install
+~~~
+
+Die erwartete Ausgabe sieht wie folgt aus:
+
+~~~
+Loading composer repositories with package information
+Installing dependencies (including require-dev) from lock file
+Warning: The lock file is not up to date with the latest changes in composer.json. You may be getting outdated dependencies. Run update to update them.
+  - Installing zendframework/zendframework (2.2.4)
+    Downloading: 100%
+ 
+    Skipped installation of bin/classmap_generator.php for package zendframework/zendframework: name conflicts with an existing file
+    Skipped installation of bin/pluginmap_generator.php for package zendframework/zendframework: name conflicts with an existing file
+    Skipped installation of bin/templatemap_generator.php for package zendframework/zendframework: name conflicts with an existing file
+zendframework/zendframework suggests installing doctrine/annotations (Doctrine Annotations >=1.0 for annotation features)
+zendframework/zendframework suggests installing ext-intl (ext/intl for i18n features (included in default builds of PHP))
+zendframework/zendframework suggests installing ircmaxell/random-lib (Fallback random byte generator for Zend\Math\Rand if OpenSSL/Mcrypt extensions are unavailable)
+zendframework/zendframework suggests installing ocramius/proxy-manager (ProxyManager to handle lazy initialization of services)
+zendframework/zendframework suggests installing zendframework/zendpdf (ZendPdf for creating PDF representations of barcodes)
+zendframework/zendframework suggests installing zendframework/zendservice-recaptcha (ZendService\ReCaptcha for rendering ReCaptchas in Zend\Captcha and/or Zend\Form)
+Generating autoload files
+~~~
+
+## Ergebnisse
+
+Sobald die oben genannten Schritte ausgeführt wurden, können Sie die Website *Hello World*
+in Ihrem Webbrowser öffnen. Wenn Sie die IP-Adresse Ihrer EC2 Instanz
+im Browser eingeben, sollten Sie folgende Seite sehen können:
+
+![Abbildung E.20. Webseite Hello World](images/ec2_tutorial/helloworld.png)
+
+Herzlichen Glückwunsch! Sie haben dieses Tutorial abgeschlossen und sollten es jetzt in der Lage sein,
+jede auf Zend Framework 3 basierende Website in einer Amazon EC2-Instanz installieren zu können.
+
+## Zusammenfassung
+
+Wenn Ihre ZF3-basierte Website fertig ist, müssen Sie sie auf einem öffentlich zugänglichen Webserver installieren,
+um sie für andere Menschen sichtbar zu machen.
+
+In diesem Lernprogramm haben wir gezeigt, wie Sie eine ZF3-basierte Website auf einer virtuelle Maschine Amazon EC2 installieren.
+Zunächst melden Sie sich bei Amazon Management Console an und erstellen eine EC2-Instanz.
+Dann stellen Sie eine Verbindung zu der neu erstellten VM her und installieren den Apache HTTP-Server und die PHP-Engine.
+Schließlich kopieren Sie Ihre Website-Dateien und installieren Abhängigkeiten mit Composer. So einfach!

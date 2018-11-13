@@ -1,0 +1,615 @@
+﻿{mainmatter}
+
+# Einführung in Zend Framework 3 {#intro}
+
+In diesem Kapitel erfahren Sie mehr über die wichtigsten Prinzipien und Komponenten des Zend Framework 3.
+
+## Was ist Zend Framework 3?
+
+PHP ist eine beliebte Website-Entwicklungssprache. Es ist jedoch schwierig, Websites in reinem PHP zu schreiben.
+Wenn Sie eine Webanwendung in reinem PHP schreiben, müssen Sie Ihren Code irgendwie organisieren, sammeln
+und Benutzereingaben validieren, die Unterstützung der Benutzerauthentifizierung und Zugriffskontrolle implementieren, die Datenbank verwalten,
+Ihren Code testen und so weiter. Wenn Ihre Website größer wird, wird es immer schwieriger, sie zu entwickeln
+der Code in konsistenter Weise. Jeder Entwickler in Ihrem Team wendet seine bevorzugte benutzerdefinierte Codierung an;
+seinen Stile und sein Muster. Der Code wird immer komplizierter und es wird zunehmend schwieriger ihn zu warten. Sie nehmen oft Änderungen
+Ihr Code in einem einzigen riesigen Skript ohne Trennung von Bedenken. Sie müssen das Rad neu erfinden
+vor und das verursacht Sicherheitsprobleme. Bei der Entwicklung einer neuen Seite, werden Sie feststellen, dass 
+ein großer Teil des Codes bereits für die alte Website geschrieben wurde und
+kann mit kleinen Änderungen wieder verwendet werden. Dieser Code kann in einer Bibliothek ausgelagert werden. 
+So sind die Frameworks erschienen.
+
+I> Ein Framework ist eine Art Bibliothek, ein Stück Software (auch in PHP geschrieben).
+Es ist eine Bereitstellung von Code-Basis für Web-Entwickler sowie die konsistente Standartformen für die Erstellung
+von Web-Anwendungen. 
+
+Zend Framework 3 ist ein kostenloses und Open-Source-PHP-Framework.
+Seine Entwicklung wird von Zend Technologies geleitet und gesponsert, der auch als Anbieter von Sprache PHP bekannt ist. 
+Die erste Version (Zend Framework 1) wurde 2007 veröffentlicht; Zend Framework 2, die zweite Version dieser Software,
+wurde im September 2012 veröffentlicht. Zend Framework 3 (oder kurz ZF3) wurde im Juni 2016 veröffentlicht.
+Zend Framework 3 is a free and open-source PHP framework.
+
+Zend Framework 3 bietet Ihnen folgende Möglichkeiten:
+
+* Entwickeln Sie Ihre Website viel schneller, als wenn Sie es in reinem PHP schreiben. ZF3 bietet
+  viele Komponenten, die Sie als Code-Basis für die Erstellung Ihrer Website verwenden werden können.
+  
+* Einfachere Zusammenarbeit mit anderen Mitgliedern Ihres Site-Building-Teams. Das Model-View-Controller-Pattern,
+  welches ZF3 verwendet, ermöglicht die Trennung von Business-Logic und Presentation-Layer Ihres
+  Website, wodurch die Struktur konsistent und wartbar wird.
+  
+* Teilen Sie ihre Webseite in Module auf. ZF3 verwendet den Begriff *Modul*, um
+  ihre Webseite in verschiedene Teile zu trennen, so dass Modelle, Views,
+  Controller und Assets in anderen Webseiten von Ihnen eingesetzt werden können.
+  
+* Objektorientierter Zugriff auf die Datenbank.  Anstatt direkt mit der Datenbank über SQL-Abfragen zu interagieren, 
+  können Sie von Doctrine das Object-Relational-Mapping (ORM) verwenden, um die Datenbank zu verwalten sowie 
+  die Struktur und die Beziehungen zwischen Ihren Daten zu verwalten. Mit Doctrine ordnen Sie Ihre Datenbanktabelle 
+  einer PHP-Klasse (wird auch als *Entity*-Klasse bezeichnet) zu, und eine Zeile aus dieser Tabelle wird einer Instanz 
+  dieser Klasse zugeordnet. Doctrine ermöglicht es, den Datenbanktyp zu abstrahieren und den Code leichter 
+  verständlich zu machen.
+  
+* Schreiben Sie sichere Websites mit den von ZF3 bereitgestellten Komponenten, wie Formulareingabefilter und -validatoren, 
+  HTML-Ausgabe-Escaper und Kryptografiealgorithmen, Captcha und Cross-Site-Request-Forgery (CSRF) sowie den Formularelementen.
+
+## Beispiel einer PHP Website
+
+Um Ihnen zu zeigen, wie schwierig es ist, eine Website *ohne* ein PHP-Framework zu schreiben, 
+schreiben wir hier eine sehr einfache Website, die aus drei HTML-Seiten besteht: *Home*, *Login* und *Logout*.
+In diesem Beispiel werden wir kein Framework verwenden und versuchen, nur "reines" PHP zu verwenden.
+
+I> Ich bin nicht verwirrt - das Schreiben einer Website mit einem PHP-Framework kann auch schwierig sein, aber
+I> mit einem Framework werden Sie das auf eine konsistente und sichere Weise tun.
+ 
+### Startseite
+
+I> Wenn Sie eine Website in PHP schreiben, fügen Sie Ihren Code in eine Datei mit der Erweiterung *.php* ein. 
+Eine solche Datei wird als PHP-*Skript* bezeichnet.
+
+Lassen Sie uns zunächst die *Home*-Seite (Startseite) für die Website implementieren. 
+Erstellen Sie dazu die Datei *index.php* in Ihrem Apache-Stammverzeichnis und fügen Sie den folgenden Code ein:
+
+T> Um den folgenden Code zu verstehen, müssen Sie etwas Erfahrung mit PHP haben. Wenn Sie keine Erfahrung 
+T> mit PHP haben, wenn Sie sich auf ein PHP-Tutorial anschauen,
+T> wie [w3schools.com](http://www.w3schools.com/php/).
+
+{line-numbers=off,lang="php"}
+~~~
+<?php 
+// index.php
+session_start();
+
+// Wenn der Benutzer angemeldet ist, rufen Sie die Identität aus der Sitzung ab.
+$identity = null;
+if (isset($_SESSION['identity'])) {
+    $identity = $_SESSION['identity'];
+}
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Startseite</title>
+    </head>
+    <body>
+        <h1>Startseite</h1>
+        <?php if ($identity==null): ?>
+        <a href="login.php">Sign in</a>
+        <?php else: ?>
+        <strong>Willkommen, <?= $identity ?></strong> <a href="logout.php">Abmelden</a>
+        <?php endif; ?>
+        
+        <p>
+            Dies ist eine einfache Webseite, um die Vorteile eines PHP-Frameworks zu 
+            demonstrieren und Nachteile von "reinem" PHP.
+        </p>
+    </body>
+</html>
+~~~
+
+Wenn Sie jetzt die "http: //localhost/index.php" in Ihrem Browser eingeben (zum Beispiel Google-Chrome oder Firefox), 
+sollten die Seite wie folgt sehen:
+
+![Eine einfache Startseite](images/intro/simple_home_page.png)
+
+### Login-Seite
+
+Als nächstes implementieren wir die Seite *Login*.
+Eine solche Seite enthält ein Formular mit der *Email-Adresse* und dem *Passwort* als Eingabefelder. 
+Sobald der Benutzer das Formular übermittelt, übergibt er die Authentifizierung
+und seine Identität wird in der PHP-Sitzung gespeichert. Das Skript würde wie folgt aussehen:
+
+{line-numbers=off,lang="php"}
+~~~
+<?php 
+// login.php
+session_start();
+
+// Wenn der Benutzer eingeloggt ist, leite ihn in die index.php um
+if (isset($_SESSION['identity'])) {
+    header('Location: index.php');
+    exit;
+}
+
+// Überprüfe, ob das Formular gesendet wurde.
+$submitted = false;
+if ($_SERVER['REQUEST_METHOD']=='POST') {
+    
+    $submitted = true;
+    
+    // Formulardaten extrahieren.
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    
+    // Benutzer authentifizieren.
+    $authenticated = false;
+    if ($email=='admin@example.com' && $password=='Secur1ty') {
+        $authenticated = true;
+        
+        // Speichere die Identität in der Sitzung.
+        $_SESSION['identity'] = $email;
+        
+        // Leite den Benutzer zu index.php weiter.
+        header('Location: index.php');
+        exit;
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Anmeldeseite</title>
+    </head>
+    <body>
+        <h1>Melden Sie sich an</h1>
+        <?php if ($submitted && !$authenticated): ?>
+            <div class="alert">
+                Ungültige Anmeldedaten
+            </div>
+        <?php endif; ?>
+        <form name="login-form" action="/login.php" method="POST">
+            <label for="email">E-mail</label>
+            <input type="text" name="email">
+            <br>
+            <label for="password">Passwort</label>
+            <input type="password" name="password">
+            <br>
+            <input type="submit" name="submit" value="Anmelden">
+        </form>
+    </body>
+</html>
+~~~
+
+Wenn Sie die URL "http: //localhost/login.php" in Ihrem Browser öffnen, sollten Sie Folgendes sehen:
+
+![Eine einfache Anmeldeseite](images/intro/simple_login_page.png)
+
+T> Um sich einzuloggen, verwenden Sie als Email `admin@example.com` und als Passwort `Secur1ty`.
+
+### Logout-Seite
+
+Und schließlich implementieren wir die Seite *Logout*, welche die Benutzeridentität aus der Sitzung löscht:
+
+{line-numbers=off,lang="php"}
+~~~
+<?php 
+// logout.php
+session_start();
+
+unset($_SESSION['identity']);
+header('Location: index.php');
+exit;
+~~~
+
+T> Den vollständigen Code dieser einfachen Website finden Sie in 
+T> [Pure PHP](https://github.com/olegkrivtsov/using-zf3-book-samples/tree/master/purephp)
+T> welches als Beispiel mit diesem Buch gebündelt ist.
+
+### Überprüfung des Codes
+
+Die obigen Skripte sind nicht nur ein typisches Beispiel für eine "reine" PHP-Website. Es ist auch ein Beispiel für
+wie du *deine* Webseiten nicht schreiben solltest (selbst einfache Webseiten). Was ist daran so schlimm?
+
+1. Die Scripte *index.php* und *login.php* neigen dazu, den gesamten Code in eine einzige Datei zusammenzuführen.
+   Sie haben keine Bedenken, dass das nicht Trennen in Wirklichkeit Ihren Code zu komplex macht.
+   Intuitiv meinen Sie, dass es so wäre, als den Code zu teilen, welcher
+   für die Benutzerauthentifizierung verantwortlich ist und den Code welcher für 
+   die Präsentation (HTML-Rendering) verantwortlich ist.
+   
+2. Die URLs Ihrer Webseiten sehen hässlich aus (z.B.: "http: //localhost/index.php"). Wir würden gern die 
+   Dateiendungen .php generell verstecken. Und was passiert, wenn ein Web-Benutzer versucht, eine Seite zu besuchen, die nicht existiert? 
+   Wir möchten den Benutzer in diesem Fall auf eine Fehlerseite umleiten.
+
+3. Was ist, wenn diese Website größer wird? Wie würden Sie Ihren Code organisieren? Ein PHP-Skript pro Webseite?
+   Und was, wenn Sie einige Ihrer PHP-Skripte auf anderen Websites ohne Änderungen wiederverwenden möchten?
+   Sie könnten verstehen, dass es sinnvoll wäre, den Code in einer Art wiederverwendbaren *Modul* zu organisieren.
+   
+4. Die beiden Scripte *index.php* und die *login.php* enthalten gängige HTML-Markups. Warum kopieren und einfügen 
+   und nicht ein gemeinsames Layout in jedem PHP-Script verwenden? Wir möchten das gleiche Master-Layout für alle wiederverwenden
+   (oder fast alle) Seiten.
+   
+5. Das *login.php*-Script hat Probleme mit der Sicherheit, da wir keine Validierung von POST-Variablen implementiert haben.
+   Die PHP-Sitzung unterliegt auch Hacking. Das *login.php* PHP-Script wird unter dem Apache-Stammverzeichnis liegen,
+   welches nicht sehr sicher ist (es wäre besser, es an einem nicht zugänglichen Ort zu platzieren
+   für Webbenutzer). ist auch unsicher, weil wir die PHP-Ausgabe nicht gefiltert haben (sie unterliegt XSS-Attacken).  
+
+6. Diese Skripte verwenden keine PHP-Klassen. Das Auslagern der Funktionalität in Klassen würde theoretisch erfolgen
+   der Code ist gut strukturiert und einfach zu unterstützen.  
+
+7. In diesen Skripten müssen Sie Ihre eigene Implementierung der Benutzerauthentifizierung schreiben (und so weiter). 
+   Warum erfinden wir das Rad neu und verwenden nicht eine gut gestaltete Bibliothek dafür?  
+ 
+Die oben genannten Probleme sind leicht zu lösen, wenn Sie eine Website innerhalb eines Frameworks schreiben (wie Zend Framework 3):
+
+1. In ZF3 verwenden Sie das Entwurfsmuster *Model-View-Controller*, das Ihren PHP-Code in Modelle aufteilt 
+   (der Code, der für die Authentifizierung verantwortlich ist), Views (der für das HTML-Rendering verantwortliche Code)
+   würde hier gehen) und Controller (der Code für das Abrufen von POST-Variablen).
+    
+2. Mit dem ZF3 *Routing* können URLs professionell aussehen, indem die .php-Erweiterungen ausgeblendet werden. Wie URLs
+   aussehen kann durch strenge Regeln definiert werden. Wenn ein Benutzer versucht, eine nicht vorhandene Seite zu sehen, wird er automatisch
+   auf eine Standardfehlerseite umgeleitet.
+
+3. In ZF3 können Sie das Konzept von *Modul* verwenden. Dies ermöglicht eine bequeme Trennung Ihrer Modelle, Views und
+   Controller in der autonomen Einheit (Modul) und können diese Einheit problemlos in einem anderen Projekt wiederverwenden.
+   
+4. In ZF3 können Sie eine gemeinsame *Layout*-View-Vorlage definieren und diese auf allen (oder den meisten) Webseiten wiederverwenden.
+
+5. ZF3 bietet Ihnen verschiedene Sicherheitsfunktionen wie Formularfilter und Validatoren, Output-Escaper, Session Validatoren,
+   krypthografische Algorithmen und so weiter. Auf einer ZF3-Website ist nur die *index.php* für Web-Benutzer zugänglich. 
+   Alle anderen PHP-Skripte befinden sich außerhalb des Stammverzeichnisses des Apache-Servers.
+
+6. In einer ZF3-Website fügen Sie Ihren Code in Klassen ein, wodurch er gut organisiert wird.
+
+7. ZF3 bietet Ihnen viele Komponente, die Sie auf Ihrer Website verwenden können: eine Komponente zur Authentifizierung, eine Komponente
+   zum Arbeiten mit Formularen und so weiter.  
+  
+T> Jetzt haben Sie vielleicht eine Vorstellung von den Vorteilen des Zend Framework 3 und was es für Sie tun kann. Im nächsten
+   Abschnitte beschreiben wir ZF3 genauer.
+  
+## Lizenz
+
+Zend Framework 3 wird unter einer BSD-ähnlichen Lizenz lizenziert, so dass Sie es verwenden können
+sowohl kommerzielle als auch in kostenlose Anwendungen. Sie können sogar den Bibliothekscode ändern und ihn unter
+einem anderen Namen freigeben. Das einzige, was Sie nicht tun können, ist den Copyright-Hinweis
+aus dem Code entfernen. Wenn Sie Zend Framework 3 verwenden, sollten Sie dies ebenfalls erwähnen
+darüber in der Dokumentation Ihrer Website oder auf der About-Seite.
+
+Im Folgenden wird der Lizenztext von Zend Framework 3 vorgestellt.
+
+{line-numbers=off,lang=text}
+~~~
+Copyright (c) 2005-2016, Zend Technologies USA, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions 
+are met:
+
+	* Redistributions of source code must retain the above copyright 
+	  notice, this list of conditions and the following disclaimer.
+
+	* Redistributions in binary form must reproduce the above copyright 
+	  notice, this list of conditions and the following disclaimer in 
+	  the documentation and/or other materials provided with the 
+	  distribution.
+
+	* Neither the name of Zend Technologies USA, Inc. nor the names of 
+	  its contributors may be used to endorse or promote products 
+	  derived from this software without specific prior written 
+	  permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+~~~
+
+## Benutzer-Support
+
+Support ist eine wichtige Sache, die bei der Entscheidung zu berücksichtigen ist,
+ob das Framework als Basis für Ihre Website wird oder nicht. Support beinhaltet eine gute
+schriftliche Dokumentation, Webinare, Community-Foren
+und (optional) kommerzielle Unterstützungsdienste, wie Schulungen und
+Zertifizierungsprogramme.
+
+![Offizielle Website des Zend Framework](images/intro/zend_framework_site.png)
+
+*Documentation*. Die Dokumentation für Zend Framework befindet sich unter [dieser Adresse](https://framework.zend.com/learn).
+Es enthält Anfänger Tutorials und Programmierer Handbuch.
+
+*API Reference* finden Sie unter [dieser Adresse](https://olegkrivtsov.github.io/zf3-api-reference/html/).
+
+*Community Forum*. Sie können eine Frage zur Verwendung von Zend Framework 3 unter [StackOverflow](https://stackoverflow.com/search?q=zend+framework+3).
+Ihre Fragen werden von der großen Community von ZF3-Entwicklern wie Ihnen beantwortet.
+
+*Webinars* sind Videotutorials, die verschiedene Zend-Framework-Funktionen abdecken. Vollständige Liste der Webinare
+finden Sie unter [dieser Adresse](http://www.zend.com/en/resources/webinars/framework).
+
+*Trainingskurse* mit Online-Dozenten sind abrufbar unter
+[dieser Adresse](http://www.zend.com/en/services/training).
+Hier können Sie Zend Framework lernen, indem Sie Übungen machen,
+Mini-Projekte erstellen und Entwicklung von echtem Code. 
+
+*Zertifizierungsprogramm*. Ermöglicht Ihnen ein Zend Certified Engineer (ZCE) zu erhalten.
+Dadurch wird es einfacher, Ihre Fähigkeiten als Entwickler zu verbessern und in einem Job zu arbeiten
+wettbewerbsfähiger PHP-Stellenmarkt. Zertifizierungen finden Sie [hier](http://www.zend.com/en/services/certification).
+
+*Willst du noch mehr ZF3-Ressourcen?* Schau dir diese großartige Liste von [Zend Framework Resourcen](https://github.com/dignityinside/awesome-zf) an.
+
+## Framework Quellcode
+
+Der Quellcode von Zend Framework 3 ist in GitHub [Repositories](https://github.com/zendframework) gespeichert.
+Für jede ZF3-Komponente gibt es ein separates Repository.
+
+I> In den meisten Fällen müssen Sie den Code von Zend Framework 3 nicht manuell abrufen.
+I> Stattdessen installieren Sie es mit dem Composer-Dependency-Manager. Wir werden
+I> später im Kapitel [Zend Skeleton Application](#skeleton) uns mit Composer vertraut machen.
+
+### Codierungsstandard
+
+Es ist eine gute Übung, einen allgemeinen Codierungsstandard für all Ihren Code einzuführen. Dieser Standard würde die Klassenbenennung definieren, Code-Formatierungsregeln, 
+etc. Zend Framework 3 definiert einen solchen Standard [https://github.com/zendframework/zendframework/wiki/Coding-Standards].
+Der gesamte Code in ZF3 folgt den in diesem Dokument beschriebenen Regeln.
+
+T> Wenn Sie planen, eine ZF3-basierte Website zu schreiben, wird empfohlen, denselben Standard für Ihren eigenen Code zu verwenden.
+T> Das macht Ihren Code konsistenter und einfacher zu erweitern und vereinfacht das Arbeiten im Team.
+
+## Unterstützte Betriebssysteme
+
+Wie jede PHP-Website kann ZF3-basierte Webanwendung auf einem Linux-Server und auf jedem anderen Betriebssystem, auf dem PHP läuft, ausgeführt werden. 
+Um beispielsweise Beispiele für dieses Buch zu erstellen, verwendete der Autor das Ubuntu Linux-Betriebssystem.
+
+Wenn Sie noch nicht wissen, welches Betriebssystem für Ihre Webentwicklung verwendet werden soll,
+empfehlen wir Ihnen, Linux zu verwenden, da die meisten Server-Software auf Linux-Server laufen. 
+Weitere Informationen finden Sie im [Anhang A. Web-Entwicklungsumgebung konfigurieren](# devenv).
+Eine Anleitung zur Konfiguration Ihrer Entwicklungsumgebung.
+
+## Serveranforderungen
+
+Zend Framework 3 erfordert, dass Ihr Server PHP Version 5.6 (oder höher) installiert ist. 
+Beachten Sie, dass dies eine ziemlich strenge Anforderung ist. Nicht alle billigen Shared Hoster
+und nicht alle privaten Server haben solch eine moderne PHP-Version.
+
+Außerdem ist die empfohlene Art der Installation von ZF3 (und andere abhängigen Komponenten
+Ihrer App) [Composer](http://getcomposer.org/).
+Dafür benötigen Sie zwingend Shell-Zugriff (SSH),
+um das Composer-Befehlszeilentool auszuführen. Einige Web-Hoster bieten nur FTP-Zugriff.
+Auf solchen Servern können Sie eine ZF3-basierte Web-Anwendung nicht wie gewohnt installieren.
+
+ZF3 verwendet die URL-Rewrite-Erweiterung des Web-Servers, um Web-Benutzer auf das
+Einstiegsskript Ihrer Webseite umzuleiten (Sie müssen Apaches `mod_rewrite` Modul aktivieren.).
+Eventuell müssen Sie auch einige PHP-Erweiterungen wie `memcached` installieren.
+Dies kann bei der Verwendung eines geteilten Webhostings schwierig sein
+und erfordert, dass Sie Administratorrechte (Root-Rechte) auf Ihrem Server benötigen.
+
+Also, wenn Sie planen, ZF3 auf einem Shared-Web-Hoster zu verwenden, denken Sie zweimal nach.
+Der beste Server für die Installation von ZF3 ist ein Server mit der neuesten Version von
+PHP und mit Shell-Zugriff, um Composer ausführen und PHP-Erweiterungen installieren zu können.
+
+Wenn Ihr Unternehmen eine eigenen Server verwaltet und es sich leisten kann
+wenn Sie die PHP-Version auf die Neueste aktualisieren, können Sie ZF3 auf Ihrem privaten Server installieren.
+
+Eine akzeptable Alternative ist die Installation einer ZF3-basierten Webanwendung auf einem
+Cloud-basierten Hosting-Service, wie [Amazon Web Services](http://aws.amazon.com/). 
+Amazon bietet Linux-Server-Instanzen als Teil des EC2-Dienstes. EC2 ist eher
+billig, und es bietet eine [kostenlose Nutzung](http://aws.amazon.com/free/) an. Versuchen Sie 
+es für ein Jahr kostenlos zu mieten. Wir bieten Anleitungen für Anfänger, wie man eine ZF3-Website 
+in die Amazon EC2-Cloud einbaut [Anhang E. Installation einer ZF3-Webanwendung in Amazon EC2](#ec2-tutorial).
+
+## Sicherheit
+
+Zend Framework 3 folgt Best Practices, um Ihnen eine sichere Codebasis
+für Ihre Websites zu bieten. Die ZF3-Entwickler geben Sicherheits-Patches frei, wenn die Community Benutzer
+ein Problem findet. Sie können diese Korrekturen mit einem einzigen Befehl über den Composer-Manager integrieren.
+
+I> Die Praxis zeigt, dass die Verwendung eines Frameworks zum Schreiben Ihrer Website sicherer ist als die Verwendung in "rein"
+I> PHP, weil Sie das Rad nicht neu erfinden müssen. Die meisten Sicherheitslücken in Frameworks
+I> sind bekannt und werden von der Community geschlossen.
+
+ZF3 bietet die folgenden Funktionen, um Ihre Website sicher zu machen:
+
+* *Einstiegsdatei* (*index.php*) ist die einzige PHP-Datei, die für Web-Besucher zugänglich ist. Alle anderen PHP-Dateien
+  befinden sich außerhalb des Apache-Stammverzeichnisses. Dies ist viel sicherer, als das alle
+  Ihrer PHP-Skripte den Benutzern zugänglich sind. 
+
+* Das *Routing* ermöglicht es, strenge Regeln zu definieren, wie eine akzeptable Seiten-URL aussehen soll.
+  Wenn ein Website-Nutzer eine ungültige URL in die Navigationsleiste eines Webbrowsers eingibt,
+  wird er/sie automatisch auf eine Fehlerseite umgeleitet.
+
+* Mit *Access control lists (ACL)* und *Role-Based Access Control (RBAC)*
+  definieren Sie flexible Regeln zum Gewähren oder Verweigern des Zugriffs auf bestimmte Ressourcen von
+  Ihrer Website. Ein anonymer Benutzer hätte beispielsweise Zugriff auf Ihren Index
+  Nur authentifizierte Benutzer hätten Zugriff auf ihre Profilseite
+  Der Administrator hätte Zugriff auf das Site-Management-Panel.
+  
+* *Formular-Validatoren und Filter* stellen sicher, dass über Webformulare keine unerwünschten Daten gesammelt werden. 
+  Filter, zum Beispiel, erlauben es, Strings zu trimmen oder HTML-Tags zu entfernen.
+  Mit Validatoren werden die Daten überprüft, die über ein Formular übermittelt wurden.
+  Sie müssen bestimmten Regeln entsprechen. Zum Beispiel prüft der E-Mail-Validierer, dass ein E-Mail-Feld
+  eine gültige E-Mail-Adresse enthält und falls nicht, wird ein Fehler ausgelöst, der den Benutzer der Site zur Korrektur 
+  der Eingabe zwingt.
+
+* *Captcha* und *CSRF* (Cross-Site Request Forgery)
+  Diese Formularelemente werden für menschliche Überprüfungen verwendet
+  bzw. Hacker-Angriffs-Prävention.
+
+* Die *Zend\Escaper*-Komponente ermöglicht das Entfernen unerwünschter HTML-Tags von Daten, die auf Webseiten ausgegeben werden.
+  
+* *Kryptografie-Unterstützung* ermöglicht es Ihnen, Ihre sensiblen Daten (z.B. Anmeldeinformationen) verschlüsselt mit 
+  starke Kryptalgorithmen zu speichern, die schwer zu hacken sind.
+
+## Leistung
+
+ZF3 bietet die folgenden Funktionen, um sicherzustellen, dass die Leistung akzeptabel ist: 
+
+  * *Lazy Class Autoloading.* Klassen werden einmal geladen.
+    Sie müssen nicht in jeder Klasse `require_once` schreiben, um sie zu laden.
+    Stattdessen erkennt das Framework automatisch Ihre Klassen, welche verwendet
+    werden, durch die Funktion des *Autoloaders*.
+
+  * *Efficient Service und Plugin-Loading.* In ZF3 werden Klassen nur instanziiert,
+    wenn sie wirklich gebraucht werden. Dies wird durch den Service Manager erreicht
+    (der zentrale Container für Service Ihrer Anwendung).
+  
+  * *Unterstützung durch Caching.* PHP hat mehrere Caching-Erweiterungen (wie Memcached), die
+    verwendet werden können, um ZF3-basierte Websites zu beschleunigen. Das Caching gespeichert
+    häufig verwendete Daten in den Speicher, um den Datenabruf zu beschleunigen.
+
+## Designmustern
+
+Die Entwickler von Zend Framework 3 sind große Fans verschiedener Designmuster.
+Sie müssen keine Muster verstehen, wenn Sie dieses Buchlesen. Dieser Abschnitt dient dazu, 
+um Ihnen eine Vorstellung davon zu geben, auf welchen Designmustern ZF3 basiert.
+
+* *Model-View-Controller (MVC) - Pattern*. Das Model-View-Controller-Pattern wird in allen modernen PHP-Franeworks verwendet.
+  In einer MVC-Anwendung trennen Sie Ihren Code in drei Kategorien:
+  Modelle (Ihre Geschäftslogik), Views (Ihre Präsentation) und
+  Controller (Code der verantwortlich ist, für die Interaktion mit dem Benutzer). Das wird auch
+  *the separation of concerns* genannt. Mit MVC können Sie Ihre Komponenten *wiederverwenden*. Es ist auch leicht, irgendein Teil zu ersetzen. 
+  Beispielsweise können Sie eine View problemlos durch eine andere ersetzen oder Sie
+  ändern Ihre Geschäftslogik. 
+  
+* *Domain Driven Design (DDD) - Pattern*. In Zend Framework 3 haben Sie eine Model-Ebene, 
+  welche sich in *Entitäten* (Klassen, die auf Datenbanktabellen abgebildet sind), 
+  *Repositories* (Klassen zum Abrufen von Entitäten aus der Datenbank),
+  *Value Objects* (Modellklassen, welche keine Identität haben),
+  *Services* (Klassen, die für die Geschäftslogik zuständig sind).  
+  
+* *Aspect Oriented Design - Pattern.* In ZF3 wird alles durch Events gesteuert.
+  Wenn ein Websitebenutzer eine Seite anfordert, wird ein *Event* generiert (ausgelöst). Ein Listener (oder Observer) kann
+  Events erfassen und etwas damit machen. Zum Beispiel die Komponente @`Zend\Router` analysiert
+  die URL und bestimmt, welche Controller-Klasse aufgerufen werden soll. Wenn das Event das Ende der Seite erreicht hat, wird vom
+  Renderer eine HTTP-Response generiert und der Benutzer sieht die Webseite.
+
+* *Singleton - Pattern.* In ZF3 gibt es das Service-Manager-Objekt, welches ein zentraler
+  Container ist und in ihm alle verfügbaren Dienste der Anwendung enthalten sind. Jeder Dienst existiert 
+  in einer einzigen Instanz.
+
+* *Strategy - Pattern.* Eine Strategie ist nur eine Klasse, die einen Algorithmus kapselt. 
+  Und Sie können auf verschiedene Algorithmen basieren. Jeodch verwenden sie die gleiche
+  Bedingung. Zum Beispiel hat der Page-Renderer mehrere Rendering-Strategien,
+  Dadurch ist es möglich, Webseiten anders darzustellen
+  (Der Renderer kann eine HTML-Seite, eine JSON-Antwort, einen RSS-Feed usw. generieren)
+  
+* *Adapter - Pattern.* Adapter ermöglichen die Anpassung einer generischen Klasse an einen konkreten Anwendungsfall.
+  Zum Beispiel stellt die Komponente @`Zend\Db` den Zugriff auf die Datenbank auf generische Weise bereit.
+  Intern verwendet es verschiedene Adapter für jede unterstützte Datenbank (SQLite, MySQL, PostgreSQL usw.).
+  
+* *Factory - Pattern.* Sie können eine Instanz einer Klasse mit dem Operator `new` erstellen. Sie können sie 
+  ebenso mit einer Factory erstellen. Eine Factory ist nur eine Klasse, die die Erstellung anderer Objekte kapselt.
+  Factories sind nützlich, weil sie die Dependency Injection vereinfachen. Factories benutzt man auch, 
+  um Ihre Modell- und Controller-Klassen zu testen.
+
+## Hauptkomponente von ZF3
+
+Das Ziele der Entwickler von ZF3 war, das Framework in verschiedene Komponente zu zerlegen,
+welche mit minimalen Abhängigkeiten voneinander auskommen. So ist ZF3 organisiert. 
+
+Die Idee war, einige ausgewählte ZF3-Komponenten alleine zu verwenden,
+auch wenn Sie Ihre Site mit einem anderen Framework schreiben. Das wird
+noch einfacher, wenn man bedenkt, dass jede Komponente von ZF3 durch Composer installierbar ist.
+Damit können Sie jede ZF3-Komponente mit ihren Abhängigkeiten einfach über einen einzigen Befehl installieren.
+
+Es gibt mehrere "Haupt"-Komponente, die (explizit oder implizit) verwendet
+in fast jeder Webanwendung werden: 
+
+  * @`Zend\EventManager` ermöglicht es, Events zu senden und Listener zu registrieren, um darauf zu reagieren. 
+     
+  * @`Zend\ModuleManager`. In ZF3 besteht jede Anwendung aus Modulen und diese Komponente enthält
+     Laden von Modulen.                                                 
+
+  * @`Zend\ServiceManager`. Dies ist die zentralisierte Registrierung aller in der Anwendung verfügbaren Service.
+     Es ermöglicht den Zugriff auf Service von jedem Punkt der Website.
+   
+  * @`Zend\Http` bietet eine einfache Schnittstelle zum Ausführen von Hyper-Text Transfer Protocol (HTTP)
+    Anfragen.                             
+     
+  * @`Zend\Mvc`. Unterstützung des Model-View-Controller-Pattern und trennt die Geschäftslogik von
+    der Präsentation. 
+
+  * @`Zend\View`. Stellt ein System von Helfern, Ausgabefiltern und Variablen-Escaping bereit. Benutzt in
+    Präsentations-Layer.                      
+
+  * @`Zend\Form`. Dient als Datensammlung, Filterung, Validierung und Rendering für Web-Formulare.  
+
+  * @`Zend\InputFilter`. Bietet die Möglichkeit, Validierungsregeln für Formulardaten zu definieren. 
+    
+  * @`Zend\Filter`. Bietet eine Reihe von häufig verwendeten Datenfiltern, wie z.B. String-Trimmer. 
+
+  * @`Zend\Validator`. Stellt eine Reihe häufig verwendeter Validatoren bereit. 
+
+## Unterschiede zu Zend Framework 2
+
+Für Leser, die Erfahrung mit Zend Framework 2 haben, werden wir in diesem Abschnitt
+Informationen geben, was sich durch Zend Framework 3 geändert hat.
+
+Im Folgenden werden die wichtigsten technischen Unterschiede zwischen ZF2 und ZF3 vorgestellt:
+
+### Rückwärtskompatibilität
+
+ZF3 ist eine evolutionäre Version, so dass die Rückwärtskompatibilität in den meisten Fällen erhalten bleibt. Jedoch,
+Einige Migrationsarbeiten müssen noch durchgeführt werden, wenn Sie den `ServiceLocatorAwareInterface` in Ihrem
+Code (was Sie wahrscheinlich getan haben) verwendet haben. In ZF3 wurde diese Schnittstelle entfernt und nun müssen alle Abhängigkeiten 
+durch Factories ersetzt werden. Also, Sie müssen Factories für die meisten Ihrer Controller, Dienste, View Helper und 
+Controller-Plugins erstellen. 
+
+### Komponenten
+
+In ZF2 wurden Komponenten in einem einzigen GIT-Repository gespeichert.
+In ZF3 werden Komponenten in mehreren GIT-Repositories gespeichert, ein Repository pro Komponente (z.B.
+`zendframework/zend-mvc`, `zendframework/zend-servicemanager`, `zendframework/zend-form`, usw.).
+Dies ermöglicht die Entwicklung und Freigabe von Komponenten unabhängig voneinander.
+
+Komponenten sind noch entkoppelter als zuvor und haben minimale Abhängigkeiten voneinander. Die Komponente @`Zend\Mvc` 
+wurde in mehrere geteilt. Zum Beispiel wurde die Routing-Funktionalität in die neue @`Zend\Router` - Komponente verschoben.
+
+Es wird jetzt empfohlen, einzelne Komponentennamen in der Datei `composer.json` anzugeben, von denen Ihre Anwendung abhängt.
+Obwohl es möglich ist, sich auf das Paket 'zendframework/zendframework' zu verlassen, das ein Meta-Paket ist wird es
+*alle* verfügbaren Komponenten installieren.
+
+### Komponenten Installer
+
+In ZF3 wurde ein spezielles Composer-Plugin namens *component installer* eingeführt. Es erlaubt Komponente zu installieren, 
+wie ZF-Module. Es fügt Informationen über die Komponente in die Datei der Anwendungskonfiguration ein.
+
+### ServiceManager und EventManager Performance
+
+Die ZF3-Entwickler haben die Leistung der @Zend\ServiceManager und der @Zend\EventManager Komponenten verbessert.
+Sie sind jetzt schneller als zuvor. Der Nachteil ist, dass Sie jetzt eine Migration durchführen müssen, 
+um die neue Funktionalitäten zu verwenden. Es wird empfohlen, Controller- und Servicenamen zu verwenden
+das PHP 5.5 Feature namens `::class`. Wenn Sie Ihren Controller zum Beispiel zuvor als `Application\Controller\Index` registriert haben,
+registrieren Sie ihn jetzt als `IndexController::class`. Wenn Sie zuvor Servicenamen wie gewünscht registriert haben,
+wird jetzt empfohlen, das mit `ServiceClassName::class` zu tun. Lesen Sie die Dokumentation zu der Komponenten von `Mvc`
+für zusätzliche Informationen.
+
+### PSR-4
+
+In ZF2 war die empfohlene Verzeichnisstruktur PSR-0, in ZF3 PSR-4. Dies erfordert einige
+(kleine) Migrationsarbeiten.
+
+### Middleware 
+
+Zend glaubt, dass die Zukunft von PHP in der Middleware liegt. "Middleware ist ganz einfach Code, der zwischen
+einer eingehende HTTP-Anfrage und die ausgehende HTTP-Antwort ist." Jetzt können Sie einen Middleware-Listener 
+in einer MVC-Anwendung registrieren.
+
+### Fokus der Dokumentation
+
+Jetzt enthält jedes Komponenten-Repository eine eigene Dokumentation. Die Dokumentation befindet sich jetzt im Markdown-Format
+und wurde besser gestaltet. 
+ 
+## Zusammenfassung
+
+Ein PHP-Framework ist eine Bibliothek, die Ihnen die Codebasis und die Definitionen für die Erstellung von
+Web Applikationen biete. Zend Framework 3 ist ein modernes Web-Entwicklungs-Framework von Zend Technologies,
+der Anbieter von PHP-Sprache. Es bietet den Entwicklern
+mit herausragenden Fähigkeiten zum Aufbau skalierbarer und sicherer Websites. ZF3 ist unter der Lizenu BSD-like lizenziert
+und kann kostenlos in kommerziellen und Open-Source-Anwendungen verwendet werden.
+

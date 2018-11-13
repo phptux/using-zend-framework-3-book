@@ -1,0 +1,338 @@
+# Arbeiten mit Sessions {#session}
+
+In diesem Kapitel erfahren Sie mehr über *Sessions*. Das HTTP-Protokoll ist zustandslos, Sie können es also nicht
+standardmäßig Daten zwischen zwei HTTP-Requests zwischenspeichern. Mit PHP-Sessions können Sie dies umgehen, indem Sie Daten
+eine Seitenanfrage auf dem Server speichern und diese später während einer anderen Seitenanfrage wieder abrufen. Vielleicht können Sie sich erinnern,
+dass sich der Benutzer angemeldet hat und beim nächsten Besuch der Website eine personalisierte Webseite anzeigt.
+dass Zend Framework intern PHP-Sessions verwendet. Es bietet jedoch zusätzlich einen praktischen Wrapper für
+PHP-Sessions, sodass Sie nicht direkt auf das super globale Array `$_SESSION` zugreifen müssen.
+
+In diesem Kapitel behandelte ZF3-Komponenten:
+
+|-------------------|-----------------------------------------------|
+| *Komponente* 		| *Beschreibung* 								|
+|-------------------|-----------------------------------------------|
+| @`Zend\Session` 	| Implementiert einen Wrapper für PHP-Sitzungen.|
+|-------------------|-----------------------------------------------|
+
+## PHP-Sessions
+
+Lassen Sie uns zunächst ein wenig Theorie darüber geben, was PHP-Sessions sind. In PHP funktionieren Sessions wie folgt:
+
+  * Wenn ein Websitebesucher, der die Website zum ersten Mal öffnet, setzt PHP im Client-Browser ein Cookie [^cookie].
+  * Die Website kann Informationen mit Hilfe eines speziellen super-globalen Arrays mit dem Namen `$_SESSION` speichern.
+    Die, in der Sitzung gespeicherten Daten, werden auf dem Server in Dateien gespeichert.
+  * Wenn derselbe Besucher die Website erneut öffnet, sendet der Webbrowser das gespeicherte Cookie an den Server, so erkennt PHP,
+    dass dies derselbe Besucher ist und lädt die Sitzungsdaten erneut in das Array `$_SESSION`.
+
+[^cookie]: Ein HTTP-Cookie ist ein kleines Datenstück, das von einer Website gesendet und im Webbrowser des Benutzers gespeichert 
+wird, während der Benutzer surft. Cookies werden verwendet, um sich an einen Status zwischen HTTP-Requests zu erinnern.
+    
+Aus Sicht des PHP-Anwendungsentwicklers ist die Arbeit mit Sessions einfach. Initialisieren Sie zuerst die Session mit
+Aufruf der PHP-Funktion `session_start()`. Verwenden Sie dann das super-globale Array `$_SESSION` zum Setzen/Abrufen von Session-Daten.
+Um beispielsweise Daten in einer Session zu speichern, verwenden Sie den folgenden Code:
+
+{line-numbers=off,lang=php}
+~~~
+session_start();
+$_SESSION['my_var'] = 'Some data';
+~~~
+
+Um die Daten später von der Sitzung abzurufen, verwenden Sie den folgenden Code:
+
+{line-numbers=off,lang=php}
+~~~
+session_start();
+if (isset($_SESSION['my_var']))
+    $sessionVar = $_SESSION['my_var'];
+else 
+    $sessionVar = 'Some default value';
+~~~
+
+Um die Daten zu löschen, verwenden Sie die PHP-Funktion `unset()` wie folgt:
+
+{line-numbers=off,lang=php}
+~~~
+unset($_SESSION['my_var']);
+~~~
+
+Beachten Sie, dass Sitzungen nicht für immer bestehen (sie laufen früher oder später ab, wenn das Cookie des Benutzers abläuft oder wenn die PHP-Engine
+die Session-Dateien bereinigt). Wie lange die Sitzung gültig ist, wird in der Konfigurationsdatei *php.ini* definiert. Es ist möglich
+den Standard-Ablaufparameter mit Hilfe der Funktion `ini_set()` wie folgt zu überschreiben:
+
+{line-numbers=off,lang=php}
+~~~
+// Set session cookie lifetime (in seconds) to be 1 hour.
+ini_set('session.cookie_lifetime', 60*60*1);
+
+// Store session data on server for maximum 1 month.
+ini_set('session.gc_maxlifetime', 60*60*24*30);
+~~~
+
+In der Datei *php.ini* gibt es einige andere "erweiterte" Session-bezogene PHP-Konfigurationseinstellungen. Wir werden hier nicht
+weiter darauf eingehen, weil sie normalerweise nicht benötigt werden.
+
+Q> **Wenn PHP-Sessions so einfach sind, warum benötige ich einen zusätzlichen Wrapper, der von Zend Framework 3 bereitgestellt wird?**
+Q>
+Q> ZF3 bereitgestellter Wrapper für die PHP-Session ist hilfreich, weil:
+Q>
+Q> * Der ZF3-Session-Wrapper ist objektorientiert, sodass Sie ihn in Ihrer MVC-Anwendung konsistent verwenden können.
+Q> * ZF3 bietet das Konzept von Sitzungsnamesräumen, sodass verschiedene Modelle Daten ohne Namenskonflikte speichern können.
+Q> * ZF3 bietet Sicherheitsfunktionen (Session-Prüfer), so dass es für böswillige Benutzer schwieriger ist, Ihre Session-Daten zu hacken und zu ersetzen.
+Q> * Die Verwendung des super-globalen Arrays `$_SESSION` ist nicht ratsam, da es das Testen Ihrer Website dadurch erschwert wird. Wenn Sie einen Wrapper für PHP-Sessions verwenden, ist es einfacher, Testdaten bereitzustellen.
+Q> * Mit ZF3-Session-Klassen können benutzerdefinierte Session-Datenspeicher implementiert werden (z.B. Session-Daten in einer Datenbank statt in Dateien speichern).
+
+## Komponente Zend\Session installieren
+
+In ZF3 ist die Session-Funktionalität in der Komponente @`Zend\Session` implementiert.
+Wenn Sie diese Komponente noch nicht in Ihrer Webanwendung installiert haben, tun Sie dies jetzt mit Composer, indem Sie den folgenden Befehl eingeben:
+
+~~~
+php composer.phar require zendframework/zend-session
+~~~
+
+Der obige Befehl lädt den Komponentencode von GitHub herunter und installiert ihn im Verzeichnis `APP_DIR/vendor`.
+Es fügt auch die Informationen über das installierte Modul in Ihrer Konfigurationsdatei 
+`APP_DIR/config/modules.config.php` ein.
+
+## Session-Manager
+
+ZF3 bietet einen speziellen Service namens @`SessionManager`, der zum Namesraum @`Zend\Session` gehört. Der Service
+ist ein üblicher ZF3-Service und wird automatisch im Service-Manager registriert. Sie können eine Instanz des Service @`SessionManager`
+abrufen, durch in die Service-Factory mit folgendem Code:
+
+{line-numbers=off,lang=php}
+~~~
+// Use alias for the SessionManager class.
+use Zend\Session\SessionManager;
+
+// Retrieve an instance of the session manager from the service manager.
+$sessionManager = $container->get(SessionManager::class);
+~~~
+
+Was macht also der @`SessionManager`? Eigentlich macht er alles für die Session.
+Die Zusammenfassung der nützlichsten Methoden ist in der folgenden Tabelle 15.1 enthalten:
+
+{title="Tabelle 15.1. Von der Klasse Session-Manager bereitgestellte Methoden"}
+|-----------------------------------|---------------------------------------------------------------|
+| *Methode* 						| *Beschreibung* 												|
+|-----------------------------------|---------------------------------------------------------------|
+| `sessionExists()` 				| Überprüft, ob eine Session existiert und derzeit aktiv ist.	|
+|-----------------------------------|---------------------------------------------------------------|
+| `start($preserveStorage = false)`	| Startet die Session (falls noch nicht gestartet). 			|
+|-----------------------------------|---------------------------------------------------------------|
+| `destroy(array $options = null)`	| Beendet die Session. 											|
+|-----------------------------------|---------------------------------------------------------------|
+| `getId()` 						| Gibt die Session-ID zurück. 									|
+|-----------------------------------|---------------------------------------------------------------|
+| `setId()` 						| Setzt die Session-ID. 										|
+|-----------------------------------|---------------------------------------------------------------|
+| `regenerateId()` 					| Erzeugt eine neue Session-ID. 								|
+|-----------------------------------|---------------------------------------------------------------|
+| `getName()` 						| Gibt den Session-Namen zurück. 								|
+|-----------------------------------|---------------------------------------------------------------|
+| `setName()` 						| Überschreibt den Session-Namen aus *php.ini*. 				|
+|-----------------------------------|---------------------------------------------------------------|
+| `rememberMe($ttl = null)` 		| Setzt die Lebensdauer des Session-Cookies (in Sekunden).		|
+|-----------------------------------|---------------------------------------------------------------|
+| `forgetMe()` 						| Setzt Sie eine Lebensdauer von `0` für das Session-Cookie		|
+|									| (das Cookie verfällt, wenn der Browser geschlossen wird). 	|
+|-----------------------------------|---------------------------------------------------------------|
+| `expireSessionCookie()` 			| Setzt das Session-Cookie für den sofrtigen Ablauf. 			|
+|-----------------------------------|---------------------------------------------------------------|
+| `isValid()` 						| Führt Session-Validator aus. 									|
+|-----------------------------------|---------------------------------------------------------------|
+
+Wie Sie in der Tabelle oben sehen können, kann der @`SessionManager` eine Session starten und beenden, überprüfen, ob eine Session vorhanden ist, und Session-Parameter festlegen
+(wie zum Beispiel das Ablaufen von Cookies). Es stellt auch eine Validator-Methode bereit, die Session-Validatoren enthalten können
+(Die Validatoren erlauben es, Hackerangriffe auf Session-Daten zu verhindern).
+
+### Bereitstellen der Session-Konfiguration
+
+Die Klasse @`SessionManager` liest bei der Initialisierung die Anwendungskonfiguration.
+So können Sie die Session-Parameter bequem setzen. Ändern Sie dazu Ihre Datei `APP_DIR/config/autoload/global.php`
+wie folgt:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+use Zend\Session\Storage\SessionArrayStorage;
+use Zend\Session\Validator\RemoteAddr;
+use Zend\Session\Validator\HttpUserAgent;
+
+return [
+    // Session configuration.
+    'session_config' => [
+        // Session cookie will expire in 1 hour.
+        'cookie_lifetime' => 60*60*1,     
+        // Session data will be stored on server maximum for 30 days.
+        'gc_maxlifetime'     => 60*60*24*30, 
+    ],
+    // Session manager configuration.
+    'session_manager' => [
+        // Session validators (used for security).
+        'validators' => [
+            RemoteAddr::class,
+            HttpUserAgent::class,
+        ]
+    ],
+    // Session storage configuration.
+    'session_storage' => [
+        'type' => SessionArrayStorage::class
+    ],
+    
+    // ...
+];
+~~~
+
+T> Wir ändern hier die Datei `global.php`, da Sessions von jedem Modul Ihrer Website verwendet werden können und nicht
+T> abhängig von der Umgebung sind.
+
+Wie Sie sehen, ist die Session-Konfiguration in drei Schlüsseln gespeichert:
+
+  * Mit dem Schlüssel `session_config` können Sie festlegen, wie lange das Session-Cookie und wie lange die PHP-Engine
+    die Session-Daten auf dem Server als Gültig betrachtet.
+    Tatsächlich enthält dieser Schlüssel möglicherweise zusätzliche Session-Optionen, die wir jedoch der Einfachheit halber weglassen (wenn Sie sie
+    diese erweiterten Optionen überschreiben möchten, finden Sie in der Dokumentation zum Zend Framework mehr darüber).
+    
+  * Mit dem Schlüssel `session_manager` können Sitzungsprüfer eingestellt werden. Diese dienen zur Erhöhung der Sicherheit. Es wird empfohlen
+    dass Sie diese Validatoren immer hier angeben.
+    
+  * Mit der Taste `session_storage` können Sie die Session-Speicherklasse angeben. Wir verwenden die Klasse @`SessionArrayStorage`. Diese
+    ist der Standardspeicher und reicht für die meisten Fälle aus.
+
+### Den Session-Manager als Standard festlegen
+
+In ZF3 verwenden viele Komponenten den Session-Manager implizit (z.B. @`FlashMessenger`[Zend\Mvc\Plugin\FlashMessenger], Controller-Plugins und View-Helpers
+verwenden Sessions zum Speichern von Meldungen zwischen HTTP-Requests). Damit solche Komponenten den soeben konfigurierten Session-Manager verwenden können, müssen Sie ihn
+als "Standardt" setzen, indem er so früh wie möglich instanziiert wird. Beispielsweise können Sie den Session-Manager in der Methode
+`onBootstrap()` wie folgt instanziieren:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+namespace Application;
+
+use Zend\Mvc\MvcEvent;
+use Zend\Session\SessionManager;
+
+class Module
+{
+    //...
+    
+    /**
+     * This method is called once the MVC bootstrapping is complete. 
+     */
+    public function onBootstrap(MvcEvent $event)
+    {
+        $application = $event->getApplication();
+        $serviceManager = $application->getServiceManager();
+        
+        // The following line instantiates the SessionManager and automatically
+        // makes the SessionManager the 'default' one.
+        $sessionManager = $serviceManager->get(SessionManager::class);
+    }
+}
+~~~ 
+
+T> Den Session-Manager wird als Standard festgelegt, da er sonst an jede Komponente explizit übergeben werden muss.
+    
+## Session-Container
+
+Nachdem Sie den Session-Manager konfiguriert haben, können Sie tatsächlich Daten für die Session speichern und abrufen. Um das zu tun,
+verwenden Sie einen *Session-Container*. Session-Container werden von der Klasse @`Container`[Zend\Session\Container] implementiert, der sich im Namensraum @`Zend\Session` befindet.
+
+Mit dem Session-Container können Sie Ihre Daten in einer Session speichern und aus der Session abrufen. Um Namenskonflikte zwischen
+verschiedenen Klassen, Modulen und Komponenten, die Sitzungen verwenden, zu vermeiden, können Sie mit dem Session-Container einen *Namensraum* angeben unter
+welchem die Daten gespeichert werden. Ein Container-Namesraum kann Groß-und Kleinbuchstaben enthalten,
+Unterstriche und umgekehrte Schrägstriche ('\'). So sind beispielsweise "Session\ContainerName", "session_container_name" und "SessionContainerName" alle
+gültige Container-Namespaces.
+
+I> Session-Container arbeiten eng mit dem Session-Manager zusammen. Wenn Sie einen Session-Container erstellen, ruft er die
+I> Methode `start()` vom Session-Manager auf und die Sitzung wird automatisch gestartet und initialisiert.
+
+Beginnen wir nun mit der Verwendung von Containern. Sie können einen Container auf zwei gleichwertige Arten erstellen: entweder einen Container manuell instanziieren oder
+Sie lassen eine Factory das für Sie tun. Die zweite ist einfacher, daher empfehlen wir sie.
+
+### Methode 1. Manuelle Instantiierung eines Session-Containers
+
+Sie können einfach einen Session-Container mit dem Operator `new` erstellen, aber Sie müssen eine Instanz
+der Session-Managers an den Konstruktor des Containers übergeben:
+
+{line-numbers=off,lang=php}
+~~~
+use Zend\Session\Container;
+
+// We assume that $sessionManager variable is an instance of the session manager.
+$sessionContainer = new Container('ContainerNamespace', $sessionManager);
+~~~
+
+Vergewissern Sie sich also vor dem Erstellen des Containers, dass Sie den Session-Manager in Ihren Controller als Service oder wo auch immer injiziert haben.
+Sie brauchen den Session-Manager zum Erstellen eines Containers.
+
+### Methode 2. Erstellen eines Session-Containers mit Factory
+
+Diese Methode entspricht der ersten Methode. Der Session-Container wird jedoch von der Factory erstellt.
+Sie müssen nur den benötigten Container-Namesraum registrieren.
+Fügen Sie dafür den Schlüssel `session_containers` wie folgt zu Ihrer Datei `module.config.php` hinzu:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+return [
+    // ...
+    'session_containers' => [
+        'ContainerNamespace'
+    ],
+];
+~~~
+
+Sie können die zulässigen Containernamen unter diesem Schlüssel setzen. Die Auswahl eines Containernamens liegt bei Ihnen. Vergewissern Sie sich, dass er unter allen anderen Servicenamen eindeutig ist.
+
+Nachdem Sie einen Containernamen (oder mehrere Containernamen) registriert haben, können Sie den Container erstellen und damit arbeiten.
+Normalerweise machen Sie das in einer Factory mit Hilfe des Service-Managers:
+
+{line-numbers=off,lang=php}
+~~~
+// The $container variable is the service manager.
+$sessionContainer = $container->get('ContainerNamespace');
+~~~
+
+Wie Sie sehen, rufen Sie einen Session-Container mit seinem registrierten Namen vom Service-Manager ab.
+
+### Speichern von Daten in einer Session mit dem Session-Container
+
+Wenn Sie den Session-Container erstellt haben, können Sie Daten wie folgt darin speichern:
+
+{line-numbers=off,lang=php}
+~~~
+$sessionContainer->myVar = 'Some data';
+~~~
+
+Um die Daten aus dem Session-Container abzurufen, verwenden Sie den folgenden Code:
+
+{line-numbers=off,lang=php}
+~~~
+if(isset($sessionContainer->myVar))
+    $myVar = $sessionContainer->myVar;
+else
+    $myVar = null;
+~~~
+
+Um Daten aus der Session zu entfernen, verwenden Sie den folgenden Code:
+
+{line-numbers=off,lang=php}
+~~~
+unset($sessionContainer->myVar);
+~~~
+
+T> Ein paar praktische Beispiele für die Verwendung von Session-Containern finden Sie unter dem Abschnitt [Implementieren von mehrstufigen Formularen](#multi-step-forms).
+
+## Zusammenfassung
+
+PHP-Sessions sind eine nützliche Funktion, mit der Sie einige Daten zwischen Seitenanfragen speichern können. Die PHP-Engine speichert Session-Daten
+in Form von Dateien auf dem Server und verwendet Browser-Cookies, um denselben Besucher beim nächsten Mal zu identifizieren und seine Session-Daten in den Speicher zu laden. Zum Beispiel können Sie
+Sie sich an den Benutzer erinnern und zeigen Sie ihm personalisierte Seiten. Die Session gilt nicht für immer - sie läuft nach einiger Zeit ab.
+
+Zend Framework bietet einen praktischen Wrapper für PHP-Sessions. Mit diesem Wrapper können Sie Daten objektorientiert in Session-Containern speichern.
+ZF3 bietet außerdem Sicherheitsfunktionen, mit denen Sessions automatisch überprüft werden und dadurch Hackerangriffe verhindert werden können.

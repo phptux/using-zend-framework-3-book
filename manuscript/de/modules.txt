@@ -1,0 +1,383 @@
+# Erstellen eines neuen Moduls {#modules}
+
+Wenn Ihre Website an Größe zunimmt, können Sie die Funktion von Zend Framework 3 namens *modules* nutzen.
+Modulare Anwendungen bestehen aus Teilen, die relativ wenige Abhängigkeiten voneinander haben.
+Module können bei Bedarf installiert oder entfernt werden. In diesem Kapitel erfahren Sie, was ein ZF3-Modul ist,
+wann Sie ein neues Modul erstellen und wie es erstellt wird.
+
+## Wann wird ein neues Modul erstellt?
+
+Ein Modul ist eine *autonome* und *wiederverwendbare* Einheit Ihrer Anwendung. Standardmäßig hat Ihre Anwendung
+das einzigste Modul *Application*. Und es ist normal, dass Ihre Modelle, Views und Controller in dieses
+Modul zu erstellen, vor allem in einer einfachen Website.
+
+I> Ein Modul kann Modelle, Views, Controller und Assets enthalten. Modulklassen befinden sich in unterschiedlichen
+I> Namesräumen (Modulname ist der Namensraum). Das Modul verfügt über eine eigene Konfigurationsdatei, in der Sie Routen,
+I> Controller, Controller-Plugins, Services, View-Helpers, usw. registrieren können.
+
+Möglicherweise müssen Sie ein neues Modul erstellen, wenn eine der folgenden Bedingungen erfüllt ist:
+
+  * Wenn Ihre Website relativ groß ist und die Aufteilung in Teile, die Wartung erleichtert.
+    Sie können beispielsweise das Modul *Admin* erstellen und Ihre Backend-Funktionalität in dieses Modul einbauen.
+  * Wenn die Funktionalität, die Sie implementieren, autonom ist (keine oder nur wenige Abhängigkeiten zu anderen
+    Module Ihrer Anwendung haben). Zum Beispiel kann die Blog-Funktionalität theoretisch
+    in einem anderes Modul getrennt werden, da sie nicht vom Rest der Anwendung abhängt, sondern
+    die Anwendung hängt davon ab.
+  * Wenn ein Modul von Ihrer Anwendung getrennt und gleichzeitig in einem anderen Projekt verwendet werden kann.
+    Beispielsweise kann das Blog-Modul in einem anderen Projekt ohne Änderungen wiederverwendet werden.
+    (Die Konfiguration kann Änderungen erforderlich machen).
+
+In jedem Fall ist das wirkliche Leben komplex und Sie sollten sich von der Intuition leiten lassen, wenn es so scheint,
+ist notwendig, ein neues Modul anzulegen. Wenn Sie denken, dass das Trennen einer Funktionalität in ein Modul gegeben ist,
+dann erstellen Sie das Modul.
+
+Gleichzeitig sollten Sie keine große Anzahl fast leerer Module erstellen.
+Es ist besser, verwandte Funktionen in einem einzigen Modul zu kombinieren.
+
+## Wie erstelle ich ein neues Modul?
+
+Es gibt mindestens zwei Möglichkeiten ein neues Modul in Ihrer Website zu erstellen. Der erste Weg ist das Kopieren eines vorhandenen
+Moduls aus dem Verzeichnis *APP_DIR/module* (z.B. das Modul *Application* ), Entfernen überflüssiger Controller,
+Modelle und Views und umbenennen des vorhandenen Nameraumes in Ihren Modulnamen in jeder Quelldatei. Das kann eher
+langweilig sein.
+
+Der zweite Weg ist das Herunterladen eines leeren *Skeleton-Moduls* aus dem offiziellen Zend Framework-Repository auf GitHub.
+Sie finden dieses Repository unter [diesem Link](https://github.com/zendframework/ZendSkeletonModule).
+Sie können den Code klonen oder als ZIP-Archiv herunterladen (empfohlen).
+
+Verwenden Sie beispielsweise in Linux die folgenden Befehle, um das Skeleton-Modul herunterzuladen:
+
+{line-numbers=on,lang=bash}
+~~~
+cd ~
+wget https://github.com/zendframework/ZendSkeletonModule/archive/master.zip
+unzip master.zip
+cp ZendSkeletonModule-master APP_DIR/module/ZendSkeletonModule
+~~~
+
+Die obigen Befehle laden die Quelle des Skeleton-Modul in Ihr Home-Verzeichnis herunter. Entpacken Sie das Archiv
+und kopieren Sie die Dateien in das Verzeichnis `module` Ihrer Website.
+
+Schauen wir uns die Struktur des Skelettmoduls an (siehe Abbildung 14.1):
+
+![Abbildung 14.1. Verzeichnisstruktur des Skeleton-Modul](images/modules/skeleton_module_directory.png)
+
+Wie Sie sehen, haben wir eine typische Verzeichnisstruktur, mit der wir bereits vertraut sind:
+ 
+  * Das Unterverzeichnis `config` enthält die Datei `module.config.php`, die die Konfigurationsdatei für dieses Modul ist.
+  * Das Unterverzeichnis `src` enthält die Quelldateien des Moduls:
+    * Unterverzeichnis `Controller` enthält eine Beispiel-Controller-Klasse.
+    * Datei `Module.php` ist der Eintrittspunkt des Moduls. Wir werden es später besprechen.
+  * Das Unterverzeichnis `tests` enthält einen Stub für UnitTests für dieses Modul. Der Einfachheit halber behandeln wir in diesem Buch keine Komponententests.
+  * Das Unterverzeichnis `view` enthält View-Templates (und kann auch modulspezifische Layout-Templates enthalten).
+
+### Das Skeleton-Modul umbenennen
+
+Bevor Sie dieses neue leere Modul verwenden können, sollten Sie einen Namen dafür auswählen. Ein guter Name beschreibt das Modul gut.
+Der Name `Admin` ist beispielsweise gut, wenn Sie ein Modul für Backend-Sachen benötigen. Der Name `Blog` wäre gut, wenn Sie
+die Speicherung der Blog-Funktionalität in diesem Modul planen. Ein bewährtes Verfahren ist auch, wenn dem Modul ein Vendor-Name vorangestellt wird
+Name, zum Beispiel `YourCompanyBlog`.
+
+Nachdem Sie den Namen für das Modul ausgewählt haben, sollten Sie das Verzeichnis mit den Moduldateien umbenennen. Zum Beispiel,
+mit dem folgenden Befehl wird das Modul in `Admin` umbenannt:
+
+{line-numbers=on,lang=bash}
+~~~
+mv ZendSkeletonModule Admin
+~~~
+
+Als Nächstes sollten Sie die `SkeletonController.php` in etwas beschreibender umbenennen. Vergessen Sie nicht, Unterverzeichnisse umzubenennen
+des Verzeichnisses `view`, um den Namen des Controllers wiederzugeben.
+
+Gehen Sie schließlich durch die Konfigurations-und Quelldateien des Controllers, und stellen Sie sicher, dass Sie den Namesraum `ZendSkeletonModule`
+in den Namensraum Ihres Moduls umbenannt haben (dies ist erforderlich, um sicherzustellen, dass Ihre Klassen vom PHP-Klassen-Autoloader gefunden werden).
+
+### Aktivieren des automatischen Laden von Klassen
+
+Der letzte Schritt ist das Aktivieren des PHP-Klassen-Autoloader. Unsere Quelldateien des Moduls werden so organisiert, dass sie dem PSR-4-Standard entsprechen.
+Sie können den von Composer bereitgestellten Standard-Autoloader verwenden. Fügen Sie dazu die folgende Zeile in Ihre
+Datei `composer.json` unter dem Schlüssel `psr-4` ein (ersetzen Sie Ihren Modulnamen):
+
+{line-numbers=on,lang=json}
+~~~
+...
+"autoload": {
+        "psr-4": {
+            ...
+            "Admin\\": "module/Admin/src/"
+        }
+    },
+...
+~~~
+
+Führen Sie als Nächstes den folgenden Befehl aus, um die Dateien automatisch mit Composer zu aktualisieren:
+
+~~~
+php composer.phar dump-autoload
+~~~
+
+I> Der Befehl `dump-autoload` generiert nur den Code für den Autoloader, ohne dass Abhängigkeiten installiert oder aktualisiert werden.
+
+Großartig! Das Modul ist jetzt einsatzbereit. Sie können Controller, Modelle und Views hinzufügen. Vergessen Sie nicht
+die Datei `module.config.php` zu ändern. Registrieren Sie Ihre Routen, Service, Controller, Controller-Plugins, View-Helper, usw.
+
+### Aktivieren des Moduls
+
+Vergessen Sie nicht, Ihr neues Modul in Ihrem Modul zu aktivieren, damit ZF3 über das neue Modul informiert wird und es beim Start der Anwendung mit geladen wird.
+Die Datei *APP_DIR/config/modules.config.php* wie folgt anpassen:
+
+~~~
+return [
+    'Admin',
+    //...
+);
+~~~
+
+## Module.php Datei und Events verstehen
+
+Die Datei `Module.php`, die sich im Quellverzeichnis des Moduls befindet, ist eine Art *Einstiegspunkt* des Moduls.
+Die in dieser Datei definierte Klasse `Module` wird von der Komponente `Zend\ModuleManager` geladen, wenn alle 
+Module der Anwendungen geladen werden.
+
+Eine nützliche Sache, die Sie mit dieser Klasse machen können, ist das *Registrieren von Events*. Wenn Sie sich an das Kapitel [Funktionsweise einer Website](#operation) 
+erinnern, hat die Anwendung mehrere Lebensstadien, die durch Events dargestellt werden. Sie können eine Event-Listener-Funktion (oder eine Klasse) schreiben und diese
+in Ihrem Modul-Einstiegspunkt registrieren. Wenn ein Event ausgelöst wird, wird Ihre Listener-Methode (oder Klasse) aufgerufen, sodass Sie damit
+etwas Nützliches tun können.
+
+Q> **Warum sollte ich einen Event-Listener registrieren wollen?**
+Q>
+Q> Hier sind einige praktische Anwendungen für Event-Listener, die für Sie nützlich sein könnten:
+Q>
+Q> * Hören Sie auf das Event *Route*, um die Verwendung einer sicheren HTTPS-Verbindung zu erzwingen.
+Q> * Wenn sich Ihre Website im Wartungsmodus befindet, hören Sie auf das Event *Route*, um alle Anfragen zu erfassen, und leiten Sie den Benutzer auf die einzelne Seite weiter.
+Q> * Hören Sie auf das Event *Dispatch*, um einen Benutzer auf eine andere Seite umzuleiten. Wenn der Benutzer beispielsweise nicht authentifiziert ist, leiten Sie ihn auf die Anmeldeseite um.
+Q> * Hören Sie auf das Event *Dispatch*, um das Standard-Layout-Template für alle zum Modul gehörenden Controller zu überschreiben.
+Q> * Hören Sie auf das Event *Dispatch Error*, um Ausnahmen oder Fehler auf Ihrer Website zu protokollieren und/oder zu melden.
+Q> * Hören Sie auf das Event *Render*, um den Inhalt der resultierenden Webseite zu ändern.
+
+Es gibt zwei Möglichkeiten, um einen Event-Listener innerhalb der Klasse `Module` zu registrieren: Entweder mit Hilfe der Methode `init()` der Klasse `Module` oder mit
+Hilfe der  Methode `onBootstrap()`. Der Unterschied zwischen der Methode `init()` und der Methode `onBootstrap()` besteht darin, dass die Methode `init()`
+vor der Methode `onBootstrap()` aufgerufen wird, bevor alle anderen Module initialisiert werden; `onBootstrap()` wird aufgerufen, sobald alle Module initialisiert sind.
+In den folgenden Beispielen verwenden wir die Methode `init()`.
+
+### Beispiel 1. Layout-Template wechseln
+
+Um Ihnen zu zeigen, wie Sie ein Event "abonnieren" können, erstellen Sie einen Event-Listener, der auf das Event *Dispatch* reagiert.
+Damit legen Sie für *alle* Controller des Moduls eine anderes Layout-Template fest:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+namespace YourCompanyModule;
+
+use Zend\ModuleManager\ModuleManager;
+use Zend\Mvc\MvcEvent;
+
+class Module
+{
+    // The "init" method is called on application start-up and 
+    // allows to register an event listener.
+    public function init(ModuleManager $manager)
+    {
+        // Get event manager.
+        $eventManager = $manager->getEventManager();
+        $sharedEventManager = $eventManager->getSharedManager();
+        // Register the event listener method. 
+        $sharedEventManager->attach(__NAMESPACE__, 'dispatch', 
+                                    [$this, 'onDispatch'], 100);
+    }
+    
+    // Event listener method.
+    public function onDispatch(MvcEvent $event)
+    {
+        // Get controller to which the HTTP request was dispatched.
+        $controller = $event->getTarget();
+        // Get fully qualified class name of the controller.
+        $controllerClass = get_class($controller);
+        // Get module name of the controller.
+        $moduleNamespace = substr($controllerClass, 0, strpos($controllerClass, '\\'));
+           
+        // Switch layout only for controllers belonging to our module.
+        if ($moduleNamespace == __NAMESPACE__) {
+            $viewModel = $event->getViewModel();
+            $viewModel->setTemplate('layout/layout2');  
+        }        
+    }
+    
+    // ...
+}
+~~~
+
+Im obigen Code fügen wir die Methode `init()` der Klasse `Module` hinzu. In dieser Methode registrieren wir einen Event-Listener (Zeile 17),
+mithilfe der Methode `attach()`, die von der Klasse `Zend\EventManager\SharedEventManager` bereitgestellt wird. Der Methode `attach()`
+können vier Argumente übergeben werden: die ID der emittierenden Komponente, den Event-Namen ("dispatch"), die Event-Listener-Methode (Methode `onDispatch()`
+der aktuellen Klasse) und der Priorität (100)).
+
+Die Methode `onDispatch()` wird für das Dispatch-Event aufgerufen. In dieser Methode prüfen wir (Zeile 32), ob der HTTP-Request
+an einen Controller unseres Moduls gesendet wurde, und wenn ja, wechseln wir das Layout-Template (Zeile 34).
+
+### Beispiel 2. Erzwingen der Verwendung von HTTPS
+
+In diesem Beispiel wird gezeigt, wie ein Event-Listener registriert wird, der die Website dazu bringt, immer eine HTTPS-Verbindung
+für allen Webseiten zu verwenden:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+namespace YourCompanyModule;
+
+use Zend\ModuleManager\ModuleManager;
+use Zend\Mvc\MvcEvent;
+
+class Module
+{
+    // The "init" method is called on application start-up and 
+    // allows to register an event listener.
+    public function init(ModuleManager $manager)
+    {
+        // Get event manager.
+        $eventManager = $manager->getEventManager();
+        $sharedEventManager = $eventManager->getSharedManager();
+        // Register the event listener method. 
+        $sharedEventManager->attach(__NAMESPACE__, 'route', 
+                                    [$this, 'onRoute'], 100);
+    }
+    
+    // Event listener method.
+    public function onRoute(MvcEvent $event)
+    {
+        if (php_sapi_name() == "cli") {
+            // Do not execute HTTPS redirect in console mode.
+            return;
+        }
+        
+        // Get request URI
+        $uri = $event->getRequest()->getUri();
+        $scheme = $uri->getScheme();
+        // If scheme is not HTTPS, redirect to the same URI, but with
+        // HTTPS scheme.
+        if ($scheme != 'https'){
+            $uri->setScheme('https');
+            $response=$event->getResponse();
+            $response->getHeaders()->addHeaderLine('Location', $uri);
+            $response->setStatusCode(301);
+            $response->sendHeaders();
+            return $response;
+        }
+    }
+    
+    // ...
+}
+~~~
+
+Im obigen Code registrieren wir eine Event-Listener-Methode, wenn das Event *Route* aufgerufen wird.
+
+Innerhalb des Listeners überprüfen wir zunächst, ob unsere Website im Konsolenmodus arbeitet. Wir
+leiten zu HTTPS im Konsolenmodus um.
+
+Dann extrahieren wir den URI aus dem HTTP-Request und prüfen, ob das aktuelle Schema HTTPS ist oder nicht.
+Wenn das Schema nicht HTTPS ist, leiten wir den Benutzer zur gleichen URL um, aber mit dem HTTPS-Schema.
+
+### Beispiel 3. Alle Exceptions auf Ihrer Website melden
+
+Mit dieser Technik können Sie alle Ausnahmen auf Ihrer Website problemlos nachverfolgen. Das Melden von
+Ausnahmen und Fehler sind wichtig, da Ihre Website dadurch stabiler wird sowie
+Benutzererfahrung sichern und verbessern.
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+namespace YourCompanyModule;
+
+use Zend\ModuleManager\ModuleManager;
+use Zend\Mvc\MvcEvent;
+
+class Module
+{
+    // The "init" method is called on application start-up and 
+    // allows to register an event listener.
+    public function init(ModuleManager $manager)
+    {
+        // Get event manager.
+        $eventManager = $manager->getEventManager();
+        $sharedEventManager = $eventManager->getSharedManager();
+        // Register the event listener method. 
+        $sharedEventManager->attach(__NAMESPACE__, MvcEvent::EVENT_DISPATCH_ERROR,
+                                    [$this, 'onError'], 100);
+        $sharedEventManager->attach(__NAMESPACE__, MvcEvent::EVENT_RENDER_ERROR, 
+                                    [$this, 'onError'], 100);
+    }
+    
+    // Event listener method.
+    public function onError(MvcEvent $event)
+    {
+        // Get the exception information.
+        $exception = $event->getParam('exception');
+        if ($exception!=null) {
+            $exceptionName = $exception->getMessage();
+            $file = $exception->getFile();
+            $line = $exception->getLine();
+            $stackTrace = $exception->getTraceAsString();
+        }
+        $errorMessage = $event->getError();
+        $controllerName = $event->getController();
+        
+        // Prepare email message.
+        $to = 'admin@yourdomain.com';
+        $subject = 'Your Website Exception';
+        
+        $body = '';
+        if(isset($_SERVER['REQUEST_URI'])) {
+            $body .= "Request URI: " . $_SERVER['REQUEST_URI'] . "\n\n";
+        }
+        $body .= "Controller: $controllerName\n";
+        $body .= "Error message: $errorMessage\n";
+        if ($exception!=null) {
+            $body .= "Exception: $exceptionName\n";
+            $body .= "File: $file\n";
+            $body .= "Line: $line\n";
+            $body .= "Stack trace:\n\n" . $stackTrace;
+        }
+        
+        $body = str_replace("\n", "<br>", $body);
+        
+        // Send an email about the error.
+        mail($to, $subject, $body);
+    }
+    
+    // ...
+}
+~~~ 
+
+Im obigen Code registrieren wir einen Event-Listener, der bei jedem Dispatch-Fehler aufgerufen wird
+(wenn eine Route nicht übereinstimmt oder eine Exception auftritt) und bei Fehlern beim Rendern. In der Listener-Methode `onError()`
+extrahieren wir einige Informationen zu der Exception oder dem Fehler und senden sie als E-Mail-Nachricht an die
+Adresse Ihrer Wahl.
+
+## Registrieren des Moduls als Composer-Paket
+
+Wenn Sie ein wiederverwendbares Modul schreiben, das Sie öffentlich verfügbar machen möchten, möchten Sie möglicherweise den Code Ihres Moduls
+auf GitHub veröffentlichen und registrieren Sie es im Katalog [Packagist.org](http://packagist.org) als installierbares Composer-Paket.
+Das ist absolut kostenlos.
+
+Nachdem Sie das Paket registriert haben, können Sie es wie folgt zu Ihrer Webanwendung als Abhängigkeit hinzufügen (ersetzen Sie die 
+Platzhalter `vendor` und `package` mit Ihren Firmen-bzw. Paketnamen):
+
+~~~
+php composer.phar require vendor/package
+~~~
+  
+Composer lädt Ihr Modul herunter und installiert es in das Verzeichnis `vendor`, sodass Sie es als Drittanbieter-Modul verwenden können.
+  
+## Zusammenfassung
+
+In diesem Kapitel haben Sie das Konzept *module* in Zend Framework 3 kennen gelernt. Ein Modul ist ein *autonomes* und eine
+*wiederverwendbare* Einheit Ihrer Anwendung. Sie können ein neues Modul erstellen, wenn Ihre Website groß wird und die Funktionalität
+hat sehr wenige Abhängigkeiten zu anderen Teilen Ihrer Anwendung.
+
+Jedes ZF3-Modul verfügt über eine Einstiegspunktklasse namens "Module". Sie können diese Klasse verwenden, um einen Event-Listener zu registrieren.
+Event-Listener sind beispielsweise nützlich, wenn Sie das Standard-Layout-Template für das gesamte Modul ändern möchten
+oder um den Standardinhalt einer Webseite zu optimieren.
+
+Wenn Sie ein Modul entwickeln, das Sie für die Verwendung in anderen Projekten öffentlich verfügbar machen möchten, können Sie 
+Ihr Modul im Katalog unter Packagist.org registrieren und installieren Sie es mit Composer als Paket eines Drittanbieters.

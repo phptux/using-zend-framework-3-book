@@ -1,0 +1,17 @@
+# Danksagungen
+
+Danke an Edu Torres, einen 2D-Künstler aus Spanien, der das Cover für dieses Buch gemacht hat.
+
+Danke an Roman Belinsky, einen Übersetzer aus St. Pittersburg, für seine harte Arbeit bei der Übersetzung dieses Buches ins Russische.
+
+Vielen Dank an Guillermo Lengemann, der das Buch ins Spanische übersetzt und seine Übersetzung beigesteuert hat.
+
+Vielen Dank an Cora Cox für ihre französische Übersetzung.
+
+Vien Dank an Alan Stanley, Sam Sheridan, Kevin Foster, Blount, Alex Lashford, Jakub Ksiazek,
+Guillermo Lengemann, Olexiy Guzenko, Pavel Savostin, Alessandro De Giuli,
+Alex Belkin, @ Csharpninja, Cyrille Hamel, Greg Bell,
+Yuri Aya, Dmitriy Halytskiy, Denis Krupnov, Vladimír Náprstek,
+Renato Mendes, Mulot, Paul Bernardi, Behzad Moradi, @bitwombat, Rodion Abdurakhimov,
+Fadel Chafai, Moriancumer Richard Uy und Charles Naylor für die Hilfe bei der Suche und Behebung 
+von Fehler im Text.

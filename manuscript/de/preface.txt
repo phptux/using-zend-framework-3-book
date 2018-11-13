@@ -1,0 +1,90 @@
+{frontmatter}
+
+# Vorwort
+
+"Using Zend Framework 3" ist ein kostenloses und Open-Source-Buch über die Programmierung
+von Webanwendungen mit dem Zend Framework 3.
+
+## Über das Buch
+
+"Using Zend Framework 3" ist ein kostenloses und Open-Source-Buch über die Programmierung
+von Webanwendungen mit dem Zend Framework 3.
+Dieses Buch verwendet die [Creative Commons Attribution-NonCommercial-ShareAlike](https://creativecommons.org/licenses/by-nc-sa/4.0/) Lizenz.
+
+ZF3 ist ein modernes PHP-Framework. Es wurde Erstellt für den Aufbau professioneller, 
+skalierbarer und sicherer Websites.
+Solche Websites sind einfach zu testen und zu pflegen. Das Framework nutzt das "Best Practices" 
+und gemeinsame Designmuster, die von der Entwicklung der Webentwicklungsbranche inspiriert wurden. 
+Dazu gehört das *Model-View-Controller* - Pattern, welches es ermöglicht, den Code einer Anwendung 
+einheitlich und standardisiert zu organisieren.
+
+In diesem Buch geht es nicht nur um Zend Framework, sondern auch um eng verwandte Themen
+Bibliotheken. Obwohl Zend Framework 3 eine dedizierte Komponente für den Zugriff auf die
+Datenbank besitzt, verwenden wir in diesem Buch eine Drittanbieter-Bibliothek namens Doctrine ORM, die ein De-facto ist
+für den Standard über objektorientierte Weise die Datenbankverwaltung zu übernehmen. In den Kapiteln de Buches werden wir Beispielanwendungen erstellen.
+Ebenso verwenden wir das Twitter Bootstrap CSS Framework, um schön gestaltete und angelegte Webseiten zu erstellen.
+
+## Zielgruppe
+
+Dieses Buch richtet sich an Webentwickler, die an der Entwicklung von webbasierten Anwendungen in PHP beteiligt sind.
+Der Autor versucht, mit einfachen Dingen zu beginnen, die ein Anfänger
+verstehen sollte. Auf fortgeschrittene Dinge werden wir zuletzt in einem Kapitel eingehen. 
+Dies macht dieses Buch zum ersten Buch über Zend Framework, das für einen Neuling leicht zu lesen und zu verstehen ist.
+Sie müssen kein Guru in Entwurfsmustern sein, um die meisten Inhalte zu verstehen.
+
+Um dieses Buch zu lesen und zu verstehen, benötigen Sie Grundkenntnisse in PHP.
+Ein guter Punkt zum Erlernen von PHP ist [die offizielle Website](http://php.net/) und die Online-Version der
+[Dokumentation](http://php.net/docs.php). Es wäre gut, wenn Sie ein Verständnis für HTTP-Anfragen, GET- und POST-Variablen, Namespaces, Klassen und Schnittstellen haben.
+
+Da PHP eng mit anderen Webtechnologien verbunden ist, wird auch empfohlen
+einige grundlegende Erfahrungen zu haben:
+
+ * HTML (Hyper Text Markup Language) - wird für die Erstellung von Webseiten verwendet.
+   Diese kann in einem Webbrowser angezeigt werden.
+ * CSS (Cascading Style Sheets) - wird zur Definition das Aussehen einer Webseite verwendet.
+   Zum Beispiel für Schriftgröße oder Hintergrundfarbe.
+ * JavaScript - eine clientseitige Skriptsprache, die für die Erstellung eines Webs verwendet wird 
+   um Seite interaktiver zu gestalten.
+
+Für das Erlernen von HTML, CSS und JavaScript ist ein guter Ausgangspunkt
+[W3Schulen Tutorials](http://www.w3schools.com/).
+
+## Beispiele und Quellcode
+
+Der Text dieses Buches ist mit Codebeispielen illustriert. Jedes Beispiel ist eine komplette Website, die Sie installieren und ausführen, um 
+Zend Framework 3 in Aktion zu sehen. Sie können die Beispiele sogar als Grundlage für Ihre eigenen Websites verwenden.
+
+Der gesamte Quellcode ist auf GitHub gespeichert. Der Code ist öffentlich verfügbar und Sie können den gesamten Code als 
+Archiv herunterladen. [Download](https://github.com/olegkrivtsov/using-zf3-book-samples).
+Um das Archiv herunterzuladen, klicken Sie auf die Schaltfläche *Klonen oder Herunterladen*, die auf der Seite zu finden ist
+(Siehe die Abbildung unten).
+
+![Samples können von GitHub heruntergeladen werden](images/preface/samples_on_github.png)
+
+Die Struktur des Code-Archivs ist unten dargestellt.
+
+{line-numbers=off,lang=text}
+~~~
+using-zf3-book-samples
+	blog
+	helloworld
+	formdemo
+	...
+~~~
+
+## Ihre Rückmeldung
+
+Danke, dass Sie dieses Buch gelesen haben und es Ihnen geholfen hat, es besser zu machen. Sie werden ermutigt, auf Fehler hinzuweisen und
+Anregungen und kritische Anmerkungen machen. Sie können den Autor über den Kommentarbereich schreiben. Dieser 
+befindet sich unter jeder Seite. Alternativ können Sie den Autor über seine E-Mail-Adresse kontaktieren
+(`olegkrivtsov@gmail.com`). Ihr Feedback wird sehr geschätzt.
+
+## Über den Autor
+
+Oleg Kriwtsov ist ein C++ und PHP-Entwickler. Er entwickelt professionelle Software
+seit 2005. Oleg ist ein Certified Zend Framework 2 Architect
+und ein zertifizierter MySQL-Entwickler. Er schreibt gerne Beiträge für Open Source und schreibt Programmierartikel für
+beliebte Webressourcen wie CodeProject. Diese Leidenschaft hat ihn auch dazu inspiriert, dieses Buch 
+über Zend Framework 3 zu schreiben. Oleg liebt auch Skifahren und Formel 1.
+
+Sie können Oleg über seine E-Mail-Adresse kontaktieren (`olegkrivtsov@gmail.com`).

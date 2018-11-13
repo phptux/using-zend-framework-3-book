@@ -1,0 +1,1867 @@
+# Model-View-Controller{#mvc}
+
+In diesem Kapitel erfahren Sie mehr über die Modelle, Views und Controller (das MVC-Entwurfsmuster).
+Eine Webanwendung verwendet das MVC-Muster, um Geschäftslogik von der Präsentation zu trennen.
+Das Ziel besteht darin, die Wiederverwendbarkeit von Code und die Trennung von Problemen zu ermöglichen.
+
+ZF3-Komponenten in diesem Kapitel:
+
+|---------------|-----------------------------------------------------------------------|
+| *Komponente*	| *Beschreibung* 														|
+|---------------|-----------------------------------------------------------------------|
+| @`Zend\Mvc` 	| Unterstützt das MVC-Musters. Implementiert Basis-Controller-Klassen,	|
+|				| Controller-Plugins usw. 												|
+|---------------|-----------------------------------------------------------------------|
+| @`Zend\View` 	| Implementiert die Funktionalität für Variablencontainer,				|
+|				| die Darstellung einer Webseite und häufig verwendete Ansichtshelfer. 	|
+|---------------|-----------------------------------------------------------------------|
+| @`Zend\Http` 	| Implementiert einen Wrapper für HTTP-Requests und HTTP-Responses. 	|
+|---------------|-----------------------------------------------------------------------|
+
+## Holen Sie sich das "Hello World"-Beispiel von GitHub
+
+In diesem und in den nächsten Kapiteln stellen wir Ihnen einige Codebeispiele zur Verfügung,
+die Sie selbst nachvollziehen können. Es kann für einen Anfänger schwierig sein, Code ohne Fehler zu schreiben.
+Wenn Sie stecken bleiben oder nicht verstehen, warum der eigene Code nicht funktioniert, können Sie den kompletten *Hello World* - Beispiel
+als Web-Anwendung von GitHub Code-Hosting downloaden. Codebeispiele aus diesem Kapitel sind meist ein Teil von
+dieser *Hello World* Beispielanwendung.
+
+Um die *Hello World* - Anwendung herunterzuladen, gehen Sie auf [diese Seite](https://github.com/olegkrivtsov/using-zf3-book-samples)
+und klicken dort auf die Schaltfläche *Klonen oder Herunterladen*, um den Code als ZIP-Archiv herunterzuladen (siehe Abbildung 4.1).
+Wenn der Download abgeschlossen ist, entpacken Sie das Archiv in ein Verzeichnis.
+
+![Abbildung 4.1. Das "Hello World"-Beispiel von GitHub downloaden](images/preface/samples_on_github.png)
+
+Navigieren Sie dann zum Verzeichnis `helloworld`, das den vollständigen Ordner mit
+dem Quelltext des *Hello World* - Beispiels enthält:
+
+{line-numbers=off,lang=text}
+~~~
+/using-zf3-book-samples
+   /helloworld
+     ...
+~~~
+
+Das "Hello World"-Beispiel ist eine komplette Website, die auf Ihrem Computer installiert werden kann.
+Um das Beispiel zu installieren, können Sie entweder Ihre standardmäßige virtuelle Apache-Host-Datei bearbeiten
+oder erstellen eine neue Datei. Starten Sie nach dem Bearbeiten der Datei den Apache HTTP Server neu
+und öffnen Sie die Website in Ihrem Webbrowser.
+
+## Trennung der Geschäftslogik von der Präsentation
+
+Eine typische Website hat drei Arten von Funktionen: Code, der Geschäftslogik implementiert,
+Code zur Implementierung von Benutzerinteraktion und Code-Rendering der HTML-Seiten (Präsentation).
+Vor PHP-Frameworks kombinierten Programmierer diese drei Arten von Code normalerweise in einer einzigen
+großen PHP-Skriptdatei, die es besonders mühsam machte, solchen Code zu testen und zu pflegen,
+wenn Sie eine große Website schrieben.
+
+Seit dieser Zeit wurde PHP objektorientierter und Sie können Ihren Code jetzt in Klassen organisieren.
+Das *Model-View-Controller* (MVC) - Pattern ist nur eine Sammlung von Ratschlägen, die Ihnen vorgibt, wie
+Sie Ihre Klassen in einer besseren Art und Weise organisieren können, um sie leichter zu pflegen.
+
+In MVC werden Klassen, die Ihre Geschäftslogik implementieren, als *Models* bezeichnet.
+Rendering-HTML-Seiten heißen *Views* und die Klassen, die für die Interaktion mit dem Benutzer verantwortlich sind
+werden *Controller* genannt.
+
+I> Views werden als *Code-Snippets* (Code-Schnipsel) implementiert, nicht als Klassen. Da
+I> Views in der Regel sehr einfach sind und da sie nur eine Mischung aus HTML und Inline-PHP-Code enthalten.
+
+Das Hauptziel des MVC-Konzepts ist die Trennung der Geschäftslogik (Modelle)
+von der Visualisierung (Views). Dies wird bei jeder Schicht auch als *Separation of Concerns* bezeichnet.
+Es nimmt nur seine spezifischen Aufgaben wahr.
+
+Indem Sie Ihre Modelle von Views trennen, reduzieren Sie die Anzahl der Abhängigkeiten zwischen ihnen.
+Daher haben Änderungen an einer der Schichten eine geringe Auswirkung auf andere
+Schichten. Diese Trennung verbessert auch die *Code-Wiederverwendbarkeit*. Zum Beispiel,
+können Sie mehrere visuelle Darstellungen für dieselben Modelle erstellen (änderbare Designs).
+
+Um es besser zu verstehen, wie es funktioniert, erinnern wir uns daran, dass jede Website nur ein PHP-Programm ist,
+welches ein HTTP-Request vom Webserver erhält und eine HTTP-Response erzeugt.
+Abbildung 4.2 zeigt, wie ein HTTP-Request von der MVC-Anwendung verarbeitet wird
+und wie die HTTP-Response generiert wird:
+
+![Abbildung 4.2. Verarbeitung eines HTTP-Request in einer MVC-Webanwendung](images/mvc/model-view-controller.png)
+
+* Zuerst gibt ein Website-Besucher eine URL in seinem Webbrowser ein, zum Beispiel * http://localhost* und der Webbrowser
+  sendet die Anfrage über das Internet an den Webserver.
+  
+* Die PHP-Engine des Webservers führt die Einstiegsdatei *index.php* aus. Das einzigste, was in der Einstiegsdatei
+  erstellt wird, ist die Klasseninstanz @`Zend\Mvc\Application`.
+
+* Die Anwendung verwendet ihre *Router* - Komponente zum Parsen der URL und zum Bestimmen
+  zu welchem ​​Controller die Anfrage zu übergeben ist. Wenn die Routenübereinstimmung gefunden wurde, wird
+  der Controller instanziiert und die entsprechende *Aktionsmethode* aufgerufen.
+  
+* In der Aktionsmethode des Controllers werden die Parameter
+  GET- und POST-Variablen abgerufen. Um die eingehenden Daten zu verarbeiten, muss der Controller
+  entsprechende Modellklassen instanziiert und ruft ihre Methoden auf.
+  
+* Modellklassen verwenden Business-Logik-Algorithmen, um die Eingabedaten zu verarbeiten
+  und die Ausgabedaten zurückgeben. Die Business-Logik-Algorithmen sind anwendungsspezifisch,
+  und umfassen typischerweise das Abrufen von Daten aus der Datenbank, das Verwalten von Dateien und das Interagieren
+  mit externen Systemen und so weiter.
+  
+* Das Ergebnis des Aufrufs der Modelle wird an das entsprechende
+  View-Skript zum Rendern der HTML-Seite übergeben.
+
+* Das View-Skript verwendet die vom Modell bereitgestellten Daten zum Rendern der HTML-Seite.
+
+* Der Controller übergibt die resultierende HTTP-Response an die Anwendung.
+    
+* Der Webserver gibt die resultierende HTML-Webseite an den Webbrowser des Benutzers zurück.
+
+* Der Benutzer sieht die Seite im Browserfenster.
+
+Jetzt verstehen Sie, wie Modelle, Views und Controller zusammenarbeiten und die
+HTML-Ausgabe generieren. In den nächsten Abschnitten beschreiben wir sie genauer.
+
+## Controller
+
+Ein Controller stellt die Kommunikation zwischen der Anwendung, den Modellen und den Views bereit:
+Er erhält die Eingabe von dem HTTP-Request und verwendet das Modell und die entsprechende View
+um die notwendige HTTP-Response zu erzeugen.
+
+Zu einem Modul gehörende Controller befinden sich typischerweise im Unterverzeichnis `Controller`
+im Quellverzeichnisses des Moduls (siehe Abbildung 4.3).
+
+![Abbildung 4.3. Controller-Verzeichnis](images/mvc/controller_dir.png)
+
+Zend Skeleton Application bietet Ihnen die Standardimplementierung von der Klasse `IndexController`. 
+Der `IndexController` ist in der Regel die Hauptcontroller-Klasse der Website. Sein Code
+ist unten dargestellt (einige Teile des Codes wurden der einfachheithalber weggelassen):
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+namespace Application\Controller;
+
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
+
+class IndexController extends AbstractActionController
+{
+    public function indexAction()
+    {
+        return new ViewModel();
+    }
+}
+~~~
+
+Aus dem obigen Beispiel können Sie erkennen, dass ein Controller normalerweise seinen eigenen Namensraum definiert (Zeile 2).
+Der Index-Controller, wie alle anderen Controller aus dem Modul *Application*, befindet sich im Namensraum `Application\Controller`.
+
+Ein Controller ist eine übliche PHP-Klasse, die von der Basisklasse @`AbstractActionController`[Zend\Mvc\Controller\AbstractActionController] abgeleitet ist (Zeile 7).
+
+Standardmäßig enthält die Controller-Klasse die einzige *Aktionsmethode* namens `indexAction()` (siehe Zeilen 9-12).
+In der Regel erstellen Sie in Ihrer Controller-Klassen andere Aktionsmethoden.
+
+T> ZF3 erkennt die Aktionsmethoden automatisch mit dem Suffix `Action`.
+T> Wenn der Name einer Controller-Methode dieses Suffix nicht hat, wird dies als eine übliche Methode und nicht als eine Aktion betrachtet.
+
+Wie der Name schon sagt, führt eine Aktionsmethode einige Seite-Aktionen aus,
+was typischerweise zur Erzeugung einer einzelnen Webseite führt. Der Index-Controller enthält normalerweise
+Aktionsmethoden, für alle Webseiten gelten (Tabelle 4.1). Zum Beispiel hätten Sie
+"index"-Aktion für die *Home*-Seite, "about"-Aktion für *About*-Seite,
+"contactUs"-Aktion für die Seite *Contact Us* und möglicherweise weitere Aktionen.
+
+{title ="Tabelle 4.1. Typische Aktionen des Index-Controllers"}
+|---------------------------------------|-------------------------------------------------------|
+| *Aktionsmethode* 						| *Beschreibung*										|
+|---------------------------------------|-------------------------------------------------------|
+| `IndexController::indexAction()`		| Die Aktion "index" zeigt die Startseite Ihrer Seite.	|
+|---------------------------------------|-------------------------------------------------------|
+| `IndexController::aboutAction()`		| Die Aktion "about" zeigt die Info-Seite von Ihrem		|
+| 										| der Standort an. Die Info-Seite enthält Kontakte und	|
+| 										|Urheberrechtsinformation. 								|
+|---------------------------------------|-------------------------------------------------------|
+| `IndexController::contactUsAction()`	| Die Aktion "contactUs" zeigt den Kontakt Seite der 	|
+| 										| Website. Die Kontaktseite zeigt das Formular zum		|
+| 										| das Formular zum Kontaktieren von Site-Autoren an. 	|
+|---------------------------------------|-------------------------------------------------------|
+
+### Basis-Controller-Klasse
+
+------------
+HIER WEITER
+------------
+
+Jeder Controller in Ihrer Webseite wird von der Basisklasse @`AbstractActionController`[Zend\Mvc\Controller\AbstractActionController] geerbt.
+In Abbildung 4.4 ist das Klassenvererbungsdiagramm dargestellt.
+
+![Abbildung 4.4. Controller-Vererbungsdiagramm](images/mvc/controller_inheritance.png)
+
+Der @`AbstractActionController`[Zend\ Mvc\Controller\AbstractActionController] bietet Ihnen einige nützliche Methoden, die Sie
+in Ihren Controller-Klassen verwenden können. Tabelle 4.2 bietet eine kurze Zusammenfassung der Methoden:
+
+{title="Tabelle 4.2. Nützliche Methoden von AbstractActionController"}
+|---------------------------|-------------------------------------------------------|
+| *Methodenname* 			| *Beschreibung* 										|
+|---------------------------|-------------------------------------------------------|
+| `getRequest()` 			| Gibt das @`Zend\Http\Request`Objekt zurück, welches 	|
+| 							| die Daten vom HTTP-Request enthält. 					|
+|---------------------------|-------------------------------------------------------|
+| `getResponse()` 			| Gibt das @`Zend\Http\PhpEnvironment\Response` Objekt 	|
+| 							| zurück. Es ermöglicht, Daten der HTTP-Response 		|
+|							| zu setzen.											|
+|---------------------------|-------------------------------------------------------|
+| `getEventManager()` 		| Gibt das @`Zend\EventManager\EventManager` Objekt 	|
+| 							| zurück. Es erlaubt Events auszulösen und auf 			|
+|							| Events zu hören.										|
+|---------------------------|-------------------------------------------------------|
+| `getEvent()` 				| Gibt das @`Zend\Mvc\MvcEvent-Objekt` zurück, dass das	|
+| 							| Event darstellt, auf das der Controller reagiert. 	|
+|---------------------------|-------------------------------------------------------|
+| `getPlugManager()` 		| Gibt das @`Zend\Mvc\Controller\PluginManager` 			|
+| 							| Objekt zurück, welches zum Registrieren von 			|
+|							| Controller-Plugins verwendet werden kann.				|
+|---------------------------|-------------------------------------------------------|
+| `plugin($name, $options)`	| Diese Methode erlaubt den Zugriff auf bestimmte		|
+| 							| Controller-Plugins mit dem gegebenen Namen.			|
+|---------------------------|-------------------------------------------------------|
+| `__call($method, $params)`| Ermöglicht das indirekte Aufrufen eines Plugins		|
+| 							| mit PHP's magischer Methode `__call()`.				|
+|---------------------------|-------------------------------------------------------|
+
+Wie Sie der obigen Tabelle entnehmen können, bietet Ihnen die Base-Controller-Klasse Zugriff auf den HTTP-Request
+und auf die Daten der HTTP-Response und bietet Ihnen den Zugriff auf den Event-Manager.
+Es gibt Ihnen auch die Möglichkeit, Controller-Plugins zu registrieren und aufzurufen
+(wir werden später in diesem Kapitel etwas über Controller Plugins lernen).
+
+## Abrufen von Daten aus HTTP-Request
+
+In der Aktionsmethode eines Controllers müssen Sie möglicherweise die Daten vom HTTP-Request abrufen
+(Daten wie GET und POST Variablen, Cookies, HTTP-Header und so weiter). Zu diesem Zweck stellt Ihnen
+Zend Framework 3 die Klasse @`Zend\Http\Request` aus der Komponente @`Zend\Http` zur Verfügung.
+
+Um das Objekt des HTTP-Request innerhalb Ihrer Aktionsmethode zu erhalten, können Sie den folgenden Code verwenden:
+
+{line-numbers=off,lang=php}
+~~~
+// Get HTTP request object
+$request = $this->getRequest();
+~~~
+
+Der obige Code gibt die Instanz der Klasse @`Zend\Http\Request` zurück, die das gesamte HTTP-Daten enthält.
+In Tabelle 4.3 finden Sie die am häufigsten verwendeten Methoden der Klasse @`Request`[Zend\Http\Request] zusammen
+mit ihrer kurzen Beschreibung.
+
+{title="Tabelle 4.3. Methoden der Klasse `Zend\Http\Request`."}
+|-------------------------------|-------------------------------------------------------------------|
+| *Methodenname* 				| *Beschreibung*													|
+|-------------------------------|-------------------------------------------------------------------|
+| `isGet()` 					| Prüft, ob dies ein GET-Request ist. 								|
+|-------------------------------|-------------------------------------------------------------------|
+| `isPost()` 					| Prüft, ob dies ein POST-Request ist. 								|
+|-------------------------------|-------------------------------------------------------------------|
+| `isXmlHttpRequest()` 			| Prüft, ob diesr Request eine AJAX-Request ist. 					|
+|-------------------------------|-------------------------------------------------------------------|
+| `isFlashRequest()` 			| Prüft, ob es sich bei diesem Request um eine 						|
+|								| Flash-Anfrage handelt. 											|
+|-------------------------------|-------------------------------------------------------------------|
+| `getMethod()` 				| Gibt die Methode für des Requests zurück. 						|
+|-------------------------------|-------------------------------------------------------------------|
+| `getUriString()` 				| Gibt den URI für das Request-Objekt als String zurück. 			|
+|-------------------------------|-------------------------------------------------------------------|
+| `getQuery($name, $default)` 	| Gibt alle Query-Parameter zurück oder den Wert eines				|
+| 								| Query-Parameters. Wenn ein Parameter nicht gefunden wird, wird	|
+|								| der Wert `$ default` zurückgegeben. 								|
+|-------------------------------|-------------------------------------------------------------------|
+| `getPost($name, $default)` 	| Gibt den alle POST-Parameter zurück, oder die Daten einzelner		|
+| 								| Post-Parameter.													|
+|-------------------------------|-------------------------------------------------------------------|
+| `getCookie()` 				| Gibt den Cookie-Header zurück. 									|
+|-------------------------------|-------------------------------------------------------------------|
+| `getFiles($name, $default)` 	| Gibt den Parameter für den Datei-Upload zurück, oder die			|
+| 								| Parameter für eine einzelne Datei im Datei-Upload. 				|
+|-------------------------------|-------------------------------------------------------------------|
+| `getHeaders($name, $default)` | Gibt den für die Header verantwortlichen Header-Container zurück	|
+| 								| oder alle Header eines bestimmten Namens oder Typs. 				|
+|-------------------------------|-------------------------------------------------------------------|
+| `getHeader($name, $default)`	| Gibt eine Header von `$name` zurück. Wenn eine Header nicht, 		|
+| 								| gefunden wird gibt die Methode den Wert von `$default` zurück.	|
+|-------------------------------|-------------------------------------------------------------------|
+| `renderRequestLine()`			| Gibt die formatierte Request-Zeile (erste Zeile) für				|
+| 								| aus dem HTTP-Request zurück.										|
+|-------------------------------|-------------------------------------------------------------------|
+| `fromString($string)` 		| Eine statische Methode, die ein Request-Objekt aus einem 			|
+| 								| wohlgeformter HTTP-Request-String erzeugt. 						|
+|-------------------------------|-------------------------------------------------------------------|
+| `toString()` 					| Gibt den HTTP-Request als String zurück. 							|
+|-------------------------------|-------------------------------------------------------------------|
+
+## Abrufen von GET und POST Variablen
+
+Um einfach eine GET- oder POST-Variable aus einem HTTP-Request abzurufen, verwenden Sie den folgenden Code:
+
+{line-numbers=on,lang=php}
+~~~
+// Get a variable from GET
+$getVar = $this->params()->fromQuery('var_name', 'default_val');
+
+// Get a variable from POST
+$postVar = $this->params()->fromPost('var_name', 'default_val');
+~~~
+
+Im obigen Beispiel haben wir das Controller-Plugin @`Params` verwendet. Damit können Sie bequem auf die Methoden
+für den Zugriff auf GET- und POST-Variablen, hochgeladene Dateien usw. zugreifen.
+
+In Zeile 2 verwenden wir die Methode `fromQuery()` zum Abrufen einer Variablen mit dem Namen "var_name" aus GET.
+Wenn eine solche Variable nicht vorhanden ist, wird der Standardwert "default_val" zurückgegeben.
+Der Vorgabewert ist sehr praktisch, da Sie nicht die PHP-Funktion `isset ()` verwenden müssen,
+um zu testen, ob die Variable existiert.
+
+In Zeile 5 verwenden wir die Methode `fromPost()`, um die Variable vom POST abzurufen. Die Bedeutung
+der Parameter dieser Methode entsprechen denen der `fromQuery()` Methode.
+
+T> In ZF3 sollten Sie nicht auf Request-Parameter über die gloablen PHP-Arrays `$ _GET` und` $ _POST` zugreifen.
+T> Stattdessen verwenden Sie die von ZF3 bereitgestellte API zum Abrufen der Request-Daten.
+
+## Daten zur HTTP-Response hinzufügen
+
+Obwohl Sie selten direkt mit den HTTP-Response-Daten interagieren, können Sie dies
+mit Hilfe der Methode `getResponse()` tun. Sie wird von der Basisklasse `AbstractActionController`[Zend\Mvc\Controller\AbstractActionController] bereitgestellt.
+Die `getResponse ()` Methode gibt die Instanz der @ `Zend \ Http \ PhpEnvironment \ Response` Klasse zurück.
+Tabelle 4.4 enthält die wichtigsten Methoden dieser Klasse:
+
+{title ="Tabelle 4.4. Methoden der Zend\Http\PhpEnvironment\Response-Klasse."}
+|-----------------------------------|-----------------------------------------------------------|
+| *Methodenname* 					| *Beschreibung* 											|
+|-----------------------------------|-----------------------------------------------------------|
+| `fromString($string)` 			| Füllt das Response-Objekt mit Daten aus einem String. 	|
+|-----------------------------------|-----------------------------------------------------------|
+| `toString()` 						| Gibt die gesamte HTTP-Response als String zurück. 		|
+|-----------------------------------|-----------------------------------------------------------|
+| `setStatusCode($code)` 			| Setzt HTTP-Statuscode und (optional) den Text. 			|
+|-----------------------------------|-----------------------------------------------------------|
+| `getStatusCode()` 				| Gibt den HTTP-Statuscode zurück. 							|
+|-----------------------------------|-----------------------------------------------------------|
+| `setReasonPhrase($reasonPhrase)`	| Setzt die HTTP-Statusnachricht. 							|
+|-----------------------------------|-----------------------------------------------------------|
+| `getReasonPhrase()` 				| Gibt HTTP-Statusnachricht zurück. 						|
+|-----------------------------------|-----------------------------------------------------------|
+| `isForbidden()` 					| Prüft, ob der Response-Code 403 ist. 						|
+|-----------------------------------|-----------------------------------------------------------|
+| `isNotFound()` 					| Prüft, ob der Statuscode anzeigt, dass die Ressource nicht|
+|									| gefunden wurde (Statuscode 404). 							|
+|-----------------------------------|-----------------------------------------------------------|
+| `isOk()` 							| Prüft, ob die Response erfolgreich ist.					|
+|-----------------------------------|-----------------------------------------------------------|
+| `isServerError()` 				| Prüft, ob der Response-Statuscode 5xx ist. 				|
+|-----------------------------------|-----------------------------------------------------------|
+| `isRedirect()` 					| Prüft, ob die Response ein 303 Redirect ist. 				|
+|-----------------------------------|-----------------------------------------------------------|
+| `isSuccess()` 					| Prüft, ob die Response 200 Erfolgreich ist. 				|
+|-----------------------------------|-----------------------------------------------------------|
+| `setHeaders(Header $headers)`		| Ermöglicht das Setzen von Antwortheadern. 				|
+|-----------------------------------|-----------------------------------------------------------|
+| `getHeaders()` 					| Gibt eine Liste der Response-Header zurück. 				|
+|-----------------------------------|-----------------------------------------------------------|
+| `getCookie()` 					| Gibt die Cookie-Header ab. 								|
+|-----------------------------------|-----------------------------------------------------------|
+| `setContent($value)` 				| Setzt den Inhalt der Response. 							|
+|-----------------------------------|-----------------------------------------------------------|
+| `getContent()` 					| Gibt den Inhalt der Response zurück. 						|
+|-----------------------------------|-----------------------------------------------------------|
+| `getBody()`						| Gibt den Inhalt der Response zurück und dekodiert ihn.	|
+|-----------------------------------|-----------------------------------------------------------|
+
+Verwenden Sie das folgenden Code beispielsweise, um einen 404-Statuscode für die Response festzulegen:
+
+{line-numbers=off,lang=php}
+~~~
+$this->getResponse()->setStatusCode(404);
+~~~
+
+Verwenden Sie den folgenden Code, um der Response einer Header hinzuzufügen:
+
+{Zeilennummern = aus, lang = PHP}
+~~~
+$ headers = $ this-> getResponse () -> getHeaders ();
+$ Kopf-> addHeaderLine (
+             "Inhaltstyp: Anwendung / Oktettstrom");
+~~~
+
+Verwenden Sie den folgenden Code, um den Antwortinhalt festzulegen:
+
+{line-numbers=off,lang=php}
+~~~
+$headers = $this->getResponse()->getHeaders();
+$headers->addHeaderLine(
+             "Content-type: application/octet-stream");
+~~~
+
+## Variable-Container
+
+Nachdem Sie die Daten aus dem HTTP-Request abgerufen haben, würden Sie etwas mit diesen Daten tun (normalerweise werden Sie
+die Daten in Ihrer Modellschicht verarbeiten) und die Daten geben Sie aus der Aktionsmethode zurück.
+
+Sie sehen, dass die Methode `indexAction()` des Index-Controllers eine Instanz der Klasse @`ViewModel`[Zend\View\Model\ViewModel] zurückgibt.
+Die Klasse @`ViewModel`[Zend\View\Model\ViewModel] ist eine Art *Variable-Container*. Alle Variablen wurden an
+den Konstruktor übergeben. Die Variablen werden automatisch im View-Skript erreichbar sein.
+
+Lassen Sie uns ein Beispiel aus dem echten Leben nehmen. Wir werden eine weitere Aktionsmethode in unserer Klasse `IndexController` erstellen.
+Diese wird durch `aboutAction()` aufrufen. Die Aktion "about" zeigt die *About*-Seite unserer Website an.
+In der Aktionsmethode erstellen wir zwei Variablen mit Informationen über unsere Website.
+Die Variablen werden mit Hilfe des Objekts @`ViewModel`[Zend\View\Model\ViewModel] zum Rendern in der View zurückgeben:
+
+{line-numbers=on,lang=php}
+~~~
+// The "about" action
+public function aboutAction() 
+{              
+    $appName = 'HelloWorld';
+    $appDescription = 'A sample application for the Using Zend Framework 3 book';
+    
+    // Return variables to view script with the help of
+    // ViewModel variable container
+    return new ViewModel([
+        'appName' => $appName,
+        'appDescription' => $appDescription
+    ]);
+}
+~~~
+
+In den Zeilen 4-5 erstellen wir die Variablen `$appName` und` $appDescription`. Sie speichern
+den Name und die Beschreibung Anwendung.
+
+In den Zeilen 9-12 übergeben wir die Variablen, die wir erstellt haben, an den Konstruktor des Objekts @`ViewModel`[Zend\View\Model\ViewModel]
+als assoziatives Array. Die Array-Schlüssel definieren die Namen der Variablen, die zurückgegeben werden,
+um Skript anzuzeigen.
+
+Die Klasse @`ViewModel`[Zend\View\Model\ViewModel] bietet mehrere Methoden, mit denen Sie zusätzlich arbeiten können.
+Setzen Sie Variablen mit @`ViewModel`[Zend\View\Model\ViewModel] und rufen dann die Variablen daraus ab. Die Tabelle 4.5
+bietet eine Methodenzusammenfassung:
+
+{title="Tabelle 4.5. Methoden der ViewModel-Klasse"}
+|-------------------------------------------|---------------------------------------|
+| *Methodenname* 							| *Beschreibung* 						|
+|-------------------------------------------|---------------------------------------|
+| `getVariable($name, $default)`			| Gibt eine Variable anhand des Names 	|
+| 											| zurück (oder den Standardwert, wenn	|
+|											| die Variable ist nicht vorhanden). 	|
+|-------------------------------------------|---------------------------------------|
+| `setVariable($name, $value)` 				| Setzt eine Variable. 					|
+|-------------------------------------------|---------------------------------------|
+| `setVariables($Variablen, $überschreiben)`| Setzt eine Gruppe von Variablen und 	|
+| 											| überschreibt optional existierende. 	|
+|-------------------------------------------|---------------------------------------|
+| `getVariables()` 							| Gibt alle Variablen als Array zurück. |
+|-------------------------------------------|---------------------------------------|
+| `clearVariables()` 						| Entfernt alle Variablen. 				|
+|-------------------------------------------|---------------------------------------|
+
+## Fehlerbedingungen formulieren
+
+Manchmal gehen Dinge schief und ein Fehler tritt auf. Zum Beispiel erwarten Sie, eine GET-Variable vom HTTP-Request
+zu erhalten, aber sie fehlt oder hat einen ungültigen Wert. Um diese Fehlerbedingung zu formulieren,
+setzen Sie einen *4xx* [Statuscode](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) in der HTTP-Response
+und kehren von der Aktion des Controllers zurück.
+
+Angenommen, in einer Blog-Anwendung wird angenommen, dass ein Benutzer die folgende URL in die Navigationsleiste seines Browsers eingibt: *http://localhost/posts/view?Id =10000*. Die Absicht
+einer solchen Anfrage ist es, den Blogbeitrag mit ID=10000 anzuzeigen. Wenn der Post mit dieser ID nicht existiert, können wir ihn nicht anzeigen und verwenden den folgenden Code zum Setzen
+des 404 Statuscode (Seite nicht gefunden) für die Antwort:
+
+{line-numbers=off,lang=php}
+~~~
+// The "view" action displays a blog post with the given ID
+public function viewAction()
+{
+    // Get ID argument from GET
+    $id = (int)$this->params()->fromQuery('id', -1);
+    
+    // Validate the argument
+    if ($id<1) {
+        // Error condition - we can not display such post
+        $this->getResponse()->setStatusCode(404);
+        return;
+    }
+    
+    // Try to find the post (we omit the actual SQL query for simplicity).
+    $post = ...
+    if (!$post) {
+        // Error condition - post not found
+        $this->getResponse()->setStatusCode(404);
+        return;
+    }
+    
+    // Normal execution
+    // ...
+}
+~~~
+
+Wenn ZF3 auf den *4xx* Statuscode in der Response stößt, wird der Benutzer auf eine spezielle *Fehlerseite* umgeleitet.
+Wir werden über Fehlerseiten später in diesem Kapitel noch sprechen.
+
+Eine andere Möglichkeit, eine (kritische) Fehlerbedingung zu formulieren, ist das Auslösen einer "Exception". Zum Beispiel wie folgt:
+
+{line-numbers=off,lang=php}
+~~~
+throw new \Exception("Post with ID=$id could not be found");
+~~~
+
+Wenn ZF3 auf eine nicht behandelte Exception stößt, wird eine weitere Fehlerseite mit den Informationen zur Exception angezeigt.
+
+## Controller Registrierung
+
+Alle zu einem Modul gehörenden Controller-Klassen sollten in der Konfigurationsdatei *module.config.php* registriert sein. 
+Wenn Ihre Controller-Klasse einige Service nicht benötigt (keine Abhängigkeiten),
+können Sie ihn wie folgt registrieren:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+use Zend\ServiceManager\Factory\InvokableFactory;
+
+return [
+    // ...
+    
+    'controllers' => [
+        'factories' => [
+            Controller\IndexController::class => InvokableFactory::class
+            // Put other controllers registration here
+        ],
+    ],
+    
+    // ...
+];
+~~~
+
+In Zeile 7 haben wir den Schlüssel *controllers*, der den Unterschlüssel *factories* enthält.
+Um eine Controller-Klasse zu registrieren, müssen Sie Sie in einer Zeile in Form von *key => value* hinzu. 
+Der Schlüssel sollte der vollständige Name der Controller-Klasse sein,
+wie `\Application\Controller\IndexController` (wir können das PHP Schlüsselwort `::class` für die Klassennamenauflösung verwenden),
+und der Wert sollte der Name einer Factory-Klasse sein, die die Controller-Klasse für die Verwendung erstellen würde. In unserem Fall,
+verwenden wir die Standard @`InvokableFactory`, aber Sie können Ihre eigenen erstellen, wenn Sie sie brauchen.
+
+I> Mit der @`InvokableFactory` erklärst du Zend Framework
+I> dass es den Controller aufrufen kann, indem er es mit dem "new" Operator instanziiert. Das ist das meiste
+I> und einfacheste Weg um den Controller zum erstellen. Alternativ können Sie Ihre eigene Factory registrieren
+I> um die Controller-Instanz zu erstellen und Abhängigkeiten in den Controller zu injizieren.
+
+### Registrieren einer Controller Factory
+
+Wenn Ihre Controller-Klasse einen Service aufrufen muss (dies passiert sehr oft), dann müssen Sie diesen Service vom *Service-Manager* anfordern (wir haben
+über den Service Manager im Kapitel [Website Operation](#operation) gesprochen) und übergeben diesen Service an den Konstruktor des Controllers, und der Controller speichert den Service, den Sie übergeben haben
+in einer privaten Klassenvariablen für den internen Gebrauch (dies wird auch Abhängigkeitsinjektion genannt).
+
+Diese Prozedur wird normalerweise innerhalb einer Factory-Klasse implementiert. Angenommen, unsere Controller-Klasse muss den Service `CurrencyConverter` verwenden,
+der die Währung von USD zu EUR umwandelt. Die Factory-Klasse für unseren Controller sieht wie folgt aus:
+
+{line-numbers=off,lang=php}
+~~~
+<?php 
+namespace Application\Controller\Factory;
+
+use Zend\ServiceManager\Factory\FactoryInterface;
+use Application\Service\CurrencyConverter;
+use Application\Controller\IndexController;
+
+// Factory class
+class IndexControllerFactory implements FactoryInterface
+{
+    public function __invoke(ContainerInterface $container, 
+                     $requestedName, array $options = null) 
+    {
+        // Get the instance of CurrencyConverter service from the service manager.
+        $currencyConverter = $container->get(CurrencyConverter::class);
+        
+        // Create an instance of the controller and pass the dependency 
+        // to controller's constructor.
+        return new IndexController($currencyConverter);	
+    }
+}
+~~~
+
+Dann registrieren Sie den Controller auf die gleiche Weise, geben aber die Factory-Klasse an, die wir gerade geschrieben haben:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+return [
+    // ...
+    
+    'controllers' => [
+        'factories' => [
+            Controller\IndexController::class => Controller\Factory\IndexControllerFactory::class
+        ],
+    ],
+    
+    // ...
+];
+~~~
+
+I> Wenn Sie etwas Erfahrung mit Zend Framework 2 haben, werden Sie vielleicht feststellen, dass die Dinge jetzt ein wenig anders sind als zuvor.
+I> In ZF2 gab es die Methode `getServiceLocator()` in der Basisklasse @`AbstractActionController`[Zend\Mvc\Controller\AbstractActionController], die es erlaubte Abhängigkeiten des Controllers auch ohne Factory zu bekommen.
+I> In ZF3 müssen Abhängigkeiten explizit übergeben werden. Es ist ein bisschen langweilig,
+I> Doch es entfernt "versteckte" Abhängigkeiten und macht Ihren Code klarer und einfacher zu verstehen.
+
+### LazyControllerAbstractFactory
+
+Eine Factory für fast jeden Controller zu schreiben mag auf den ersten Blick langweilig erscheinen. Wenn Sie so faul sind, dass Sie
+das nicht tun wollen, können Sie die Standard Factory-Klasse @`LazyControllerAbstractFactory` verwenden.
+
+T> Die Factory @`LazyControllerAbstractFactory` verwendet *reflection*, um zu bestimmen, welche Serice Ihr Controller
+T> verwenden möchte. Wenn Sie die Argumente des Konstruktors für Controllers mit *Type Hinting* eingeben, wird die Factory
+T> selbst die benötigten Service abrufen und sie an den Konstruktor übergeben.
+
+Um beispielsweise den Service `CurrencyConverter` in Ihren Controller zu injizieren, stellen Sie sicher, dass der Konstruktor wie folgt aussieht:
+
+{line-numbers=off,lang=php}
+~~~
+namespace Application\Controller;
+
+use Application\Service\CurrencyConverter;
+
+class IndexController extends AbstractActionController
+{
+    // Here we will save the service for internal use.
+    private $currencyConverter;
+    
+    // Typehint the arguments of constructor to get the dependencies.
+    public function __construct(CurrencyConverter $currencyConverter)
+    {
+        $this->currencyConverter = $currencyConverter;
+    }
+}
+~~~
+
+Dann registrieren Sie den Controller auf die gleiche Weise, geben aber die Factory-Klasse @`LazyControllerAbstractFactory` an, die wir gerade geschrieben haben:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+use Zend\Mvc\Controller\LazyControllerAbstractFactory;
+
+return [
+    // ...
+    
+    'controllers' => [
+        'factories' => [
+            Controller\IndexController::class => LazyControllerAbstractFactory::class
+        ],
+    ],
+    
+    // ...
+];
+~~~
+
+## Wann einen neuen Controller erstellen?
+
+Wenn Ihre Seite größer wird, sollten Sie neue Controller-Klassen erstellen, anstatt alle
+Aktionen in den `IndexController` zu schreiben. Der Index-Controller wird zum Definieren der Aktionen verwendet,
+welche für Ihre gesamte Website funktionieren.
+
+T> Es wird nicht empfohlen, große Controller mit Hunderten von Aktionen zu erstellen, weil sie schwer zu verstehen und zu warten sind.
+
+Es wird empfohlen, für jedes Modell (oder für die wichtigsten) Ihrer Geschäftslogikdomäne eine neue Controller-Klasse zu erstellen.
+
+Zum Beispiel können Sie einen `UserController` erstellen, um Benutzer Ihrer Site zu verwalten.
+Dieser Controller hat die Standardaktion "index" zum Anzeigen der Seite
+mit allen Benutzern, Aktion "Hinzufügen" zum Hinzufügen eines neuen Benutzers, Aktion "Bearbeiten" zum Bearbeiten des
+Benutzerprofil und Aktion "Löschen" zum Löschen eines Benutzers.
+
+In analoger Weise würden Sie einen `PurchaseController` mit Aktionen erstellen, um die Käufe Ihrer Produkte zu verwalten
+und einen Einkaufswagen implementieren, einem `DownloadController` mit Aktionen, um Dateidownloads für die Seite zu verwalten,
+usw.
+
+## Controller-Plugins
+
+Ein *Controller-Plugin* ist eine Klasse, die die Funktionalität von *allen Controllern* in irgendeiner Weise erweitert.
+
+I> Ohne Plugins, um die Funktionalität aller Controller zu erweitern, müssten Sie
+I> eine benutzerdefinierte Basisklasse erstellen. Nennen wir diesen `BaseController`. Wir
+I> leite andere Controller aus dieser Basisklasse ab. Dieser Weg kann auch genutzt werden, aber aus der Sicht von den ZF3-Entwicklern sind Plugins die bessere
+I> Lösung, weil sie *Klassenzusammensetzung* [^foo] verwenden, die eine bessere Flexibilität im Vergleich bietet
+I> als die Klassenvererbung. Sie registrieren Ihren Plugin-Controller und er wird automatisch für
+I> allen Controllern Ihrer Anwendung zugänglich (die Basisklasse @`AbstractActionController` verwendet PHP's
+I> magische Methode `__call()`, um Aufrufe an registrierte Controller-Plugins zu weiterzuleiten.
+
+[^foo]: *Composition* ist eine Beziehung zwischen zwei Klassen, die am besten als "hat-eine" und
+        "Ganzes/Teil" - Beziehung. Die Besitzerklasse enthält einen Verweis auf eine andere Klasse (Plugin).
+        Der Besitzer ist verantwortlich für die Lebensdauer des Objekts, das es enthält.
+
+Es gibt mehrere Standard-Controller-Plugins, die standardmäßig zur Verfügung stehen (Tabelle 4.6).
+Wir haben bereits eines (das Plugin @`Params`) in einem unserer vorherigen Beispiele verwendet.
+
+{title="Tabelle 4.6. Standard-Controller-Plugins"}
+|---------------------------------------------------|---------------------------------------------------|
+| *Standard-Plugin-Klasse* 							| *Beschreibung* 									|
+|---------------------------------------------------|---------------------------------------------------|
+| @`Params` 										| Erlaubt das Abrufen von Variablen aus der 		|
+| 													| HTTP-Response, einschließlich der GET- und . 		|
+|													| POST-Variablen 									|
+|---------------------------------------------------|---------------------------------------------------|
+| @`Url`[Zend\Mvc\Controller\Plugin\Url] 			| Ermöglicht das Generieren von absoluten oder 		|
+| 													| relativen URLs innerhalb eines Controllers. 		|
+|---------------------------------------------------|---------------------------------------------------|
+| @`Layout`[Zend\Mvc\Controller\Plugin\Layout] 		| Ermöglicht den Zugriff auf das Layout-View-Model, |
+| 													| dass die Daten an Layoutvorlage übergibt. 		|
+|---------------------------------------------------|---------------------------------------------------|
+| @`Identity`[Zend\Mvc\Plugin\Identity\Identity]		| Gibt die Identität des Benutzers zurück, der		|
+| 													| sich  auf der Webseite angemeldet hat.			|
+|---------------------------------------------------|---------------------------------------------------|
+| @`FlashMessenger`[Zend\Mvc\Plugin\FlashMessenger\FlashMessenger]	| Ermöglicht das Definition von		|
+| 																	| Flash-Nachrichten, die in der 	|
+|																	| Session gespeichert sind. Diese	|
+|																	| können auf einer anderen Webseite |
+|																	| angezeigt werden.					|
+|-----------------------------------------------------------|-------------------------------------------|
+| @`Redirect`[Zend\Mvc\Controller\Plugin\Redirect] 			| Ermöglicht das Umleiten der Anfrage an	|
+| 															| einen anderen Controller Aktionsmethode. 	|
+|-----------------------------------------------------------|-------------------------------------------|
+| @`PostRedirectGet`[Zend\Mvc\Plugin\Prg\PostRedirectGet]	| Leitet die POST-Anfrage um und 			|
+| 															| konvertiert alle POST-Variablen. 			|
+|-----------------------------------------------------------|-------------------------------------------|
+| @`FilePostRedirectGet`[Zend\Mvc\Plugin\FilePrg\FilePostRedirectGet]	| Leitet die POST-Anfrage um	|
+|																		| und behält hochgeladene 		|
+|																		| Dateien bei. 					|
+|-----------------------------------------------------------------------|-------------------------------|
+
+Innerhalb der Aktionsmethode des Controllers greifen Sie folgendermaßen auf ein Plugin zu:
+
+{line-numbers=off,lang=php}
+~~~
+// Access Url plugin
+$urlPlugin = $this->url();
+
+// Access Layout plugin
+$layoutPlugin = $this->layout();
+
+// Access Redirect plugin
+$redirectPlugin = $this->redirect();
+~~~
+
+Alternativ können Sie ein Plugin über seinen vollständigen Klassenamen mit der Methode `plugin()`, die vom Basis-Controller-Klasse bereitgestellt wird,
+wie folgt aufrufen:
+
+{line-numbers=off,lang=php}
+~~~
+use Zend\Mvc\Controller\Plugin\Url; 
+ 
+// Inside your controller's action use the plugin() method.
+$urlPlugin = $this->plugin(Url::class);
+~~~
+
+### Schreiben eines eigenen Controller-Plugins
+
+Auf Ihren Websseiten müssen Sie wahrscheinlich benutzerdefinierte Controller-Plugins erstellen.
+Angenommen, Sie benötigen auf allen Controller-Klassen eine Prüfung,
+ob ein Benutzer Ihrer Seite auf bestimmte Controller-Aktionen zugreifen darf. Das kann mit der
+Klasse `AccessPlugin` implementiert werden.
+
+Das Controller-Plugin sollte von der Klasse @`AbstractPlugin`[Zend\Mvc\Controller\Plugin\AbstractPlugin] abgeleitet sein.
+Plugins haben typischerweise in ihrem eigenen Namesraum `Plugin` und liegen Unterverzeichnis des
+`Controller` Namensraumes:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+namespace Application\Controller\Plugin; 
+
+use Zend\Mvc\Controller\Plugin\AbstractPlugin;
+
+// Plugin class
+class AccessPlugin extends AbstractPlugin 
+{
+    // This method checks whether user is allowed
+    // to visit the page 
+    public function checkAccess($actionName)
+    {
+        // ...
+    }
+}
+~~~
+
+Um in Zend Framework 3 auf ein Plugin zugreifen zu können, müssen Sie es registrieren.
+Hierfür finden Sie in Ihrer Datei *module.config.php* den Schlüssel `controller_plugins`.
+Siehe unten zum Beispiel:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+return [
+    // ... 
+ 
+    'controller_plugins' => [
+        'factories' => [
+            Controller\Plugin\AccessPlugin::class => InvokableFactory::class,
+        ],
+        'aliases' => [
+            'access' => Controller\Plugin\AccessPlugin::class,
+        ]
+    ],
+ 
+    // ...
+];
+~~~
+
+I> Bitte beachten Sie, dass wir auch einen Alias ​​für das Plugin registrieren haben, um auf unser Plugin
+I> über einem kurzen Namen zugreifen zu können.
+
+Danach können Sie auf Ihr benutzerdefiniertes Plugin in allen Aktionen eines Controllers,
+wie folgt auf Ihr Plugin zugreifen:
+
+{line-numbers=off,lang=php}
+~~~
+// Check if site user is allowed to visit the "index" page
+$isAllowed = $this->access()->checkAccess('index');
+~~~
+
+## Views
+
+Views gehören zur Präsentationsebene einer Webanwendung, weil deren Ziel
+ist, eine HTML-Ausgabe zu erzeugen, die vom Web-Server an den Besucher der Webseite zurückgegeben wird.
+
+In Zend Framework 3 implementieren Sie eine View als eine *Template-Datei*, welche die
+Dateiendung `.phtml` hat ("phtml" steht für PHP + HTML). View-Templates haben so
+einen Namen, weil sie HTML-Code gemischt mit PHP-Code-Snippets zum Rendern
+der Webseiten enthalten.
+
+Views befinden sich in der Regel im Unterverzeichnis *view*
+eines Moduls (siehe Abbildung 4.5):
+
+![Abbildung 4.5. View-Verzeichnis anzeigen](images/mvc/views_dir.png)
+
+Q> **Warum werden die Dateien der Templates nicht im Quellverzeichnis des Moduls gespeichert?**
+Q>
+Q> View Templates (`.phtml` Dateien) werden nicht im Verzeichnis `src/`des Moduls gespeichert,
+Q> weil sie keine gewöhnlichen PHP-Klassen sind und nicht von PHP Autoload-Funktion für Klassen
+Q> geladen werden müssen. View-Templates werden durch die spezielle ZF3-Klasse *View Resolver*
+Q> verarbeitet und deshalb werden View Templates im Verzeichnis des Moduls `view` gespeichert
+Q> gespeichert.
+
+View-Templates können unterschiedliche Verhaltensweisen haben, basierend auf Variablen, die Sie vom Controller
+aus der Aktionsmethode übergeben bekommen. Die Daten werden mit Hilfe eines Variablencontainers @`ViewModel`[Zend\View\Model\ViewModel] an das Template übergeben.
+
+Lassen Sie uns zum Beispiel ein View-Template für die `aboutAction()` unseres Index-Controllers erstellen.
+Auf der Seite *About* wird der Titel und einige Informationen über unserer "Hello World" - Anwendung angezeigt.
+
+Um ein View-Template zu erstellen, navigieren Sie in Ihrem NetBeans-Fenster zum Verzeichnis *view/application/index* (siehe Abbildung 4.6).
+und klicken Sie mit der rechten Maustaste auf den Verzeichnisnamen "index". Aus dem Kontextmenü, das erscheint,
+Wählen Sie den Menüpunkt *New->PHP File ...*.
+
+![Abbildung 4.6. Kontextmenü](images/mvc/new_php_file.png)
+
+Geben Sie im Dialogfeld "New PHP File" (Abbildung 4.7) den Namen *about.phtml* ein und klicken Sie auf die Schaltfläche *Finish*.
+
+![Abbildung 4.7. Kontextmenü](images/mvc/new_php_file_dialog.png)
+
+Das View-Template *about.phtml* wird erstellt und im rechten Bereich des NetBeans-Fensters angezeigt.
+Geben Sie in diese Datei folgendes ein:
+
+{line-numbers=on,lang=php}
+~~~
+<h1>About</h1>
+
+<p>
+    The Hello World application.
+</p>
+
+<p>
+    Application name: <?= $this->escapeHtml($appName); ?>
+</p>
+
+<p>
+    Application description: <?= $this->escapeHtml($appDescription); ?>.
+</p>
+~~~
+
+Wie Sie sehen, ist das View-Template eine übliche HTML-Seite mit mehreren PHP-Code-Fragmenten.
+Ein View-Script rendert nur die Daten, die Sie mit dem Variablencontainer @`ViewModel`[Zend\View\Model\ViewModel] übergeben haben.
+Zum Beispiel erhalten wir in Zeile 8 den Wert der Variable $appName und geben diese aus.
+
+T> Innerhalb des View-Templates können Sie leicht auf die Variablen zugreifen, die von der Aktion des Controllers übergeben wurden.
+T> Um beispielsweise den Wert der Variablen des Anwendungsnamens zu erhalten, verwenden Sie entweder
+T> den Syntax `$appName` oder` $this->appName`. Diese beiden Arten des Zugriffs auf die Variable sind gleichwertig, aber die erste
+T> erfordert weniger Schreibarbeit, also werden wir es in Zukunft verwenden.
+
+Bitte beachten Sie, dass wir den View Helper @`EscapeHtml` verwenden, um den Inhalt des Strings vor der Ausgabe zu *escapen* (maskieren).
+Damit machen wir unsere Website gegen Hacker-Angriffe sicherer.
+
+W> Sie sollten Variablen, die Sie auf Ihre Webseite ausgeben, immer maskieren. Das Escaping hilft dabei, dass kein bösartiger Code
+W> auf Ihrer Seite ausgeben wird.
+
+I> In Ihrem View-Skript können Sie auch einfache Kontrolloperationen (wie `if`,` foreach` oder `switch`) verwenden,
+wenn die Darstellung der Seite vom Wert einer Variablen abhängt.
+
+Sehen wir uns nun an, wie die Seite im Webbrowser aussieht. Geben Sie die URL "http://localhost/application/about"
+in die Navigationsleiste Ihres Browsers ein. Die Seite *About* sollte erscheinen (siehe Abbildung 4.8):
+
+![Abbildung 4.8. Seite "About"](images/mvc/about_page.png)
+
+T> Im Allgemeinen muss der PHP-Code, den Sie in Views verwenden, so einfach wie möglich sein.
+T> Views ändern normalerweise die Daten nicht, die Sie vom Controller erhalten.
+T> Beispielsweise kann eine View ein Modell verwenden, das Sie durchlaufen, um Zeilen aus einer Datenbanktabelle zu durchlaufen und
+T> für die Elemente in einer HTML-Seite zu rendern, aber es sollte nie Datenbanktabellen erstellen oder sie selbst ändern.
+
+## View-Helpers
+
+Ein *View-Helper* ist eine (relativ) einfache PHP-Klasse, deren Ziel es ist, einen Teil eines Views zu rendern.
+Sie können View-Helper aus einem beliebigen View-Template aufrufen. Mit View-Helper können Sie wiederverwendbare Widgets
+(wie Menüs, Navigationsleisten usw.) für Ihre Webseiten erstellen.
+
+I> View-Helper sind analog zu Controller-Plugins: Die Controller-Plugins erlauben das "erweitern"
+I> der Funktionalität von Controllern und View-Helpern erlauben es, die Funktionalität der
+I> View-Templates zu "erweitern".
+
+ZF3 bietet viele Standard-View-Helper. In der Tabelle 4.7 sind einige von ihnen
+mit einer kurzen Beschreibung aufgeführt:
+
+{title="Tabelle 4.7. Standard-View-Helpers"}
+|---------------------------------------------------|-----------------------------------------------|
+| *Standard-Plugin-Klasse* 							| *Beschreibung* 								|
+|---------------------------------------------------|-----------------------------------------------|
+| @`BasePath` 										| Gibt den Basispfads für die Webanwendung 		|
+| 													| zurück. Das ist der absolute Pfad				|
+|													| zu `APP_DIR`. 								|
+|---------------------------------------------------|-----------------------------------------------|
+| @`Url`[Zend\View\Helper\Url] 						| Ermöglicht das Generieren von absoluten oder 	|
+| 													| relativen URL-Adressen von innerhalb des		|
+|													| View-Templates. 								|
+|---------------------------------------------------|-----------------------------------------------|
+| @`ServerUrl` 										| Gibt die URL der aktuellen Anfrage zurück. 	|
+|---------------------------------------------------|-----------------------------------------------|
+| @`Doctype` 										| Helfer zum Setzen und Abrufen des 			|
+| 													| Doctype HTML Elements der Webseite. 			|
+|---------------------------------------------------|-----------------------------------------------|
+| @`HeadTitle` 										| Helfer zum Setzen des Titel-HTML-Elements 	|
+| 													| der Webseite. 								|
+|---------------------------------------------------|-----------------------------------------------|
+| @`HtmlList` 										| Helfer zum Erzeugen von geordneten und		|
+|													| ungeordneten HTML-Listen. 					|
+|---------------------------------------------------|-----------------------------------------------|
+| @`ViewModel`[Zend\View\Helper\ViewModel] 			| Helfer zum Speichern und Abrufen des			|
+|													| View-Modells 									|
+|---------------------------------------------------|-----------------------------------------------|
+| @`Layout`[Zend\View\Helper\Layout] 				| Gibt das View-Objekt für das Layout zurück. 	|
+|---------------------------------------------------|-----------------------------------------------|
+| @`Partial`										| Ermöglicht das Rendern eines "partiellen" 	|
+|													| View-Templates. 								|
+|---------------------------------------------------|-----------------------------------------------|
+| @`InlineScript` 									| Helfer zum Setzen und Abrufen von 			|
+| 													| Skriptelementen für die Ausnahme in			|
+|													| HTML-Body-Abschnitt. 							|
+|---------------------------------------------------|-----------------------------------------------|
+| @`Identity`[Zend\View\Helper\Identity] 			| Helper zum Anzeigen der Identität eines		|
+|													| authentifizierten Benutzers. 					|
+|---------------------------------------------------|-----------------------------------------------|
+| @`FlashMessenger`[Zend\View\Helper\FlashMessenger]	| Ermöglicht das Abrufen der gespeicherten		|
+| 													| Flash-Nachrichten aus der Session. 			|
+|---------------------------------------------------|-----------------------------------------------|
+| @`EscapeHtml` 									| Ermöglicht es, eine Variable für die Ausgabe	|
+| 													| zu maskieren (escapen). 						|
+|---------------------------------------------------|-----------------------------------------------|
+
+Im Folgenden wird gezeigt, wie Sie einen Titel für eine Webseite festlegen.
+In der Regel ist es erforderlich, für jede Webseite einen anderen Titel anzugeben. Sie können es
+mit dem View-Helper @`HeadTitle` umsetzen. Zum Beispiel können Sie den Titel für die Seite *About*
+tun, indem Sie den folgenden PHP-Code am Anfang des View-Templates *about.phtml* hinzufügen:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+$this->headTitle('About');
+?>
+~~~
+
+Im obigen Code rufen wir den Helper @`HeadTitle` auf und übergeben ihm als Argument
+unseren Seitentitel ("About"). Der Helper @`HeadTitle` sichert intern den Text für den HTML-Tag `<title>`
+Ihrer Webseite. Wenn Sie die Seite *About* in Ihrem Webbrowser öffnen,
+sieht der Seitentitel wie folgt aus: "About - ZF Skeleton Application" (siehe unten Abbildung 4.9)
+für das Beispiel):
+
+![Abbildung 4.9. Festlegen des Seitentitels für die Seite "About"](images/mvc/about_title.png)
+
+I> Wir werden die View-Helper detaillierter besprechen und
+I> weitere Verwendungsbeispiele im Kapitel [Seiten-Darstellung und Layout](#appearance) sehen.
+
+## Namen der View-Templates
+
+Wenn Sie Daten mit dem Variablencontainer @`ViewModel`[Zend\View\Model\ViewModel] von der Aktionsmethode in
+Ihrem Controller zurückgeben, kennt Zend Framework irgendwie den Namen des entsprechenden View-Templates. 
+Zum Beispiel wird für die Methode `aboutAction()` Ihres `IndexController`,
+von ZF3 automatisch das View-Template *about.phtml* verwendet.
+
+I> ZF3 bestimmt den korrekten Namen des View-Templates anhand des Modulnamens, des Controllernamens und des Aktionsnamens.
+I> Zum Beispiel wird Aktion `IndexController::aboutAction()`, die zum Modul `Application` gehört,
+I> standardmäßig das View-Template `application/index/about.phtml` aufgerufen.
+
+T> Wenn Ihr Controller oder Aktionsname aus mehreren Wörtern in camel-case-Notation besteht (wie `UserRegistrationController` und `registrationStep1Action`),
+T> lautet das entsprechende View-Template *application/user-registration/registration-step-1.phtml* (camel-case-Namen
+T> werden in Kleinbuchstaben umgewandelt und Wörter werden durch Bindestriche getrennt).
+
+### Überschreiben des Namens der View-Templates
+
+Das @`ViewModel`[Zend\View\Model\ViewModel] kann auch verwendet werden, um den Namen des View-Templates zu überschreiben.
+Eigentlich ist die Klasse @`ViewModel`[Zend\View\Model\ViewModel] mehr als nur ein Variablen-Container. Darüber hinaus
+können Sie hier angeben, welches View-Template für das Seitenrendering verwendet werden soll. Hierfür können Sie
+folgende Methoden in der Klasse nutzen. Sind in Tabelle 4.8 aufgeführt.
+
+{title="Tabelle 4.8. Methoden der ViewModel-Klasse zum Setzen und Abrufen des Namens des View-Templates"}
+|-------------------|-----------------------------------------------|
+| *Methodenname* 	| *Beschreibung* 								|
+|-------------------|-----------------------------------------------|
+| `setTemplate()`	| Legt den Namen der Ansichtsvorlage fest. 		|
+|-------------------|-----------------------------------------------|
+| `getTemplate()`	| Gibt den Namen der Ansichtsvorlage zurück.	|
+|-------------------|-----------------------------------------------|
+
+Um den Namen des View-Templates festzulegen, verwenden Sie die Methode `setTemplate()`. Die Methode `getTemplate()`
+gibt den Namen des View-Templates zurück, welches aktuell für das View-Modell festgelegt ist.
+
+Das folgende Codebeispiel zeigt, wie Sie die Methode `setTemplate()` in Ihrer
+Klasse `IndexController` und in Methode `indexAction ()` aufrufen können, um zu
+erzwingen, dass ZF3 das View-Template *about.phtml* zum Rendern der Seite *Home* verwendet soll,
+anstelle der Datei *index.phtml*:
+
+{line-numbers=on,lang=php}  
+~~~
+// Index action renders the Home page of your site.
+public function indexAction() 
+{    
+	// Use a different view template for rendering the page.
+	$viewModel = new ViewModel();
+	$viewModel->setTemplate('application/index/about');
+	return $viewModel;
+}
+~~~
+
+Im obigen Code haben wir wie üblich eine neue Instanz der Klasse `ViewModel` erstellt (Zeile 5).
+
+Dann haben wir die Methode `setTemplate()` für das View-Model-Objekt (Zeile 6) aufgerufen und 
+haben den Namen des View-Templates als Argument übergeben. Der Name des View-Templates
+ist eigentlich ein relativer Pfad zur Datei `about.phtml`, ohne der Dateiendung.
+
+Schließlich gibt die Action-Methode das View-Model-Objekt zurück (Zeile 7).
+
+I> Allerdings ist der Aufruf der Methode `setTemplate()` in jeder Aktionsmethode optional.
+Wenn Sie dies nicht tun, ermittelt ZF3 automatisch den Namen des View-Templates
+durch Verketten des aktuellen Modulnamens, Controllernamens und des Namens der Aktionsmethode.
+
+## View Resolver
+
+Wenn Zend Framework das View-Template hat, bleibt nur der absolute Pfad zu der
+entsprechenden *.phtml* Datei übrig. Dies wird auch als *view template resolving* bezeichnet.
+View Templates werden mit der speziellen Klasse des Zend Framework Namens * view resolver * aufgelöst.
+
+In ZF3 gibt es zwei View-Resolver: @`TemplatePathStack` und @`TemplateMapResolver`.
+Beide Resolver verwenden den Namen eines View-Templates als Eingabe und geben den Pfad zurück, um die Template-Datei als View anzuzeigen.
+Der Template-Name besteht normalerweise aus dem Modulnamen, gefolgt vom Namen des Controllers gefolgt vom Namen des Templates, wie "application/index/about",
+"application/index/index". Eine Ausnahme ist "layout/layout", die den Modulnamen nicht enthält.
+
+* Der *Template-Map-Resolver* verwendet ein verschachteltes PHP-Array, um den Namen des Pfades zum Anzeigen der Template-Datei zu bestimmen.
+  Dieser Weg ist schnell, aber Sie müssen ein Template-Map-Array verwalten und es jedes Mal aktualisieren,
+  wenn Sie ein neues View-Template hinzufügen.
+* Der *Template-Path-Stack-Resolver* setzt voraus, dass der Name des View-Templates anhand der
+  zur Verzeichnisstruktur zugeordnet werden kann. Beispiel: Der Name "application/index/about" wird dem Namen des View-Template zugeordnet
+  *APP_DIR/module/Application/view/application/index/about.phtml*.
+  Dieser Weg ist einfacher, denn Sie müssen das Template-Map-Array nicht aktualisieren.
+  
+Die Resolver-Einstellungen sind in der Datei *module.config.php* unter dem Schlüssel *view_manager* gespeichert:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+return [
+    //...
+    
+    'view_manager' => [
+        //...
+        
+        'template_map' => [
+            'layout/layout'           => __DIR__ . '/../view/layout/layout.phtml',
+            'application/index/index' => __DIR__ . '/../view/application/index/index.phtml',
+            'error/404'               => __DIR__ . '/../view/error/404.phtml',
+            'error/index'             => __DIR__ . '/../view/error/index.phtml',
+        ],
+        'template_path_stack' => [
+            __DIR__ . '/../view',
+        ],
+    ],
+];
+~~~
+
+Sie können sehen, dass die Einstellungen des Template-Map-Resolver unter dem Schlüssel *template_map* gespeichert sind. Standardmäßig
+gibt es mehrere "Standard"-View-Templates, die folgendermaßen aufgelöst werden: das Index-Template, das Layout-Template
+(Wir werden später darüber in [Page Appearance und Layout](#appearance) sprechen) und das Fehler-Template (wir werden später darüber sprechen). 
+Diese Standardseiten verwenden diesem Typ von Resolver. Dadurch sind sie sehr schnell.
+
+Die Einstellungen des Template-Path-Stack-Resolver werden unter dem Schlüssel *template_path_stack* gespeichert.
+Sie können sehen, dass dieser Resolver nach View-Templates im Verzeichnis "view" Ihres Moduls sucht.
+Deshalb könnten wir einfach die Datei *about.phtml* in dieses Verzeichnis einfügen, und ZF wird automatisch die Template-Datei finden.
+
+Der Resolver für den Template-Map-Resolver und den Template-Path-Stack-Resolver arbeitet paarweise. Erstens, sucht der schnelle
+Template-Map-Resolver und versucht, das View-Template in seiner Array-Map zu finden. Wenn das View-Template nicht gefunden wird,
+dann wird der Template-Path-Stack-Resolver ausgeführt.
+
+## Deaktivierung des View-Renderings
+
+Manchmal müssen Sie das Standard-View-Rendering deaktivieren.
+Um dies zu tun, gib man einfach das Objekt @`Response`[Zend\Http\PhpEnvironment\Response] von der Aktion des Controllers zurück.
+
+Zum Beispiel erstellen wir eine Klasse `DownloadController` und fügen die Aktion "Datei" hinzu.
+Dies würde ermöglichen es Website-Benutzern, Dateien von Ihrer Website herunterzuladen. Diese
+Aktion benötigt keine entsprechendes View-Template *file.phtml*, da nur Dateiinhalte
+als PHP-Standard-Ausgabestream ausgegeben werden.
+
+Fügen Sie dann die Datei *DownloadController.php* in das Verzeichnis *Controller* des Moduls *Application* ein.
+Fügen Sie den folgenden Code in die Datei ein:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+namespace Application\Controller;
+
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
+
+/**
+ * This is the controller class for managing file downloads.
+ */
+class DownloadController extends AbstractActionController 
+{
+    /**
+     * This is the 'file' action that is invoked
+     * when a user wants to download the given file.     
+     */
+    public function fileAction() 
+    {
+        // Get the file name from GET variable
+        $fileName = $this->params()->fromQuery('name', '');
+        
+        // Take some precautions to make file name secure
+        $fileName = str_replace("/", "", $fileName);  // Remove slashes
+        $fileName = str_replace("\\", "", $fileName); // Remove back-slashes
+        
+        // Try to open file
+        $path = './data/download/' . $fileName;
+        if (!is_readable($path)) {
+            // Set 404 Not Found status code
+            $this->getResponse()->setStatusCode(404);            
+            return;
+        }
+        
+        // Get file size in bytes
+        $fileSize = filesize($path);
+
+        // Write HTTP headers
+        $response = $this->getResponse();
+        $headers = $response->getHeaders();
+        $headers->addHeaderLine(
+                 "Content-type: application/octet-stream");
+        $headers->addHeaderLine(
+                 "Content-Disposition: attachment; filename=\"" . 
+                $fileName . "\"");
+        $headers->addHeaderLine("Content-length: $fileSize");
+        $headers->addHeaderLine("Cache-control: private"); 
+        
+        // Write file content        
+        $fileContent = file_get_contents($path);
+        if($fileContent!=false) {                
+            $response->setContent($fileContent);
+        } else {        
+            // Set 500 Server Error status code
+            $this->getResponse()->setStatusCode(500);
+            return;
+        }
+        
+        // Return Response to avoid default view rendering
+        return $this->getResponse();
+    }
+}
+~~~
+
+Die Aktionsmethode verwendet den Parameter *name* aus dem Query-Teil der URL (Zeile 19).
+Entfernt werden Schrägstriche aus dem Dateinamen entfernt (Zeilen 22-23), fügt eine HTTP-Header zu im Objekt @`Response`[Zend\Http\PhpEnvironment\Response]
+(Zeilen 39-45) und Dateiinhalte (Zeilen 48-55) hinzu. Schließlich gibt es das Objekt @`Response`[Zend\Http\PhpEnvironment\Response] zurück,
+um das Rendern der Standard-View zu deaktivieren.
+
+Registrieren Sie die Klasse `DownloadController`, indem Sie die folgende Zeile
+Ihre Datei *module.config.php* hinzufügen:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+return [
+    // ...    
+    'controllers' => [
+        'factories' => [
+            // ...
+            Controller\DownloadController::class => InvokableFactory::class
+        ],
+    ],    
+    // ...
+];
+~~~
+
+Sie müssen auch eine *route* zu Ihrer *module.config.php* hinzufügen (eine Route teilt ZF3 mit, mit welcher URL,
+welche Controller-Aktion aufgerufen werden soll). Ändern Sie den Schlüssel `routes` der Konfigurationsdatei wie folgt:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+return [
+  // ...    
+  'router' => [
+        'routes' => [
+            // Add this route for the DownloadController
+            'download' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/download[/:action]',
+                    'defaults' => [
+                        'controller'    => Controller\DownloadController::class,
+                        'action'        => 'index',
+                    ],
+                ],
+            ],
+        ],
+    ], 
+  // ...
+];
+~~~
+
+Um zu sehen, wie der Datei-Download funktioniert, erstellen Sie das Verzeichnis *APP_DIR/data/download*
+und speichern Sie eine Textdatei mit dem Namen *sample.txt* darin. Öffnen Sie dann Ihren Webbrowser und geben Sie die URL
+"http://localhost/download/file?name=sample.txt" in der Navigationsleiste Ihres Browsers ein und drücken Sie die Eingabetaste.
+Der Browser wird die Datei *sample.txt* heruntergeladen 
+und bietet Ihnen an, sie an einem Ort zu speichern.
+
+## View Rendering Strategien
+
+Eine *Rendering-Strategie* legt fest, wie die Seite gerendert wird. Standardmäßig, um den HTML-Code der Seite zu erstellen,
+werden die *.phtml* View-Templstes mit Hilfe der Klasse @`PhpRenderer` erstellt, die sich im @`Zend\View\Renderer`[Zend\View] befindet. 
+Diese Strategie funktioniert in 99% der Fälle gut. Manchmal müssen Sie jedoch etwas anderes zurückgeben, z.B.
+JSON-Response oder eine RSS-Feed-Response.
+
+I> Eine Response im JSON-Format wird normalerweise zurückgegeben, wenn Sie eine Art API (Application Programming Interface) implementieren.
+I> API wird verwendet, um einige Daten in maschinenlesbarem Format abzurufen.
+I> Eine Response im RSS-Feed-Format wird normalerweise verwendet, um häufig wechselnde Informationen wie Blogposts oder Nachrichten zu veröffentlichen.
+
+So bietet ZF3 drei View-Rendering-Strategien:
+
+  * der Standardname (auch bekannt als @`PhpRendererStrategy`[Zend\View\Strategy\PhpRendererStrategy]).
+  * Die @`JsonStrategy` erzeugt eine JSON-Response.
+  * und die @`FeedStrategy` erstellt eine RSS-Feed-Response.
+
+### Zurücksenden der JSON-Response
+  
+Lassen Sie uns zum Beispiel zeigen, wie @`JsonStrategy` verwendet wird, um eine JSON-Response von einer Controller-Aktion zurückzugeben.
+
+Zunächst müssen Sie die Strategie in der Konfigurationsdatei *module.config.php* registrieren:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+return [
+    //...
+    
+    'view_manager' => [
+        //...
+        
+        'strategies' => [
+            'ViewJsonStrategy',
+        ],
+    ],
+];
+~~~
+
+Dann gib man das @`JsonModel` (anstelle des üblichen @`ViewModel`[Zend\View\Model\ViewModel]) in der Aktionsmethode Ihres Controllers zurück:
+
+{line-numbers=off,lang=php}
+~~~
+namespace Application\Controller;
+ 
+use Zend\Mvc\Controller\ActionController;
+use Zend\View\Model\JsonModel;
+ 
+class IndexController extends ActionController
+{
+    public function getJsonAction()
+    {
+        return new JsonModel([
+            'status' => 'SUCCESS',
+            'message'=>'Here is your data',
+            'data' => [
+                'full_name' => 'John Doe',
+                'address' => '51 Middle st.'
+            ]
+        ]);
+    }
+}
+~~~
+
+Wenn Sie in Ihrem Browser die Seite *http://localhost/application/get-json* öffnen, sehen Sie die JSON-Antwort:
+
+~~~
+{'status':'SUCCESS', 'message':'Here is your data', 'data':{'full_name:'John Doe', 'address':'51 Middle st.'}}
+~~~
+
+## Fehlerseiten
+
+Wenn eine Seite nicht gefunden werden konnte oder ein anderer Fehler in Ihrer Webanwendung auftritt,
+dann wird die Standardfehlerseite angezeigt. Das Aussehen der Fehlerseite wird von dem View-Template
+bestimmt. Es gibt zwei View-Templates: *error/404*, die für den Fehler "404 Seite nicht gefunden" verwendet wird
+(siehe Abbildung 4.10) und *error/index*, das angezeigt wird, wenn ein allgemeiner Fehler auftritt (z. B. eine nicht behandelte Ausnahme wird irgendwo
+innerhalb der Anwendung ausgelöst).
+
+![Abbildung 4.10. 404 Fehlerseite](images/mvc/error_404.png)
+
+Die Datei *module.config.php* enthält mehrere Parameter unter dem Schlüssel *view_manager*, welche Sie verwenden können,
+das Erscheinungsbild Ihrer Fehlervorlagen zu gestalten:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+return [
+    //...
+    
+    'view_manager' => [    
+        'display_not_found_reason' => true,
+        'display_exceptions'       => true,
+        //...
+        'not_found_template'       => 'error/404',
+        'exception_template'       => 'error/index',    
+        'template_map' => [
+            //...
+            'error/404' => __DIR__ . '/../view/error/404.phtml',
+            'error/index'=> __DIR__ . '/../view/error/index.phtml',
+        ],
+        //...
+    ],
+];
+~~~
+
+* Mit dem Parameter *display_not_found_reason* steuern Sie, ob die Details angezeigt werden sollen,
+  Informationen über den Fehler "Seite nicht gefunden".
+* Mit dem Parameter *display_exceptions* legen Sie fest, ob Informationen angezeigt werden sollen,
+  eine unbehandelte Exception sowie dessen Stack Trace.
+* Der Schlüssel *not_found_template* definiert den Namen des View-Templates für den Fehler-Code 404.
+* Der Schlüssel *exception_template* definiert den Namen des View-Templates für unbehandelten Exceptions.
+
+T> Normalerweise setzen Sie die Parameter *display_not_found_reason* und *display_exceptions*
+T> auf "false", wenn Ihre Anwendung als Produktionssystem läuft, denn Sie möchten nicht, dass Website-Besucher die Fehlerdetails
+T> auf Ihrer Website sehen können. Sie können jedoch weiterhin detaillierte Informationen abrufen, nämlich
+T> Informationen aus Apache `error.log` Datei.
+   
+## Modelle
+
+Ein *model* ist eine PHP-Klasse, die die Geschäftslogik Ihrer Anwendung enthält.
+Die Geschäftslogik ist der "Kern" Ihrer Website. Es implementiert das Ziel der Website. 
+Wenn Sie beispielsweise eine E-Commerce-Website implementieren, verfügen Sie über Modelle,
+den einen Produktkatalog und einen Einkaufswagens implementieren.
+
+Im Allgemeinen bedeutet der Begriff Modell eine vereinfachte Darstellung eines realen Objekts
+oder Phänomens. Vereinfacht, weil das reale Objekt unendlich viele Eigenschaften hat.
+Zum Beispiel besteht eine reale Person, die Ihre Website besucht, aus Milliarden von Atomen,
+und Sie können sie nicht alle beschreiben. Stattdessen nehmen Sie mehrere Eigenschaften des Objekts,
+welche sind die wichtigsten für Ihr System und ignorieren alle anderen.
+Zum Beispiel sind die wichtigsten Eigenschaften eines Seitenbesuchers (aus Sicht des Web-Entwicklers)
+Vorname, Nachname, Land, Stadt, Postleitzahl und Straße.
+
+Modelle besitzen ein Verhalten. Zum Beispiel ein Mailer-Modell könnte,
+unter Umständen, E-Mail-Nachrichten des Währungsumrechner-Modell versenden und
+ist in der Lage, Geld und so weiter zu konvertieren.
+
+I> Mit ZF3 repräsentieren Sie Modelle wie gewöhnliche PHP-Klassen.
+Eigenschaften werden als Klassenvariablen definiert und
+die Verhaltensweisen werden als Klassenmethoden implementiert.
+
+## Modelltypen
+
+In Zend Framework 3 gibt es kein einzelnes Verzeichnis `Model`zum Speichern der Modellklassen.
+Stattdessen werden die Modelle nach Konvention in die folgenden Haupttypen unterteilt. Jeder Typ ist
+in einem eigenen Unterverzeichnis gespeichert (siehe Tabelle 4.9):
+
+{title="Tabelle 4.9. Modelltypen und ihr Speicherort"}
+|---------------|-----------------------------------------------------------------------------------|
+| *Modelltyp* 	| *Verzeichnis* 																	|
+|---------------|-----------------------------------------------------------------------------------|
+| Entitäten 	| `APP_DIR/module/Application/src/Entity` 											|
+|---------------|-----------------------------------------------------------------------------------|
+| Repositories 	| `APP_DIR/module/Application/src/Repository` 										|
+|---------------|-----------------------------------------------------------------------------------|
+| Werte-Objekte	| `APP_DIR/module/Application/src/ValueObject` 										|
+|---------------|-----------------------------------------------------------------------------------|
+| Services		| `APP_DIR/module/Application/src/Service` 											|
+|---------------|-----------------------------------------------------------------------------------|
+| Factories 	| Im Unterverzeichnis `Factory` unter jedem Verzeichnis des Modelltyp. Zum Beispiel |
+| 				| würde Controller-Factory in `APP_DIR/module/Application/src/Controller/Factory` 	|
+|				| gespeichert werden.																|
+|---------------|-----------------------------------------------------------------------------------|
+
+I> Die Trennung von Modellen in verschiedene Typen erleichtert die Gestaltung Ihrer Geschäftslogik.
+I> Dies wird auch als "Domain Driven Design" (oder kurz DDD) bezeichnet. Die Person, die DDD vorgeschlagen hat, war Eric Evans
+I> in seinem berühmten Buch namens *Domain-Driven Design — Tackling Complexity in the Heart of Software*.
+
+Im Folgenden werden die wichtigsten Modelltypen weiter beschrieben.
+
+### Entitäten
+
+*Entitäten* (Entities) sind zum Speichern von Daten gedacht und haben immer eine Eigenschaft *identifier*, so dass Sie die Daten eindeutig identifizieren können.
+Zum Beispiel hat eine Entität "Benutzer" immer eine eindeutige Eigenschaft "Login",
+und Sie können den Benutzer anhand dieses Attributs identifizieren. Sie können einige andere Attribute
+der Entität ändern, wie `firstName` oder` address`, aber seine Kennung ändert sich nie.
+Entitäten werden normalerweise in einer Datenbank, in einem Dateisystem oder in einem anderen Speicher abgelegt.
+
+Im folgenden finden Sie ein Beispiel für eine Entität "User", die einen Besucher Ihrer Seite darstellt:
+
+{line-numbers=on, lang=php}
+~~~
+// The User entity represents a site visitor
+class User 
+{
+    // Properties
+    private $login;     // e.g. "admin"
+    private $title;     // e.g. "Mr."
+    private $firstName; // e.g. "John"
+    private $lastName;  // e.g. "Doe"
+    private $country;   // e.g. "USA"
+    private $city;      // e.g. "Paris"
+    private $postCode;  // e.g. "10543"
+    private $address;   // e.g. "Jackson rd."
+    
+    // Behaviors    
+    public function getLogin() 
+    {
+        return $this->login;
+    }
+        
+    public setLogin($login) 
+    {
+        $this->login = $login;
+    }
+    
+    //...
+}
+~~~
+
+In den Zeilen 5-12 definieren wir die Eigenschaften des Benutzermodells. Die beste Vorgehensweise ist es,
+die Eigenschaften als privaten Klassenvariablen zu definieren. Über öffentliche Getter/Setter-Methoden
+stehen Ihnen die Daten zur Verfügung (wie `getLogin()` und `setLogin()`, etc).
+
+I> Die Verhaltensmethoden des Modells sind nicht durch Getter und Setter begrenzt.
+I> Sie können andere Methoden erstellen, die die Daten des Modells manipulieren.
+I> Zum Beispiel können Sie die Methode `getFullName()` definieren,
+I> um dann den vollen Namen des Benutzers zurückzugeben, wie "Mr. John Doe".
+
+### Repositories
+
+*Repositories* sind spezifische Modelle, die für das Speichern und Abrufen von Entitäten zuständig sind.
+Zum Beispiel kann ein `UserRepository` eine Datenbanktabelle darstellen und Methoden bereitstellen
+zum Abrufen von Entitäten `User`. Normalerweise verwenden Sie Repositories beim Speichern von Entitäten
+in eine Datenbank. Mit Repositories können Sie die SQL-Abfragelogik an einen Platz ablegen.
+Dadurch ist Ihr Code leichter zu pflegen und zu testen.
+
+Sie werden mehr über Repositories im Kapitel [Database Management mit Doctrine](#doctrine) erfahren, wenn
+wir über die Doctrine-Bibliothek reden.
+
+### Werte Objekte
+
+*Werte Objekte* sind eine Art Modell, für das die Identität nicht so wichtig ist wie für Entitäten.
+Ein Werte-Objekt ist normalerweise eine kleine Klasse, die durch alle ihre Attribute identifiziert wird.
+Sie hat kein Bezeichnerattribut. Werte-Objekte haben in der Regel Getter-Methoden, aber kein
+Setter-Methoden (Werte-Objekte sind unveränderlich).
+
+Zum Beispiel kann ein Modell einen Geldbetrag als Wertobjekt bereitstellen:
+
+{line-numbers=on, lang=php}
+~~~
+class MoneyAmount 
+{
+    // Properties
+    private $currency;
+    private $amount;
+  
+    // Constructor
+    public function __construct($amount, $currency='USD') 
+    {
+        $this->amount = $amount;
+        $this->currency = $currency;
+    }
+  
+    // Gets the currency code  
+    public function getCurrency() 
+    {
+        return $this->currency;  
+    }
+  
+    // Gets the money amount
+    public function getAmount() 
+    {
+        return $this->amount;
+    }  
+}
+~~~
+
+In den Zeilen 4-5 definieren wir zwei Eigenschaften: `currency` und `amount`. Das Model
+hat keine Bezeichnereigenschaft sondern wird von allen Eigenschaften als
+ein Ganzes identifiziert: Würden Sie entweder `currency` oder `amount` ändern, hätten Sie ein
+anderes Geldbetragsobjekt.
+
+In den Zeilen 8-12 definieren wir die Konstruktormethode, die die Eigenschaften initialisiert.
+
+In den Zeilen 15-24 definieren wir Getter-Methoden für die Eigenschaften des Modells. Beachten Sie, dass wir
+keine Setter-Methoden (das Modell ist unveränderlich) haben.
+
+### Services
+
+*Servicemodelle* enthalten normalerweise einige Geschäftslogikfunktionen.
+Service haben normalerweise leicht erkennbare Namen, die mit dem Suffix "er" enden, wie `FileUploader` oder `UserManager`.
+
+Unten wird ein Beispiel für den Dienst `Mailer` dargestellt. Es hat die Methode `sendMail ()`, 
+der ein Werte-Objekt `EmailMessage' übergeben wird und eine E-Mail-Nachricht
+mit der Standard PHP-Funktion `mail()` sendet:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+
+// The Email message value object
+class EmailMessage 
+{  
+    private $recipient;
+    private $subject;
+    private $text;  
+  
+    // Constructor
+    public function __construct($recipient, $subject, $text) 
+    {
+        $this->recipient = $recipient;
+        $this->subject = $subject;
+        $this->text = $text;
+    }
+  
+    // Getters
+    public function getRecipient() 
+    {
+        return $this->recipient;
+    }
+  
+    public function getSubject() 
+    {
+        return $this->subject;
+    }
+  
+    public function getText() 
+    {
+        return $this->text;
+    }
+}
+
+// The Mailer service, which can send messages by E-mail
+class Mailer 
+{
+  
+    public function sendMail($message) 
+    {
+        // Use PHP mail() function to send an E-mail
+        if(!mail($message->getRecipient(), $message->getSubject(), 
+             $message()->getText())) 
+        {
+            // Error sending message
+            return false;
+        }
+    
+        return true;
+    }
+}
+~~~
+
+T> In Zend Framework registrieren Sie Ihre Servicemodelle in der Regel im Service Manager.
+
+### Factories
+
+*Factories* werden normalerweise entwickelt, um andere Modelle (insbesondere Servicemodelle) zu instanziieren. In den einfachsten Fällen
+können Sie eine Instanz eines Services ohne eine Factory erstellen, indem Sie nur den Operator "new" verwenden, aber
+manchmal könnte die Logik der Klassenerzeugung ziemlich komplex sein. Zum Beispiel hängen Service oft voneinander ab.
+Daher müssen Sie möglicherweise Abhängigkeiten zu einem Service *injizieren*. Manchmal kann es auch erforderlich sein, den Service
+direkt nach der Instanziierung zu initialisieren, indem eine (oder mehrere) Methoden aufgerufen werden.
+
+Factory-Klassen haben typischerweise Namen, die mit dem Suffix `Factory` enden, wie
+`CurrencyConverterFactory`,` MailerFactory` usw.
+
+Stellen wir uns vor, dass wir einen Service `PurchaseManager` haben, der Einkäufe von Waren verarbeiten kann,
+und der Service `PurchaseManager` verwendet einen anderen Service namens `CurrencyConverter`, der eine Verbindung zu einem externen Service herstellen kann, 
+welcher Geldwechselkurse anbietet. Lassen Sie uns eine Factory-Klasse für den `PurchaseManager` schreiben, die
+den Servce instanziieren würde und übergeben dann die notwendigen Abhängigkeiten:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+namespace Application\Service\Factory;
+
+use Interop\Container\ContainerInterface;
+use Zend\ServiceManager\Factory\FactoryInterface;
+use Application\Service\CurrencyConverter;
+use Application\Service\PurchaseManager;
+
+/**
+ * This is the factory for PurchaseManager service. Its purpose is to instantiate the 
+ * service and inject its dependencies.
+ */
+class PurchaseManagerFactory implements FactoryInterface
+{
+    public function __invoke(ContainerInterface $container, 
+                $requestedName, array $options = null)
+    {
+        // Get CurrencyConverter service from the service manager.
+        $currencyConverter = $container->get(CurrencyConverter::class);
+        
+        // Instantiate the service and inject dependencies.
+        return new PurchaseManager($currencyConverter);
+    }
+}
+~~~
+
+Im obigen Code haben wir die Klasse `PurchaseManagerFactory`, die das Schnittstelle
+`Zend\ServiceManager\Factory\FactoryInterface` implementiert. Die Factory-Klasse hat die Methode `__invoke()`
+dessen Ziel es ist, das Objekt zu instanziieren. Diese Methode hat als Argument `$container`, welches der ServiceManager ist.
+Sie können `$container` verwenden, um Services vom Service Manager abzurufen und an die Methode Konstruktor übergeben
+welcher den Service instanziiert.
+
+## Ermittlung des korrekten Modelltyps
+
+Q> **Ist es nicht verwirrend, so viele Modelltypen zu haben?**
+Q>
+Q> Nun, ja und nein. Zunächst mag es etwas schwierig sein
+Q> den richtigen Modelltyp zu bestimmen. Doch sobald Sie Ihre Fähigkeiten verbessert
+Q> haben, können Sie das intuitiv tun. Denken Sie daran, dass Modelltypen die
+Q> Struktur Ihrer Domänenmodelle verbessern.
+
+Wenn Sie Ihre eigene Anwendung schreiben, sind Sie möglicherweise verwirrt,
+wenn Sie sich entscheiden müssen, zu welchem ​​Modelltyp Ihre Klasse gehört (ob es sich um eine Entität handelt,
+Werte-Objekt, Repository, Service oder Factory). Unten steht Ihnen ein einfacher Algorithmus
+bereit, um Ihnen die Bestimmung des richtigen Modelltyps zu erleichtern,
+wenn Sie Ihre eigene Anwendung schreiben:
+
+* Ihre Modelklasse ist definitiv ein *Service*
+    * wenn es einige Geschäftslogiken kapselt
+    * wenn Sie es von Ihrer Controller-Klasse aus aufrufen
+    * wenn Sie denken, der beste Name dafür endet mit einem Suffix: "er", wie `FileUploader` oder` VersionChecker`
+* Ihre Modellklasse ist eine *Entität*:
+    * wenn Ihr Modell in einer Datenbank gespeichert ist
+    * wenn es ein ID-Attribut hat
+    * wenn es sowohl Getter- als auch Setter-Methoden hat
+* Ihre Modellklasse ist ein *ValueObject* (Werte-Objekt):
+    * Wenn ein Attribut geändert würde, würde das Modell komplett anders aussehen
+    * wenn Ihr Modell Getter-Methoden hat, aber keine Setter-Methoden (unveränderlich)
+* Ihr Modell ist ein *Repository*:
+    * wenn es mit einer Datenbank arbeitet, um Entitäten abzurufen
+* Ihr Modell ist eine *Factory*:
+    * wenn es andere Objekte erstellen kann und es nichts anderes tun kann
+
+Q> **Hmm... was passiert, wenn ich alle meine Modelle in einem einzigen Modellverzeichnis abspeichern würde?**
+Q>
+Q> Natürlich können Sie das, wenn Sie es wünschen. Aber wenn Sie die Bibliothek Doctrine ORM verwenden,
+Q> werden Sie feststellen, dass es auch DDD-Prinzipien verwendet. Verwendet somit
+Q> Ihre Anwendung DDD, so ist sie gut organisiert.
+
+## Andere Modelltypen
+
+Auf Ihrer Website teilen Sie Ihre Hauptmodelltypen (oben beschrieben) normalerweise in Untergruppen ein.
+Zum Beispiel werden Sie haben:
+
+  * *Forms*. Forms sind Modelle, deren Zweck es ist, vom Webbenutzer eingegebene Daten zu sammeln. Forms sind eine Untergruppen von
+    *Entitäten*. Normalerweise speichern Sie Forms im Verzeichnis `APP_DIR/module/Application/src/Form`.
+
+  * *Filters*. Filter sind für die Umwandlung von Eingabedaten ausgelegt. Filter sind ein Untergruppe von *Services*.
+    Normalerweise speichern Sie Filter im Verzeichnis `APP_DIR/module/Application/src/Filter`.
+
+  * *Validators*. Validatoren werden verwendet, um Eingabedaten auf Korrektheit zu prüfen. Validatoren sind auch eine Untergruppe von *Services*.
+    Normalerweise werden Validatoren im Verzeichnis `APP_DIR/module/Application/src/Validator` gespeichert.
+
+  * *View Helpers*. Sie kapseln einige Funktionen zum Seitenrendering. View-Helper sind ähnlich wie *Services*.
+    Normalerweise speichern Sie View-Helper im Verzeichnis `APP_DIR/module/Application/src/View/Helper`.
+
+  * *Routes*. Routen sind ein spezifisches *Service*-Modell, das zum Implementieren benutzerdefinierter Zuordnungsregeln zwischen URLs und Ihren
+    Controller dient. Normalerweise werden benutzerdefinierte Routen im Verzeichnis `APP_DIR/module/Application/src/Route` gespeichert.
+
+So sieht Sie eventuell die typische Verzeichnisstruktur Ihres Website-Moduls aus:
+
+~~~
+/Application/src
+	/Controller
+		/Factory
+        /Plugin
+            /Factory
+	/Entity
+	/Filter
+	/Form
+    /Repository
+	/Route
+	/Service
+		/Factory
+	/Validator
+    /ValueObject
+	/View
+		/Helper
+            /Factory
+~~~
+
+I> Es ist möglich, beliebig viele Modell-Untergruppen zu haben. Je komplexer Ihre Anwendung ist, desto mehr Modell-Untergruppen
+Ich> du darfst.
+
+## Skinny Controller, Fat Models, einfache View-Templates
+
+Bei der Entwicklung einer Website mit dem Model-View-Controller-Muster besteht ein Risiko
+die Rolle von Controllern, Views und Modellen misszuverstehen. Dies führt dazu, dass die
+Controller groß und Modelle klein sind, was es wiederum schwierig macht, Ihre Anwendung zu testen
+und zu pflegen. Ziel dieses Abschnitts ist es, Ihnen ein allgemeines Verständnis zu vermitteln
+wo in einer Controller-Klasse Code platziert wird, welcher Code kann in einem View-Template platziert werden,
+und welcher Code kann in einer Modellklasse platziert werden.
+
+### Skinny Controller
+
+Die Idee hinter dem Begriff "Skinny Controller" ist, dass typischerweise Ihre Controller-Klassen nur
+Code enthält, welcher:
+
+* Zugriff auf Benutzeranforderungsdaten (`$ _GET`,` $ _POST`, `$ _FILES` und andere PHP-Variablen);
+* überprüft die Gültigkeit der Eingabedaten;
+* macht (optional) einige grundlegende Vorbereitungen für die Daten;
+* übergibt die Daten an das(die) Modell(e) und ruft das von dem(den) Modell(en) zurückgegebene Ergebnis ab;
+* gibt die Ausgabedaten schließlich als Teil eines Variablencontainers "ViewModel" zurück.
+
+Eine Controller-Klasse sollte folgendes vermeiden:
+
+* enthält komplexe Geschäftslogik, die besser in Modellklassen gehalten wird;
+* Enthält HTML oder einen anderen Präsentations-Markup-Code. Dieser kann besser
+  in Templates platziert werden.
+
+Für ein Beispiel eines "skinny" Controllers schauen Sie sich die Klasse `CurrencyConverterController` unten
+an. Dieser Controller stellt die Aktion "convert" bereit, deren Ziel die Konvertierung ist
+einen Geldbetrag von der Währung EUR nach USD umzurechnen. Der Benutzer übergibt den Geldbetrag durch die
+GET Variable "amount".
+
+{line-numbers=on,lang=php}  
+~~~
+class CurrencyConverterController extends AbstractActionController 
+{  
+    // Currency converter model
+    private $currencyConverter;
+
+    // Constructor. It's purpose is to "inject" dependencies.
+    public function __construct($currencyConverter)
+    {
+        $this->currencyConverter = $currencyConverter;
+    }
+
+    // The "convert" action displays the converted money amount
+    public function convertAction() 
+    {  
+        // Get the money amount from GET
+        $amount = (float)$this->params()->fromQuery('amount', -1);
+    
+        // Validate input data
+        if($amount<0) {
+            // Money amount is missing
+            $this->getResponse()->setStatusCode(404);
+            return;
+        }
+ 
+        // Pass the data to the CurrencyConverter model
+        $convertedAmount = $this->currencyConverter->convertEURtoUSD($amount);	
+		
+        return new ViewModel([
+            'amount'=>$amount,
+            'convertedAmount'=>$convertedAmount
+        ]);
+    }
+}
+~~~
+
+Die obige Aktionsmethode des Controllers führt folgendes aus:
+
+* Nimmt die vom Benutzer übergebenen Daten (Zeile 16) entgegen. Diese Daten sind normalerweise ein Teil vom
+  Objekt `Request` und kann mit der Methode `getRequest()` des Controllers abgerufen werden
+  oder mit dem Controller-Plugin @`Params`.
+
+* Führt die grundlegende Überprüfung der vom Benutzer übergebenen Daten durch (Zeile 19). Fehlen die Daten oder sie sind ungültig,
+  dann wird ein HTTP-Fehlercode gesetzt (Zeile 21).
+    
+* Übergibt den Geldbetrag an das Modell `CurrencyConverter' (Zeile 26), indem die Methode `convertEURtoUSD()` aufgerufen wird. Die Methode
+  gibt dann den umgewandelten Betrag zurück.
+
+* Erzeugt den Variablencontainer @`ViewModel`[Zend\View\Model\ViewModel] und übergibt ihm das Ergebnis
+  (Zeile 28). Auf diesen Variablencontainer kann weiter in den entsprechenden View-Templates zugegriffen werden, 
+  die für die Datenpräsentation verantwortlich ist.
+  
+### Fat Modelle
+
+Weil Sie Ihre Controller so dünn wie möglich halten müssen,
+ist die meiste Geschäftslogik Ihrer Anwendung in den Modellklassen
+enthalten. In einer richtig gestalteten Model-View-Controller-Anwendung
+sehen Modelle "riesig" aus. Eine Modellklasse kann den Code enthalten, der
+
+* Führt komplexe Datenfilterung und -validierung durch. Weil die Daten, die Sie im Controller abgerufen haben
+  und Ihre Anwendung sie von der Außenwelt erhalten hat, müssen Sie sich sehr anstrengen
+  die Daten zu überprüfen und sicherzustellen, dass die Daten Ihr System nicht beschädigen. Das
+  Ergebnis ist eine sichere Website, die gegen Hackerangriffe resistent ist.
+  
+* Führt Datenmanipulation durch. Ihre Modelle sollten die Daten manipulieren: z.B. Lädt die Daten aus der Datenbank,
+  speichert der Daten in der Datenbank und transformieren Sie die Daten. Modelle sind der richtige Ort, um Datenbankabfragen zu speichern,
+  Dateien lesen und Funktionalität zu schreiben, und so weiter.
+
+In einer Modellklasse wird folgendes nicht empfohlen:
+
+* Zugreifen auf Daten aus dem HTTP-Request, `$ _GET`,` $ _POST` und anderen PHP-Variablen zu. Es ist die Arbeit des Controllers, 
+  um diese Daten zu extrahieren und sie an die Modells zu übergeben.
+
+* HTML oder anderen Code für die Präsentation zu erzeugen. Der Präsentationscode kann
+  abhängig von der Benutzeranforderung variieren, und es ist besser, es in einem View-Template abzulegen.
+  
+Wenn Sie diesen Prinzipien folgen, werden Sie feststellen, dass Ihre Modelle einfach zu bedienen und zu
+testen sind, weil sie Input und Output eindeutig getrennt haben. Sie können einen Komponententest schreiben, der
+einige Testdaten an ein Modell übergibt, ruft die Ausgabedaten ab und überprüft dann, ob die
+Daten sind korrekt.
+
+Wenn Sie nicht sicher sind, ob Sie bestimmten Code in einen Controller oder in ein Modell einfügen sollen,
+Fragen Sie sich selbst: Ist dies eine wichtige Geschäftslogik, die sorgfältig getestet werden muss? Wenn die Antwort
+ja ist, dann gehört Ihr Code in ein Modell.
+  
+### Einfache View-Templates
+
+Da der größte Teil der Logik in Modellen gespeichert ist, sollten Ihre View-Templates
+so einfach wie möglich sein, um die Präsentation der Daten, aus dem
+Variablencontainer anzuzeigen. In einem View-Template kann folgender Code enthalten sein:
+
+* statischer HTML-Markup-Code.
+
+* Holen Sie die Daten aus einem Variablencontainer, welcher per PHP ausgeben wird.
+
+* Wenn ein Controller ein bestimmtes Modell über einen Variablencontainer übergeben hat, rufen Sie das Modell
+  für Daten ab (z.B. können Sie Tabellenzeilen aus einer Datenbanktabelle abrufen und sie rendern).
+  
+* Enthält einfache PHP-Prüfregeln wie `if`,` foreach`, `switch` und so weiter. Diese
+  ermöglichen es, die Darstellung in Abhängigkeit von Variablen zu variieren, die vom Controller übergeben werden.
+  
+Nicht empfohlen für View-Template:
+
+* Zugriff auf Daten aus dem HTTP-Request und superglobale PHP-Variablen.
+
+* Erstellen von Modellen, manipuliert und ändert den Status der Anwendung.
+
+Wenn Sie diesen Prinzipien folgen, werden Sie feststellen, dass Ihre View-Templates klein sein können, 
+ohne die Geschäftslogik Ihrer Anwendung zu ändern. Zum Beispiel,
+können Sie das Design Ihrer Webseiten leicht ändern oder sogar veränderbare Themen einführen.
+
+## Zusammenfassung
+
+Eine auf Zend Framework 3 basierende Website ist nur ein PHP-Programm, das einen HTTP-Request vom
+Web-Server verarbeitet und eine HTTP-Response erzeugt.
+Die Webanwendung verwendet das Model-View-Controller-Muster zum Trennen der Geschäftslogik
+von der Präsentation. Das Ziel besteht darin, die Wiederverwendbarkeit des Codes und die Trennung von Problemen zu ermöglichen.
+
+Ein Controller ist ein Vermittler zwischen der Anwendung, den Modellen und den Views:
+Er erhält eine Eingabe von einem HTTP-Request und verwendet das Modell und die entsprechende View
+um die notwendige HTTP-Response zu erzeugen. Ein Controller ist eine übliche PHP-Klasse
+mit Aktionsmethoden.
+
+Views sind einfache HTML- und PHP-Code-Snippets, die HTML-Ausgaben erzeugen, die vom Web-Server
+an den Website-Besucher zurückgegeben werden. Man gibt die Daten durch einen Variablencontainer @`ViewModel`[Zend\View\Model\ViewModel]
+zurück.
+
+Ein Modell ist eine PHP-Klasse, die die Geschäftslogik Ihrer Anwendung enthält.
+Die Geschäftslogik ist der "Kern" Ihrer Website, die das Ziel der Website implementieren. 
+Modelle können auf die Datenbank zugreifen, Dateidateien bearbeiten und eine Verbindung zu externen Geräten herstellen, 
+manipulieren andere Modelle und so weiter.

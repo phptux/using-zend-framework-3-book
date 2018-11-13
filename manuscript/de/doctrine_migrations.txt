@@ -1,0 +1,418 @@
+# Datenbankmigrationen {#migrations}
+
+Wenn Sie Ihre Website entwickeln, ändern Sie ständig Ihr Datenbankschema: einige Tabellen
+werden hinzugefügt, andere werden geändert, nicht benötigte Tabellen werden gelöscht. Das Datenbankschema verwalten
+kann eine sehr komplexe Aufgabe werden, da Sie Ihre Entwicklung auf dem neuesten Stand halten müssen,
+Test- und Produktionsserver. Sie können sich es einfacher machen, wenn Sie die
+Aufgabe des Datenbankschemas mit dem Konzept *Migrationen* umsetzen.
+
+Eine Migration ist eine Art atomare Zustandsänderung des Datenbankschemas. Sie können eine Migration erstellen,
+um das Schema auf seinen neueren Status zu aktualisieren, oder Sie können eine Migration auf den
+vorherigen Zustand des Schemas setzen. Sie erstellen neue Migrationen, während Sie Ihre Website entwickeln.
+Sie können so viele Migrationen durchführen, wie Sie benötigen. Alle Migrationen bilden eine Änderung des Datenbankschemas,
+die sehr bequem ist, weil Sie wissen, wann und zu welchem ​​Zweck Sie die Änderungen
+Schema vorgenommen haben.
+
+## Komponente Doctrine\Migrations installieren
+
+Doctrine bietet eine spezielle Komponente `Doctrine\Migrations` an, die Sie
+für die Implementierung von Datenbankmigrationen in Ihrer Website verwenden können.
+Geben Sie den folgenden Befehl ein, um die Komponente `Doctrine\Migrations` zu installieren:
+
+{line-numbers=off,lang=bash}
+~~~
+php composer.phar require doctrine/migrations
+~~~
+
+Der obige Befehl lädt die Dateien Komponente herunter und installiert sie im Verzeichnis `vendor`.
+Ihre Datei `composer.json` wird dabei wie folgt geändert:
+
+~~~
+{
+    ...
+    "require": {
+        ...
+        "doctrine/migrations": "^1.4",
+        ...
+    },
+    ...
+}
+~~~
+
+## Migrationen konfigurieren
+
+Bevor Sie Migrationen verwenden können, müssen Sie die Konfiguration angeben, d.h.
+welche Datenbankverbindung soll verwendet werden, in welcher Tabelle soll der Migrationsverlauf gespeichert werden?
+und wo sollen die Migrationsklassen gespeichert werden,  usw. Um dies zu tun,
+fügen Sie Ihrer Datei `config/autoload/global.php` folgenden Zeilen hinzu:
+
+{line-numbers=on,lang=php}
+~~~
+<?php
+return [    
+    'doctrine' => [        
+        // migrations configuration
+        'migrations_configuration' => [
+            'orm_default' => [
+                'directory' => 'data/Migrations',
+                'name'      => 'Doctrine Database Migrations',
+                'namespace' => 'Migrations',
+                'table'     => 'migrations',
+            ],
+        ],
+    ],
+    // ...
+];
+~~~
+
+Wie Sie sehen, haben wir den Schlüssel `doctrine` und einen Unterschlüssel `migrations_configuration` (Zeile 5). Unter diesem Unterschlüssel
+eben wir die Konfiguration für Migrationen an:
+
+  * In Zeile 6 geben wir den Namen des zu verwendenden Entity-Managers an (`orm_default`).
+
+  * In Zeile 7 teilen wir Doctrine mit, dass wir Migration-Klassen im Verzeichnis `APP_DIR/data/Migrations` speichern möchten.
+  
+  * In Zeile 8 geben wir einen benutzerfreundlichen Namen für unsere Migrationen an.
+  
+  * In Zeile 9 teilen wir Doctrine mit, dass unsere Migrationsklassen den Namensraum `Migrations' haben.
+    Sie können einen Namesraum Ihrer Wahl angeben.
+  
+  * In Zeile 10 teilen wir Doctrine mit, dass der Migrationsverlauf in der Datenbanktabelle `migrations` gespeichert werden soll.
+    Doctrine erstellt und verwaltet diese Tabelle automatisch.
+    
+## Migrationen erstellen
+
+Bei einer Migration handelt es sich um einen Änderungssatz, der das Schema auf den nächsten bzw. vorherigen Status hoch- oder herabgestuft.
+Sie generieren eine neue leere Migration mit Hilfe des folgenden Befehles:
+
+{line-numbers=off,lang=bash}
+~~~
+cd APP_DIR
+./vendor/bin/doctrine-module migrations:generate
+~~~
+
+Die obigen Befehle machen das Anwendungsverzeichnis zum aktuellen Arbeitsverzeichnis und dann
+führen wir den Konsolenbefehl `migrations: generate` aus.
+
+I> `DoctrineModule` und `DoctrineORMModule` enthalten mehrere Konsolenbefehle, die Sie für verschiedene
+I> Datenbankwartungsaufgaben verwenden können (z B. Generieren oder Ausführen von Migrationen). Für die Liste der verfügbaren Befehle
+I> können Sie den Befehl `list` verwenden:
+I>
+I> `./vendor/bin/doctrine-module list`
+
+Wenn Sie den Befehl `migrations: generate` ausführen, können Sie die neu erstellte Migration im Verzeichnis `APP_DIR/data/Migrations` finden.
+Die Datei hat einen Namen wie `VersionYYYYMMDDHHIISS.php`, wobei `YYYY` das aktuelle Jahr ist, `MM` der aktuelle Monat ist, `DD` der aktuelle Tag ist.
+`HH`, `II` und `SS` stehen für die aktuelle Stunde, Minute und Sekunde.
+
+Wenn Sie sich die neu erstellte Datei ansehen, finden Sie folgenden Inhalt:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+
+namespace Migrations;
+
+use Doctrine\DBAL\Migrations\AbstractMigration;
+use Doctrine\DBAL\Schema\Schema;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+class Version20160901114333 extends AbstractMigration
+{
+    /**
+     * @param Schema $schema
+     */
+    public function up(Schema $schema)
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+
+    }
+
+    /**
+     * @param Schema $schema
+     */
+    public function down(Schema $schema)
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+
+    }
+}
+~~~
+
+T> Wenn die neu erstellte Migration die NetBeans-IDE nicht angezeigt wird, müssen Sie das Menü *Source* öffnen und die Option im Menüelement
+T> *Scan for external changes* auswählen.
+
+Wie Sie dem obigen Code entnehmen können, handelt es sich bei einer Migration um eine übliche PHP-Klasse, die von der Basisklasse `Doctrine\DBAL\Migrations\AbstractMigration` erbt.
+Jede Migration sollte mindestens zwei Methoden haben: `up()` und `down()`. Die Methode `up()` aktualisiert das Schema in einen neueren Zustand.
+Die Methode `down()` setzt das Schema in den vorherigen Zustand. Beide Methoden `up()` und `down()` verfügen über eine einziges Argument
+des Typs `Doctrine\DBAL\Schema\Schema`, welches für tatsächliche Änderungen des Datenbankschemas verwendet werden kann.
+
+T> Die Klasse `Schema` ist Teil der Komponente `Doctrine\DBAL`. Weitere Informationen zu den verfügbaren Methoden finden Sie 
+T> in der Doctrine-DBAL-Dokumentation. Eine andere, noch bessere Möglichkeit ist es, den Code in Ihrem Verzeichnis `vendor/doctrine/dbal` zu betrachten.
+
+Eine Migrationsklasse kann optional die folgenden (überschriebenen) Methoden haben (Tabelle 13.1):
+
+{title="Tabelle 13.1. Methoden, die eine Migrationsklasse haben kann"}
+|-------------------------------|---------------------------------------------------------------------------------------|
+| *Methode* 					| *Beschreibung* 																		|
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `isTransactional()` 			| Wenn diese Funktion true zurückgibt (Standardwert), wird die Migration in einer 		|
+| 								| Transaktion ausgeführt. Andernfalls wird der nicht-transaktionale Status verwendet,	|
+|								| um die Migrations-SQLs auszuführen. 													|
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `getDescription()` 			| Diese Methode sollte einen String zurückgeben, der die Migration beschreibt			|
+|								| (zu welchem ​​Zweck diese Schemaänderung durchgeführt wird)								|
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `preUp(Schema $Schema)` 		| Diese Methode wird vor dem Upgrade des Schemas ausgeführt. 							|
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `postUp(Schema $Schema)` 		| Diese Methode wird nach dem Upgrade des Schemas ausgeführt. 							|
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `preDown(Schema $Schema)` 	| Diese Methode wird vor dem Downgrade des Schemas ausgeführt. 							|
+|-------------------------------|---------------------------------------------------------------------------------------|
+| `postDown(Schema $Schema)`	| Diese Methode wird nach dem Downgrade des Schemas ausgeführt. 						|
+|-------------------------------|---------------------------------------------------------------------------------------|
+ 
+Die Basisklasse `AbstractMigration` bietet auch die folgenden nützlichen Methoden (Tabelle 13.2):
+
+{title="Tabelle 13.2. Von der Basismigrationsklasse bereitgestellte Methoden"}
+|-----------------------------------|--------------------------------------------------------------|
+| *Methode* 						| *Beschreibung* 											  |
+|-----------------------------------|--------------------------------------------------------------|
+| `addSql($sql, array $params = [], array $types = [])` | Diese Methode erlaubt es, eine beliebige SQL-Anfrage auszuführen. |
+|----------------------------------|--------------------------------------------------------------|
+| `write($message)` 				| Diese Hilfsmethode schreibt eine (Debug- oder Erklärungsnachricht) auf den Bildschirm. |
+|----------------------------------|--------------------------------------------------------------|
+| `throwIrreversibleMigrationException($message = null)` | Diese Hilfsmethode wird normalerweise innerhalb der down-Methode aufgerufen, um zu signalisieren, dass die Migration nicht rückgängig gemacht werden kann. |
+|----------------------------------|--------------------------------------------------------------|
+
+Wie Sie in Tabelle 13.2 sehen, können Sie das Schema auch ändern, indem Sie die Methode `addSql()` aufrufen. Diese Methode
+kann zum Erstellen einer Tabelle, zum Aktualisieren einer Tabelle oder zum Entfernen einer Tabelle verwendet werden. Es kann beispielsweise auch zum Einfügen
+von einigen Daten in die Tabelle verwendet werden (das Einfügen von Daten ist jedoch keine Schemaänderung).
+
+I> Doctrine-Migrationen sind für Schemaänderungen konzipiert, nicht für das Einfügen von Daten in die Datenbank. Obwohl
+I> in einigen Fällen ist das Einfügen einiger Anfangsdaten in die Datenbank hilfreich.
+
+Da Sie nun wissen, wie Sie eine Migration erstellen, erstellen wir einige Migrationen für unser Beispiel *Blog*.
+
+### Erstellen der ursprünglichen Migration
+
+Die erste Migration, die wir erstellen, ist die anfängliche Migration. Diese Migration wird auf eine leere Datenbank angewendet.
+Sie erstellt das Schema und vier Tabellen: `post`, `comment`, `tag` und `post_tag`.
+
+Ändern Sie die im vorherigen Abschnitt erstellte Migrationsklasse wie folgt:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+
+namespace Migrations;
+
+use Doctrine\DBAL\Migrations\AbstractMigration;
+use Doctrine\DBAL\Schema\Schema;
+
+/**
+ * A migration class. It either upgrades the databases schema (moves it to new state)
+ * or downgrades it to the previous state.
+ */
+class Version20160901114333 extends AbstractMigration
+{
+    /**
+     * Returns the description of this migration.
+     */
+    public function getDescription()
+    {
+        $description = 'This is the initial migration which creates blog tables.';
+        return $description;
+    }
+    
+    /**
+     * @param Schema $schema
+     */
+    public function up(Schema $schema)
+    {
+        // Create 'post' table
+        $table = $schema->createTable('post');
+        $table->addColumn('id', 'integer', ['autoincrement'=>true]);        
+        $table->addColumn('title', 'text', ['notnull'=>true]);
+        $table->addColumn('content', 'text', ['notnull'=>true]);
+        $table->addColumn('status', 'integer', ['notnull'=>true]);
+        $table->addColumn('date_created', 'datetime', ['notnull'=>true]);
+        $table->setPrimaryKey(['id']);
+        $table->addOption('engine' , 'InnoDB');
+        
+        // Create 'comment' table
+        $table = $schema->createTable('comment');
+        $table->addColumn('id', 'integer', ['autoincrement'=>true]); 
+        $table->addColumn('post_id', 'integer', ['notnull'=>true]);
+        $table->addColumn('content', 'text', ['notnull'=>true]);
+        $table->addColumn('author', 'string', ['notnull'=>true, 'lenght'=>128]);
+        $table->addColumn('date_created', 'datetime', ['notnull'=>true]);
+        $table->setPrimaryKey(['id']);
+        $table->addOption('engine' , 'InnoDB');
+        
+        // Create 'tag' table
+        $table = $schema->createTable('tag');
+        $table->addColumn('id', 'integer', ['autoincrement'=>true]); 
+        $table->addColumn('name', 'string', ['notnull'=>true, 'lenght'=>128]);
+        $table->setPrimaryKey(['id']);
+        $table->addOption('engine' , 'InnoDB');
+        
+        // Create 'post_tag' table
+        $table = $schema->createTable('post_tag');
+        $table->addColumn('id', 'integer', ['autoincrement'=>true]); 
+        $table->addColumn('post_id', 'integer', ['notnull'=>true]);
+        $table->addColumn('tag_id', 'integer', ['notnull'=>true]);
+        $table->setPrimaryKey(['id']);
+        $table->addOption('engine' , 'InnoDB');       
+    }
+
+    /**
+     * @param Schema $schema
+     */
+    public function down(Schema $schema)
+    {
+        $schema->dropTable('post_tag');
+        $schema->dropTable('tag');
+        $schema->dropTable('comment');
+        $schema->dropTable('post');
+    }
+}
+~~~
+
+Im obigen Code haben wir drei Methoden:
+
+  * Die Methode `getDescription()` liefert die Beschreibung der Migration.
+  * Die Methode `up()` aktualisiert das Schema durch Hinzufügen neuer Tabellen auf seinen neueren Status.
+  * Die Methode `down ()` löscht Tabellen, wodurch das Schema auf seinen vorherigen Status heruntergestuft wird.
+  
+### Eine weitere Migration hinzufügen
+
+Nehmen wir nun an, wir haben uns entschieden, die Leistung unserer Datenbank durch Hinzufügen von Indizes zu unseren Tabellen zu verbessern.
+
+T> Wenn Sie mehr über Datenbankindizes erfahren möchten und warum Indizes so hilfreich sind, können Sie auf ein hervorragendes Tutorial verweisen
+T> [Use the Index, Luke](https://use-the-index-luke.com/de).
+
+Wir können die Datenintegrität auch verbessern, indem Sie Fremdschlüssel hinzufügen. Dazu müssen wir eine weitere Migration hinzufügen. Generieren Sie eine weitere
+leere Migration mit dem Konsolenbefehl `migrations: generate`. Ändern Sie den Code wie folgt:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+
+namespace Migrations;
+
+use Doctrine\DBAL\Migrations\AbstractMigration;
+use Doctrine\DBAL\Schema\Schema;
+
+/**
+ * A migration class. It either upgrades the databases schema (moves it to new state)
+ * or downgrades it to the previous state.
+ */
+class Version20160901114938 extends AbstractMigration
+{
+    /**
+     * Returns the description of this migration.
+     */
+    public function getDescription()
+    {
+        $description = 'This migration adds indexes and foreign key constraints.';
+        return $description;
+    }
+    
+    /**
+     * @param Schema $schema
+     */
+    public function up(Schema $schema)
+    {
+        // Add index to post table
+        $table = $schema->getTable('post');
+        $table->addIndex(['date_created'], 'date_created_index');
+        
+        // Add index and foreign key to comment table
+        $table = $schema->getTable('comment');
+        $table->addIndex(['post_id'], 'post_id_index');
+        $table->addForeignKeyConstraint('post', ['post_id'], ['id'], [], 'comment_post_id_fk');
+        
+        // Add indexes and foreign keys to post_tag table
+        $table = $schema->getTable('post_tag');
+        $table->addIndex(['post_id'], 'post_id_index');
+        $table->addIndex(['tag_id'], 'tag_id_index');
+        $table->addForeignKeyConstraint('post', ['post_id'], ['id'], [], 'post_tag_post_id_fk');
+        $table->addForeignKeyConstraint('tag', ['tag_id'], ['id'], [], 'post_tag_tag_id_fk');
+    }
+
+    /**
+     * @param Schema $schema
+     */
+    public function down(Schema $schema)
+    {
+        $table = $schema->getTable('post_tag');
+        $table->removeForeignKey('post_tag_post_id_fk');
+        $table->removeForeignKey('post_tag_tag_id_fk');
+        $table->dropIndex('post_id_index');
+        $table->dropIndex('tag_id_index'); 
+        
+        $table = $schema->getTable('comment');
+        $table->dropIndex('post_id_index'); 
+        $table->removeForeignKey('comment_post_id_fk');
+        
+        $table = $schema->getTable('post');
+        $table->dropIndex('date_created_index');       
+    }
+}
+~~~
+
+T> Sie finden die gerade erstellten Migrationen im Beispiel *Blog*, welches an dieses Buch gebunden ist.
+
+## Migrationen ausführen
+
+Sobald unsere Migrationsklassen fertig sind, können Sie die Migrationen auf die Datenbank anwenden. Dazu verwenden Sie
+Konsolenbefehl `migrations: migrate` wie folgt:
+
+{line-numbers=off,lang=bash}
+~~~
+./vendor/bin/doctrine-module migrations:migrate
+~~~
+
+Der obige Befehl wendet alle verfügbaren Migrationen der Reihe nach an. Es schreibt die IDs der angewendeten Migration in
+die Datenbanktabelle `migrations`. Danach sieht die Tabelle `migrations` wie folgt aus:
+
+{line-numbers=off,lang=bash}
+~~~
+mysql> select * from migrations;
++----------------+
+| version        |
++----------------+
+| 20160901114333 |
+| 20160901114938 |
++----------------+
+2 rows in set (0.00 sec)
+~~~
+
+Wenn Sie ein Upgrade oder Downgrade auf eine bestimmte Version durchführen möchten, geben Sie die Migrations-ID hinter dem 
+Befehlsargument `migrations: migrate` wie folgt an:
+
+{line-numbers=off,lang=bash}
+~~~
+./vendor/bin/doctrine-module migrations:migrate 20160901114333
+~~~
+
+T> Sie können auch 'prev', 'next' und 'first' als Versions-IDs verwenden, um die Datenbank in den vorherigen Status (nächsten Status)
+T> oder auf den Zustand vor der ersten Migration (leere Datenbank) zu verschieben.
+
+Mit Migrationen können Sie also problemlos den Migrationsverlauf durchgehen und das Datenbankschema nach Bedarf ändern.
+Beachten Sie jedoch, dass Migrationen möglicherweise einige Ihrer Daten entfernen. Wenden Sie sie daher sorgfältig an.
+
+## Zusammenfassung
+
+In diesem Kapitel haben wir etwas über Datenbankmigrationen erfahren. Doctrine stellt Ihnen eine Komponente namens `Doctrine\Migrations` zur Verfügung.
+Sie erlaubt Ihnen, Migrationen zu implementieren und anzuwenden.
+
+Eine Migration ist eine Art Änderungssatz, der auf das Datenbankschema angewendet werden kann. Sie können eine
+Migration erstellen, um das Schema auf seinen neueren Status zu aktualisieren, oder Sie können eine Migration auf
+seinen vorherigen Zustand setzen.
+
+Migrationen sind hilfreich, da sie die Historie von Schemaänderungen speichern können und
+Änderungen standardmäßig anwenden. Mit Migrationen können Sie Ihr Schema bei jeder Entwicklung auf dem neuesten Stand halten,
+auf verschiedenen Computern sowie auf Test-, Staging- und Produktionsservern.

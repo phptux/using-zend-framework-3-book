@@ -1,0 +1,777 @@
+﻿{backmatter}
+
+# Anhang A. Konfigurieren der Webentwicklungsumgebung {#devenv}
+
+Hier erhalten Sie Anweisungen zur Vorbereitung Ihrer Umgebung
+zur Entwicklung von ZF3-basierten Anwendungen. Wenn Sie bereits über eine konfigurierte Umgebung verfügen,
+können Sie das Kapitel überspringen.
+
+Das Konfigurieren der Entwicklungsumgebung ist das erste, was Sie tun müssen,
+wenn Sie mit dem Erstellen Ihrer ersten Website beginnen. Dies beinhaltet die Installation
+des Webservers, der PHP-Engine mit den erforderlichen Erweiterungen und der Datenbank.
+
+Zur Ausführung der in diesem Buch erstellten Codebeispiele verwenden wir
+Apache HTTP Server (V.2.4 oder höher), PHP-Engine (V.5.6 oder höher)
+mit XDebug-Erweiterung und MySQL-Datenbank (v.5.6 oder höher).
+
+Wir bieten auch Anweisungen für die Installation von NetBeans IDE, einer
+komfortable integrierte Entwicklungsumgebung für die PHP-Entwicklung. Es erlaubt
+eine einfachere Navigation, Bearbeitung und Fehlerbehebung Ihrer PHP-Anwendung.
+Die NetBeans-IDE ist in Java geschrieben und kann unter Windows, Linux und anderen Betriebssystemen 
+installiert werden, welche Java unterstützen.
+
+I> Wir bieten auch Anfängern Anweisungen zur Installation einer ZF3-Website in der Amazon EC2 Cloud in
+I> [Anhang E. ZF3-Webanwendung bei Amazon EC2 installieren](#ec2-tutorial).
+
+## Installation von Apache, PHP und MySQL unter Linux
+
+Im Allgemeinen wird empfohlen, dass Sie eine beliebte und gut unterstützte Version
+Linux-Distribution verwenden, entweder 32-Bit (x86) oder 64-Bit (amd64). Eine 64-Bit-Version kann eine hervorragende Leistung erbringen.
+Jedoch können mehr Probleme (wie Treiberkompatibilitätsprobleme) auftreten. 32-Bit-Systeme laufen schon längere Zeit bei
+und haben weniger Probleme, was für Anfänger wichtig ist.
+
+Es gibt zwei große Familien von Linux-Distributionen: [Debian](https://www.debian.org/) und
+[Red Hat](https://www.redhat.com). Debian ist ein kostenloses Open-Source-Projekt.
+Das hat mehrere Zweige, von denen das bekannteste [Linux Ubuntu](http://www.ubuntu.com/) ist. Red Hat ist ein kommerziell
+verteiltes Betriebssystem mit "freien" Zweigen namens [Linux CentOS](https://www.centos.org/)
+und [Linux Fedora](https://getfedora.org/).
+
+Red Hat Linux wird von Red Hat Inc. entwickelt.
+Red Hat Linux (oder seine "kostenlose" Modifikation CentOS) wird als "Corporate"-Betriebssystem bezeichnet.
+Sein Hauptvorteil ist "Stabilität" (geringe Systemabsturzrate). Diese Stabilität wird jedoch
+durch sorgfältige Auswahl der Software erreicht, die sofort installiert wird. Wenn Sie solch
+ein Betriebssystem zum Zwecke der PHP-Entwicklung installieren, kann die "Stabilität" schwinden, weil
+sie Zugriff auf eine alte (aber "stabile") Version von PHP haben und anderer Software. Sie können nicht
+eine neue "Bleeding-Edge"-Software in ihr Repository einfügen. Dash heißt, wenn Sie eine installieren möchten,
+müssen Sie sie von irgendwo herunterladen, das Handbuch lesen und möglicherweise (wenn Sie kein Glück haben)
+es selbst kompilieren.
+
+Es gibt eine weitere Linux-Distribution, die nach Meinung des Autors besser für die PHP-Entwicklung geeignet ist.
+Ihr Name ist Linux Ubuntu. Ubuntu wird von Canonical Ltd. entwickelt. Linux Ubuntu hat zwei Ausgaben: Desktop
+Edition und Server Edition. Ubuntu Desktop ist eine Distribution, die eine Grafikumgebung enthält, während Ubuntu Server
+Edition nur ein Konsolenterminal hat. Für die PHP-Entwicklung wird die Verwendung der Desktop Edition empfohlen.
+
+Canonical veröffentlicht normalerweise alle 6 Monate, im April und Oktober, eine neue Version von Linux Ubuntu.
+Eine "Langzeit-Support" -Version (LTS) alle 2 Jahre. Zum Beispiel bei der
+uum Zeitpunkt des Schreibens dieses Textes ist Ubuntu 16.04 Xenial Xerus LTS die neueste Version
+(Veröffentlicht im April 2016).
+
+Nicht-LTS-Versionen haben eine kurze Supportzeit (etwa 9 Monate). Jedoch die neuesten Versionen der PHP-Software
+haben eine längere Supportdauer (5 Jahre) als die LTS-Releases und sind damit auch ein wenig veraltete.
+
+Für die PHP-Entwicklung würde der Autor empfehlen, die neueste Version
+von Ubuntu Desktop zu verwenden, da sie die neueste Version von PHP und anderer verfügbarer Software im
+Repository enthält. Der Nachteil einer solchen Version besteht darin, dass Sie ein Upgrade aller 9 Monate bis zur 
+nächsten Version durchführen müssen (da der Supportzeitraum abläuft). Wenn Sie nicht
+alle 9 Monate ein Upgrade auswählen wollen, so wählen Sie die neueste LTS-Version aus.
+
+Zu Ihrer Information sind in Tabelle A.1 die zur Installation verfügbaren PHP-Versionen
+aus dem Repository in verschiedenen Linux-Distributionen aufgeführt:
+
+{title="Tabelle A.1. Verfügbare PHP-Versionen in verschiedenen Linux-Distributionen"}
+|---------------------------------------|---------------|
+| Linux Distribution 					| PHP-Version	|
+|---------------------------------------|---------------|
+| Linux Ubuntu 16.04 Xenial Xerus LTS 	| 7,0 			|
+|---------------------------------------|---------------|
+| Linux Ubuntu 15.10 Wily Werwolf 		| 5,6 			|
+|---------------------------------------|---------------|
+| Linux Ubuntu 15.04 Vivid Vervet 		| 5,6 			|
+|---------------------------------------|---------------|
+| Linux Ubuntu 14.10 Utopic Unicorn 	| 5,5 			|
+|---------------------------------------|---------------|
+| Linux Ubuntu 14.04 Trusty Tahr 		| 5,5 			|
+|---------------------------------------|---------------|
+
+I> Wie Sie der obigen Tabelle entnehmen können, müssen Sie für die ZF3-Entwicklung
+I> Ubuntu 15.04 oder neuer installieren.
+
+Denken Sie daran, wenn Sie zwischen 32-Bit-und 64-Bit-Versionen des Systems wählen,
+wird ie 64-Bit-Version von Linux Ubuntu mehr Kompatibilitätsprobleme haben als die
+32-Bit. Die Unterstützung von Treibern kann auch Probleme bei
+64-Bit-Systemen verursachen.
+
+T> Wenn Sie Linux Ubuntu noch nicht kennen, schauen Sie sich dieses hervorragenden Video-Tutorials an
+T> [LearnLinux.tv](https://www.youtube.com/channel/UCxQKHvKbmSzGMvUrVtJYnUA) YouTube-Nutzer:
+T> [Tutorial - Installieren von Ubuntu 16.04 LTS](https://www.youtube.com/watch?v=ajYMQ69S4pg) (Es 
+T> zeigt, wie man Ubuntu Desktop Edition installiert)
+T> und [Tutorial - Installieren von Ubuntu Server 16.04](https://www.youtube.com/watch?v=w5W_48vyC6U)
+T> (Dieses zeigt, wie man die Ubuntu Server Edition installiert, die nur über ein Konsolenterminal verfügt).
+
+### Apache und PHP installieren
+
+In modernen Linux-Distributionen können Sie problemlos Software aus einem 
+zentralen *Repository* herunterladen und installieren. Das Repository enthält so genannte
+*Pakete*. Ein Paket hat einen Namen (zum Beispiel "php", "apache2") und eine Version.
+
+Im Allgemeinen können Sie ein Paket mit einem einzigen Befehl installieren. Der Befehl (und ein Paketname)
+kann je nach verwendeter Linux-Distribution unterschiedlich sein. Zum Beispiel zum Herunterladen und Installieren
+von Paketen in Debian-basierten Linux-Distributionen (z.B. Ubuntu Linux) verwenden Sie das Advanced
+Packaging Tool (APT). In von Red Hat bereitgestellten Distributionen (z.B. Fedora oder CentOS) verwenden Sie
+YUM (RPM-Paketmanager). Nachfolgend finden Sie detaillierte Installationsanweisungen für diese Betriebssysteme.
+
+**Debian oder Linux Ubuntu**
+
+Zunächst wird empfohlen, dass Sie Ihr System, nach er Installation, mit den neuesten verfügbaren Updates
+aktualisieren. Führen Sie dazu von einer Befehlsshell aus die
+folgende Befehle:
+
+{line-numbers=off,lang=bash}
+```
+sudo apt-get update
+
+sudo apt-get upgrade
+```
+
+Die obigen Befehle führen das APT-Tool aus und installieren die neuesten Aktualisierungen der Systempakete.
+Der Befehl `sudo` (steht für "Super User DO") ermöglicht das Ausführen eines anderen Befehls
+`apt-get` in unserem Fall als Systemadministrator (root). Normalerweise verwenden Sie `sudo`, wenn Sie
+Ihre Berechtigungen zum Installieren eines Pakets oder zum Bearbeiten einer Konfigurationsdatei erhöhen müssen.
+
+T> Der Befehl `sudo` fordert Sie möglicherweise zur Eingabe eines Kennworts auf. Wenn Sie dazu aufgefordert werden, geben Sie das Passwort ein,
+T> unter dem Sie sich am System anmelden und die Eingabetaste drücken.
+
+Führen Sie als Nächstes von einer Befehlsshell die folgenden Befehle aus:
+
+{line-numbers=off,lang=bash}
+```
+sudo apt-get install apache2
+
+sudo apt-get install php
+
+sudo apt-get install libapache2-mod-php
+```
+
+Die obigen Befehle werden aus dem Repository den Apache HTTP Server, die PHP-Engine und das 
+PHP-Erweiterungsmodul für Apache heruntergeladen und die neuesten verfügbaren Versionen werden installiert.
+
+I> Die obigen Befehle können Sie bei der Installation eines Pakets zur Bestätigung auffordern.
+I> Es wird empfohlen, mit Ja zu antworten (drücken Sie "y" und anschließend die Eingabetaste).
+
+**Fedora, CentOS oder Red Hat Linux**
+
+Zunächst wird empfohlen, dass Sie Ihr System nach der Installation mit den
+neuesten verfügbaren Updates aktualisieren. Führen Sie dazu von einer Befehlsshell den
+folgenden Befehl aus:
+
+{line-numbers=off,lang=bash}
+```
+sudo yum update
+```
+
+Der obige Befehl führt das YUM-Tool aus und installiert die neuesten Systempaketaktualisierungen.
+
+Führen Sie als Nächstes von einer Befehlsshell die folgenden Befehle aus:
+
+{line-numbers=off,lang=bash}
+```
+sudo yum install httpd
+
+sudo yum install php
+```
+
+Die obigen Befehle werden aus dem Repository den Apache HTTP Server und die PHP-Engine
+heruntergeladen und die neuesten verfügbaren Versionen werden installiert.
+
+Führen Sie als Nächstes die folgenden Befehle aus, um den Apache HTTP Server dem Systemautorun hinzuzufügen und zu starten:
+
+{line-numbers=off,lang=bash}
+```
+sudo chkconfig --level 235 httpd on
+
+sudo service httpd start
+```
+
+### Überprüfen der Webserver-Installation
+
+Nachdem Sie Ihren Apache HTTP-Webserver eingerichtet haben, überprüfen Sie, ob er
+richtig installiert ist und dass der Server die PHP-Engine geladen hat. Erstellen Sie dazu eine Datei *phpinfo.php*
+im Stammverzeichnis ("document root") des Apache-Webservers.
+
+Das *Stammverzeichnis* ("document root") ist ein Verzeichnis, in dem Sie (standardmäßig) die Webdateien speichern können.
+In der Regel lautet das Stammverzeichnis des Apache-Webservers */var/www/html*.
+
+T> Um in der Verzeichnisstruktur navigieren und Dateien bearbeiten zu können, wird
+T> empfohlen, Midnight Commander zu installieren (ein praktischer Dateimanager und Texteditor).
+T> Um Midnight Commander in Debian oder Linux Ubuntu zu installieren, geben Sie Folgendes ein:
+T>
+T> `sudo apt-get install mc`
+T>
+T> Der folgende Befehl installiert Midnight Commander in Fedora, CentOS oder Red Hat Linux:
+T>
+T> `sudo yum install mc`
+T>
+T> Nach der Installation können Sie den Dateimanager mit dem Befehl `mc` starten und eine
+T> Textdatei mit folgendem Befehl bearbeiten:
+T>
+T> `mcedit /path/to/file`
+T>
+T> Wenn Sie zur Bearbeitung der Datei Administratorrechte benötigen, setzen Sie den Befehl `sudo`
+T> dem obigen Befehl voran.
+
+Geben Sie in der Datei *phpinfo.php* die PHP-Funktion `phpinfo()` wie folgt ein:
+
+{line-numbers=off,lang=php}
+~~~
+<?php
+  phpinfo(); 
+?>
+~~~
+
+Öffnen Sie die Datei in Ihrem Webbrowser. Die standardmäßige Informationsseite von PHP sollte angezeigt werden
+(Siehe Abbildung A.1 zum Beispiel).
+
+![Abbildung A.1. PHP-Informationen](images/devenv/phpinfo.png)
+
+### PHP-Konfiguration bearbeiten
+
+Um PHP für Ihre Entwicklungsumgebung zu konfigurieren, müssen Sie die
+PHP-Konfigurationsdatei (*php.ini*) bearbeiten und einige Parameter anpassen.
+
+T> In verschiedenen Distributionen von Linux kann sich die PHP-Konfigurationsdatei in verschiedenen Pfaden befinden.
+T> Um die PHP-Konfigurationsdatei in Debian oder Linux Ubuntu zu bearbeiten, geben Sie Folgendes ein:
+T>
+T> `sudo mcedit/etc/php/7.0/apache2/php.ini`
+T>
+T> Geben Sie Folgendes ein, um *php.ini* in Fedora, CentOS oder Red Hat Linux zu bearbeiten:
+T>
+T> `sudo mcedit /etc/php.ini`
+
+Für die Entwicklungsumgebung wird empfohlen, Fehlerbehandlung und Protokollierungsparameter wie folgt festzulegen. 
+Dies wird PHP dazu zwingen Fehler auf Ihren PHP-Seiten anzeigen.
+
+`error_reporting = E_ALL`
+  
+`display_errors = On`
+
+`display_startup_errors = Ein`
+  
+T> Um bequem in der Datei zu suchen, drücken Sie im Editorfenster von Midnight Commander F7 und 
+T> geben Sie den Such-String ein (den Namen des Parameters, nach dem gesucht werden soll).
+  
+Setzen Sie Ihre Zeitzonene(ersetzen Sie den Platzhalter für <Ihre_Zeitzone> durch Ihre Zeitzone,
+z.B. "UTC" oder "Europe/Berlin"):
+
+`date.timezone = <Ihre_Zeitzone>`
+    
+Stellen Sie die Parameter `max_execution_time`, `upload_max_filesize` und `post_max_size` so ein,
+um das Hochladen von Dateien über POST zu ermöglichen. Setzen Sie zum Beispiel `upload_max_filesize` auf `128M`.
+Dies ermöglicht das Hochladen von Dateien mit einer Größe von bis zu 128 Megabyte. Das Setzen von `max_execution_time` auf `0`, 
+ermöglicht die Ausführung eines PHP-Skript unendlich lange.
+
+`max_execution_time = 0`
+
+`post_max_size = 128M`
+
+`upload_max_filesize = 128M`
+  
+Wenn Sie fertig sind, speichern Sie Ihre Änderungen, indem Sie die Taste *F2* drücken und dann
+Drücken Sie *F10*, um den Editor des Midnight Commanders zu verlassen.
+  
+### Apache Web Server neu starten
+
+Nach dem Bearbeiten der Konfigurationsdateien müssen Sie Apache HTTP Server neu starten
+um Ihre Änderungen anzuwenden. Dies tun Sie mit dem folgenden Befehl (in Debian oder Linux Ubuntu):
+
+{line-numbers=off,lang=bash}
+~~~
+sudo service apache2 restart
+~~~
+
+oder Folgendes (in Fedora, CentOS oder Red Hat):
+
+{line-numbers=off,lang=bash}
+~~~
+sudo service httpd restart
+~~~
+
+### Das Modul mod_rewrite von Apache aktivieren
+
+Zend Framework 3 setzt voraus, dass Sie das Modul *mod_rewrite* von Apache aktiviert haben.
+Das Modul *mod_rewrite* wird verwendet, um angeforderte URLs basierend auf einigen Regeln neu zu schreiben.
+Damit funktioniert das Umleiten von Website-Benutzern zu einer anderen URL.
+
+**In Debian oder Ubuntu Linux**
+
+Geben Sie den folgenden Befehl ein, um das Apache-Modul "mod_rewrite" zu aktivieren:
+
+{line-numbers=off,lang=bash}
+~~~
+a2enmod rewrite
+~~~
+
+Starten Sie schließlich den Apache-Webserver neu, um Ihre Änderungen zu übernehmen.
+
+**In Fedora, CentOS oder Red Hat Linux**
+
+In diesen Linux-Distributionen ist `mod_rewrite` standardmäßig aktiviert, sodass Sie dies nichts tun müssen.
+
+### Erstellen eines virtuellen Apache-Hosts
+
+Für Zend Framework 3 müssen Sie einen *virtuellen Host* für Ihre Website erstellen. 
+Der Begriff virtueller Host bedeutet, dass Sie mehrere Websites auf demselben Rechner ausführen können.
+
+Die virtuellen Hosts unterscheiden sich nach Domainnamen (wie
+*site.mydomain.com* und *site2.mydomain.com*). Jeder virtuelle Host verfügt über ein eigenes
+Stammverzeichnis. Das erlaubt Ihnen, Ihre Webdateien überall im System zu 
+platzieren (nicht nur im Verzeichnis */var/www/html*).
+
+T> Bitte beachten Sie, dass Sie im Moment keinen virtuellen Host erstellen müssen.
+T> Wir werden es im Kapitel [Zend Skeleton Application](#skeleton) tun. Jetzt werden wir Ihnen zeigen,
+T> wie virtuelle Hosts in verschiedenen Linux-Distributionen erstellt werden.
+
+**In Debian oder Ubuntu Linux**
+
+Sie haben ein Beispiel für einen virtuellen Standardhost unter
+*/etc/apache2/sites-available/000-default.conf* (siehe unten).
+
+{line-numbers=off,lang=apacheconf}
+~~~
+<VirtualHost *:80>
+	# The ServerName directive sets the request scheme, hostname and port that
+	# the server uses to identify itself. This is used when creating
+	# redirection URLs. In the context of virtual hosts, the ServerName
+	# specifies what hostname must appear in the request's Host: header to
+	# match this virtual host. For the default virtual host (this file) this
+	# value is not decisive as it is used as a last resort host regardless.
+	# However, you must set it for any further virtual host explicitly.
+	#ServerName www.example.com
+
+	ServerAdmin webmaster@localhost
+	DocumentRoot /var/www/html
+
+	# Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
+	# error, crit, alert, emerg.
+	# It is also possible to configure the loglevel for particular
+	# modules, e.g.
+	#LogLevel info ssl:warn
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+	# For most configuration files from conf-available/, which are
+	# enabled or disabled at a global level, it is possible to
+	# include a line for only one particular virtual host. For example the
+	# following line enables the CGI configuration for this host only
+	# after it has been globally disabled with "a2disconf".
+	#Include conf-available/serve-cgi-bin.conf
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
+~~~
+
+Sie müssen nur diese virtuelle Hostdatei bearbeiten und Apache neu starten, damit Ihre
+Änderungen angewendent werden.
+
+Sie können diese Datei auch kopieren und einen anderen virtuellen Host erstellen,
+wenn Sie mehrere Websites benötigen, um diese auf demselben Computer zu bearbeiten.
+Um beispielsweise eine weitere virtuelle Hostdatei mit dem Namen *001-vhost2.conf* zu erstellen, geben Sie folgendes
+Ihre Befehlsshell ein:
+
+{line-numbers=off,lang=bash}
+~~~
+cd / etc / apache2 / sites-available
+
+sudo cp 000-default.conf 001-vhost2.conf
+
+sudo a2ensite 001-vhost2.conf
+~~~
+
+I> Der Name des virtuellen Hosts beginnt mit einem Präfix (wie *000*, *010* usw.), welches die Priorität definiert.
+I> Der Apache-Webserver versucht eine HTTP-Anforderung an jeden virtuellen Host zu lenken
+I> (zuerst an *000-default*, dann an *001-vhost2*, usw.)
+I> Wenn ein bestimmter virtueller Host die Anfrage nicht bedienen kann, wird der nächste versucht und so weiter.
+
+**In Fedora, CentOS oder Red Hat Linux**
+
+In der Datei */etc/httpd/conf/httpd.conf* befindet sich ein Beispiel für einen virtuellen Host.
+Scrollen Sie bis zum Ende des Dokuments hinunter zum Abschnitt "Virtual Hosts".
+Sie können diesen Abschnitt nach Bedarf bearbeiten und Apache neu starten, um die Änderungen zu übernehmen.
+
+### Installieren der PHP-Erweiterung XDebug
+
+Um Ihre Websites debuggen zu können, wird empfohlen
+die Erweiterung *XDebug* zu installieren. Die Erweiterung XDebug erlaubt
+in ein laufendes Programm schauen. Sie sehen die vom Client übergebenen Variablen.
+Sie können den Call-Stack durch gehen und stellen Sie können Ihren PHP-Code profilieren. XDebug liefert auch den Code
+Funktionen zur Abdeckungsanalyse, die beim Schreiben von Komponententests für Ihren Code hilfreich sind.
+
+**In Debian oder Ubuntu Linux**
+
+Geben Sie einfach den folgenden Befehl ein, um XDebug zu installieren:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo apt-get install php-xdebug
+~~~
+
+Bearbeiten Sie dann die Datei `/etc/php/7.0/mods-available/xdebug.ini`, indem Sie folgendes eingeben:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo mcedit /etc/php/7.0/mods-available/xdebug.ini
+~~~
+
+Fügen Sie am Ende der Datei die folgenden Zeilen hinzu (ersetzen Sie den Platzhalter für die Remote-IP-Adresse durch die IP-Adresse
+Ihrer Website, welche Sie debuggen wollen):
+
+{line-numbers=off,lang=ini}
+~~~
+xdebug.remote_enable=1
+xdebug.remote_handler=dbgp
+xdebug.remote_mode=req
+xdebug.remote_host=<remote_ip_address>
+~~~
+
+Starten Sie schließlich den Apache-Server neu, um Ihre Änderungen zu übernehmen. Dann
+öffnen Sie die *phpinfo.php* in Ihrem Browser und suchen Sie nach dem Abschnitt "XDebug" (es sollte aussehen
+wie in der Abbildung A.2):
+
+![Abbildung A.2. Informationen über XDebug](images/devenv/xdebug.png)
+
+**In Fedora, CentOS oder Red Hat Linux**
+
+In diesen Linux-Distributionen ist die Installation von XDebug etwas schwieriger.
+Installieren Sie das XDebug-Paket mit dem folgenden Befehl:
+
+{line-numbers=off,lang=bash}
+~~~
+yum install php-pecl-xdebug
+~~~
+
+Nach der Installation müssen Sie die Datei *xdebug.ini* im Verzeichnis */etc/php.d* erstellen:
+
+{line-numbers=off,lang=bash}
+~~~
+mcedit /etc/php.d/xdebug.ini
+~~~
+
+Fügen Sie am Ende der Datei die folgenden Zeilen hinzu (ersetzen Sie den Platzhalter für die Remote-IP-Adresse durch die IP-Adresse
+Ihrer Website, welche Sie debuggen wollen):
+
+{line-numbers=off,lang=ini}
+~~~
+[xdebug]
+
+zend_extension = /usr/lib/php/modules/xdebug.so
+xdebug.remote_enable=1
+xdebug.remote_handler=dbgp
+xdebug.remote_mode=req
+xdebug.remote_host=<remote_ip_address>
+xdebug.remote_port=9000
+~~~
+
+Starten Sie den Apache-Webserver neu, um die Änderungen zu übernehmen.
+Dann überprüfen Sie die *phpinfo.php* in Ihrem Browser. Wenn die Installation erfolgreich war,
+werden einige Informationen zu XDebug angezeigt.
+
+### MySQL Database Server installieren
+
+[MySQL](http://www.mysql.com/) ist ein kostenloses relationales Datenbankverwaltungssystem. Es wird
+entwickelt und unterstützt von Oracle. MySQL ist das beliebteste Datenbanksystem, das mit PHP verwendet wird.
+In diesem Buch werden wir MySQL verwenden.
+
+**Debian oder Linux Ubuntu**
+
+Um die MySQL-Datenbank zu installieren, geben Sie Folgendes ein:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo apt-get install mysql-server
+
+sudo apt-get install mysql-client
+
+sudo apt-get install php-mysql
+~~~
+
+Die obigen Befehle installieren die MySQL-Server, den MySQL-Client
+und MySQL-Unterstützung für PHP.
+
+**Fedora, CentOS oder Red Hat Linux**
+
+Um die MySQL-Datenbank zu installieren, geben Sie Folgendes ein:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum install mysql-server
+
+sudo yum install mysql
+
+sudo yum install php-mysql
+~~~
+
+Die obigen Befehle installieren die MySQL-Server, den MySQL-Client
+und MySQL-Unterstützung für PHP.
+
+Führen Sie die folgenden Befehle aus, um den MySQL-Server zum Autostart hinzuzufügen
+und ihn zu starten:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo chkconfig --level 235 mysqld on
+
+sudo service mysqld start
+~~~
+
+### MySQL-Datenbankserver konfigurieren
+
+Während der Installation des MySQL-Servers wurde ein Benutzer *root* wird erstellt.
+Standardmäßig hat der Benutzer *root* kein Passwort.
+Sie müssen es also manuell tun. Sie benötigen dieses Passwort zum Erstellen
+anderer MySQL-Datenbankbenutzer.
+
+Um eine Verbindung zum MySQL-Server herzustellen, geben Sie den folgenden Befehl ein:
+
+{line-numbers=off,lang=bash}
+~~~
+mysql -u root -p
+~~~
+
+Die MySQL-Eingabeaufforderung wird angezeigt. In der Eingabeaufforderung
+geben Sie den folgenden Befehl ein und drücken Sie die Eingabetaste (im Befehl
+ersetzen Sie unten den Platzhalter <Ihr_Kennwort> durch ein Kennwort.)
+
+{line-numbers=off,lang=sql}
+~~~
+SET PASSWORD FOR 'root'@'localhost' = '<Ihr_Kennwort>';
+~~~
+
+Wenn der Befehl erfolgreich ausgeführt wird, wird die folgende Meldung angezeigt:
+
+`Abfrage OK, 0 Zeilen betroffen (0,00 s)`
+
+Jetzt müssen wir eine neue Datenbank erstellen, wenn wir später Tabellen erstellen wollen. 
+Geben Sie dazu folgendes ein:
+
+{line-numbers=off,lang=sql}
+~~~
+CREATE DATABASE test_db;
+~~~
+
+Der obige Befehl erstellt ein leeres Schema, das wir später auffüllen werden.
+
+Als Nächstes möchten wir einen anderen Datenbankbenutzer mit dem Namen `test_user` erstellen.
+Diesen wollen wir für unsere ZF3-basierten Website für die Verbindung zur Datenbank verwenden.
+Um den Benutzer zu erstellen, geben Sie Folgendes ein (im folgenden Befehl
+ersetzen Sie den Platzhalter <Das_Kennwort> durch ein Kennwort.):
+
+{line-numbers=off,lang=sql}
+```
+GRANT ALL PRIVILEGES ON test_db.* TO 'test_user'@'localhost' IDENTIFIED BY '<Das_Kennwort>';
+```
+
+Der obige Befehl erstellt den benannten Benutzer
+`test_user` und gewährt dem Benutzer alle Berechtigungen für die
+Datenbank `test_db`.
+
+Geben Sie zum Schluss `quit` ein, um die MySQL-Eingabeaufforderung zu beenden.
+
+## Installation von Apache, PHP und MySQL unter Windows
+
+Wir empfehlen dringend die Verwendung von Linux für die PHP-Entwicklung. Die meisten Serversysteme sind über Linux
+eingerichtet. Wenn Sie Windows für Ihre alltäglichen Aufgaben verwenden, können Sie Linux weiterhin auf einer virtuellen Maschine installieren
+(beispielsweise auf [VirtualBox](https://www.virtualbox.org/)) und führen Apache, PHP und MySQL auf dieser virtuellen Maschine aus. Wenn Sie gleichzeitig
+NetBeans unter Windows verwenden möchten, können Sie dies tun - konfigurieren Sie einfach ein freigegebenes Verzeichnis (z.B. einen Samba-Server auf der
+virtuellen Maschine einrichten).
+
+Falls Sie unbedingt Apache, PHP und MySQL unter Windows installieren möchten (was wir nicht empfehlen), hier
+einige Anweisungen (beachten Sie jedoch, dass die Installation unter Windows möglicherweise schwieriger ist als unter Linux).
+
+Es gibt einige populäre Distributionen mit Apache + MySQL + PHP:
+
+ * [WampServer](http://www.wampserver.com/)
+ * [XAMPP](https://www.apachefriends.org/ru/index.html)
+ 
+Wählen Sie eine aus und installieren Sie sie auf Ihrem Windows-PC.
+
+### Überprüfen der Installation des Webserver
+
+Nachdem Sie Ihren Webserver eingerichtet haben, überprüfen Sie, ob er ordnungsgemäß installiert ist
+und dass Ihr Apache-Server die PHP-Engine erkennt.
+
+Um zu überprüfen, ob Apache und PHP korrekt installiert sind, erstellen Sie eine Datei *phpinfo.php*
+im Apache-Stammverzeichnis.
+
+Geben Sie in der Datei *phpinfo.php* die PHP-Funktion `phpinfo()` wie folgt ein:
+
+{line-numbers=off,lang=php}
+~~~
+<?php 
+	phpinfo(); 
+?>
+~~~
+
+Öffnen Sie die Datei in Ihrem Browser. Die standardmäßige Informationsseite von PHP sollte angezeigt werden
+(Abbildung A.3).
+
+![Abbildung A.3. PHP-Informationen](images/devenv/phpinfo_win32.png)
+
+### Das Modul mod_rewrite von Apache aktivieren
+
+Zend Framework 3 setzt voraus, dass Sie das Modul `mod_rewrite` von Apache aktiviert haben.
+Um `mod_rewrite` zu ​​aktivieren, öffnen Sie die Apache-Konfigurationsdatei (normalerweise *httpd.conf*) und suchen die folgende Zeile:
+
+{line-numbers=off,lang=apacheconf}
+~~~
+#LoadModule rewrite_module modules/mod_rewrite.so
+~~~
+
+Entfernen Sie das Rautezeichen (#) vom Anfang der Zeile, um die Zeile aus zu kommentieren. Es
+sollte jetzt so aussehen:
+
+{line-numbers=off,lang=apacheconf}
+~~~
+LoadModule rewrite_module modules/mod_rewrite.so
+~~~
+
+Starten Sie schließlich den Apache-Webserver neu, um Ihre Änderungen zu übernehmen.
+
+### Erstellen eines virtuellen Apache-Hosts
+
+Der Begriff virtuellen Host bedeutet, dass Sie mehrere Websites auf demselben Computer ausführen können.
+Die virtuellen Seiten werden nach Domänennamen unterschieden (wie *site.mydomain.com*
+und *site2.mydomain.com*)
+
+Informationen zum Erstellen von virtuellen Hosts finden Sie in der Dokumentation zu WAMP oder XAMPP.
+
+T> Im Moment müssen Sie die virtuelle Host-Datei nicht bearbeiten. Wir machen das in Kapitel [Zend Skeleton Application](#skeleton)
+T> bei der Installation der Anwendung *Hello World*. Jetzt müssen Sie nur noch verstehen
+T> wie man virtuelle Hosts erstellt.
+
+### Installieren der PHP-Erweiterung XDebug
+
+Um Ihre Websites in der NetBeans IDE debuggen zu können, wird empfohlen
+die XDebug-Erweiterung Ihrer PHP-Engine zu installieren. Laden Sie eine entsprechende DLL-Datei
+von [dieser Website](http://www.xdebug.org/download.php) herunter.
+
+Bearbeiten Sie dann Ihre Datei *php.ini* und fügen Sie die folgende Zeile hinzu:
+
+{line-numbers=off,lang=ini}
+~~~
+zend_extension="C:/path/to/your/xdebug.dll"
+~~~
+
+Fügen Sie am Ende der Datei die folgenden Zeilen hinzu (ersetzen Sie den Platzhalter für die Remote-IP-Adresse durch die IP-Adresse,
+welche Sie debuggen wollen):
+
+{line-numbers=off,lang=ini}
+~~~
+xdebug.remote_enable = ein
+xdebug.remote_handler = dbgp
+xdebug.remote_host = <remote_ip_address>
+~~~
+
+Starten Sie schließlich den Apache-Server neu, um Ihre Änderungen zu übernehmen.
+Öffnen Sie dann die *phpinfo.php* in Ihrem Browser und suchen Sie nach dem Abschnitt "XDebug" (es sollte aussehen
+wie in der Abbildung A.4):
+
+![Abbildung A.4. XDebug-Informationen](images/devenv/xdebug_win32.png)
+
+### MySQL-Datenbankserver konfigurieren
+
+Jetzt möchten wir ein Datenbankschema und einen Datenbankbenutzer erstellen. Wir verwenden den
+MySQL-Befehlszeilen-Client. Informationen dazu finden Sie in der Dokumentation zu WAMP oder XAMPP.
+ 
+Die MySQL Command Line Client-Konsole sieht wie folgt aus (siehe Abbildung A.5):
+
+![Abbildung A.5. MySQL-Befehlszeilenclient](images/devenv/mysql_command_line_client.png)
+
+Jetzt müssen wir eine neue Datenbank erstellen, um später Tabellen in ihr speichern zu können.
+Geben Sie dazu in das MySQL-Clientfenster folgendes ein:
+
+{line-numbers=off,lang=sql}
+~~~
+CREATE DATABASE test_db;
+~~~
+
+Der obige Befehl erstellt eine leere Datenbank, die wir später auffüllen werden.
+Wenn der Befehl erfolgreich ausgeführt wird, wird die folgende Meldung angezeigt:
+
+`Abfrage OK, 1 Zeile betroffen (0,05 Sek.)`
+
+Als Nächstes möchten wir einen weiteren Datenbankbenutzer mit dem Namen `test_user` erstellen.
+Diesen Benutzer werden wir für die Verbindung zur Datenbank verwenden.
+Um den Benutzer anzulegen, geben Sie folgendes ein (in dem
+Befehl unten, ersetzen Sie den Platzhalter `<Ihr_Kennwort>` durch ein Passwort):
+
+{line-numbers=off,lang=sql}
+~~~
+GRANT ALL PRIVILEGES ON test_db.* TO 'test_user'@'localhost' IDENTIFIED BY '<Ihr_Kennwort>';
+~~~
+
+Der obige Befehl erstellt den Benutzer `test_user` und wir
+erteilen dem Benutzer alle Berechtigungen für das Datenbankschema `test_db`.
+
+## Installation der NetBeans IDE unter Linux
+
+Sie können die NetBeans-IDE mit zwei Methoden installieren: Entweder vom Repository aus, wie bei Apache,
+PHP und MySQL oder indem Sie das Installationsprogramm von der NetBeans-Website herunterladen und ausführen. Die erste
+Methode ist einfacher, daher empfehlen wir diese zu verweden.
+
+Um die NetBeans-IDE in Debian oder Linux Ubuntu zu installieren, geben Sie den folgenden Befehl von Ihrer Befehls-Shell aus ein:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo apt-get install netbeans
+~~~
+
+oder den folgenden Befehl, um es in Fedora, CentOS oder Red Hat Linux zu installieren:
+
+{line-numbers=off,lang=bash}
+~~~
+sudo yum install netbeans
+~~~
+
+Der obige Befehl lädt aus dem Repository die Software heruntergeladen und installiert NetBeans und alle seine
+abhängige Pakete. Nachdem die Installation abgeschlossen ist, können Sie NetBeans
+durch Eingabe ausführen:
+
+{line-numbers=off,lang=bash}
+~~~
+netbeans
+~~~
+
+Das NetBeans IDE-Fenster ist in Abbildung A.6 dargestellt.
+
+![Abbildung A.6. NetBeans IDE](images/devenv/netbeans_window.png)
+
+Um PHP-Projekte erstellen zu können, müssen Sie das PHP-Plugin für NetBeans aktivieren.
+Öffnen Sie das Menü "Tools -> Plugins". Das Dialogfeld "Plugins" wird angezeigt. Klicken Sie im angezeigten Dialog auf
+Registerkarte *Settings* und markieren Sie alle *Update Center* (siehe Abbildung A.7).
+
+![Abbildung A.7. NetBeans-Plugins](images/devenv/netbeans_plugins_dialog.png)
+
+Klicken Sie dann auf die Registerkarte *Available Plugins*. Klicken Sie auf dieser Registerkarte auf die Schaltfläche *Check for Newest*,
+um die Liste aller verfügbaren Plugins zu anzuzeigen. Setzen Sie dann in der Liste das Häkchen bei PHP-Plugin
+Klicken Sie auf den Button "Install" (siehe Abbildung A.8).
+
+![Abbildung A.8. NetBeans-Plugins](images/devenv/netbeans_plugins_php.png)
+
+Wenn die Installation des PHP-Plugins abgeschlossen ist, starten Sie die IDE neu.
+Dann sollten Sie in der Lage sein, neue PHP-Projekte
+aus dem Menü `New -> New Project...` zu erstellen.
+
+T> Es wird auch empfohlen, die NetBeans IDE auf die neueste Version zu aktualisieren.
+T> Öffnen Sie dazu das Menü "Help->Check for updates".
+
+## NetBeans IDE unter Windows installieren
+
+Die Installation von NetBeans unter Windows ist unkompliziert. Sie müssen nur das Installationsprogramm
+von der [NetBeans-Site](https://netbeans.org/) herunterladen und es ausführen. Sie können auf mehrere Pakete
+von NetBeans stoßen, die zum Download zur Verfügung stehen. Sie sollten das Bundle
+für die PHP-Entwicklung herunterladen (siehe beispielsweise Abbildung A.9).
+
+![Abbildung A.9. Download-Seite der NetBeans-PHP ](images/devenv/netbeans_download_page.png)
+
+## Zusammenfassung
+
+In diesem Anhang haben wir Anweisungen zur Installation und Konfiguration für
+Apache HTTP-Server, PHP-Engine und MySQL-Datenbank in Linux- und Windows-Plattformen gegeben.
+
+Wir haben auch Anweisungen zur Installation der integrierten Entwicklungsumgebung (IDE) von NetBeans bereitgestellt.
+Dies ist eine komfortable integrierte Entwicklungsumgebung für die PHP-Entwicklung. Sie erlaubt es Ihnen
+zu Navigieren, Bearbeiten und Debuggen Ihrer ZF3-basierten Anwendung auf effektive Weise.
+
+Q> **Diese Installationsanweisungen funktionieren für mich nicht. Was kann ich tun?**
+Q>
+Q> Bitte hinterlassen Sie einen Kommentar unter dieser Seite und beschreiben Sie Ihr Problem.

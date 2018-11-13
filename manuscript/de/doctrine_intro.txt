@@ -1,0 +1,270 @@
+# Anhang D. Einführung in Doctrine {#doctrine-intro}
+
+In diesem Anhang geben wir einen Überblick über die Bibliothek Doctrine, über ihre Architektur und Komponenten.
+Da wir uns in diesem Buch hauptsächlich auf den Object Relational Mapper (ORM) von Doctrine konzentrieren,
+erhalten Sie durch diesen Anhang ein besseres Bild von anderen Doctrine-Funktionen.
+
+## Doctrine und Datenbankverwaltungssysteme
+
+Es gibt viele Datenbankverwaltungssysteme (DBMS) auf dem Markt. Diese Systeme können in zwei Gruppen eingeteilt
+werden: traditionelle *relationale Datenbanken* unter Verwendung der SQL-Sprache zum Abfragen und Bearbeiten von Daten,
+und *NoSQL-Datenbanken*, die "nicht nur SQL"-Methoden für Zugriff auf und Verwaltung der Daten verwenden.
+In jedem Projekt bevorzugen Sie möglicherweise bestimmte DBMS, wegen
+ihren Fähigkeiten und Wettbewerbsvorteile.
+
+### Relationale Datenbanken
+
+In einer *relationalen Datenbank* haben Sie eine Sammlung von Tabellen (Beziehungen), die aus Zeilen bestehen. Eine Reihe kann
+eine oder mehrere Spalten haben. Eine Zeile (oder mehrere Zeilen) einer Tabelle kann mit einer Zeile
+(oder mehrere Zeilen) verknüpft sein oder mit einer anderen Tabelle, wodurch eine Beziehung zwischen den Daten hergestellt wird.
+
+Angenommen, Sie haben eine Blog-Website, deren Datenbank zwei Tabellen enthält: die Tabelle `post`
+und die Tabelle `comment`. Die Tabelle `post` hätte Spalten mit den Namen `id`, `title`, `content`, `author`, `date_created`;
+und die Tabelle `comment` hätte Spalten mit den Namen `id`, `post_id`, `author`, `content`, and `date_created`.
+Die Tabelle `post` bezieht sich auf die Tabelle `comment` als Eins-zu-Viele (one-to-many), da ein Beitrag null oder mehr (viele) Kommentare hat.
+Ein bestimmter Kommentar kann jedoch nur zu einem einzelnen Beitrag gehören.
+
+Die oben genannten Tabellen, ihre Spalten und ihre Beziehung sind in Abbildung D.1 unten grafisch dargestellt.
+
+![Abbildung D.1. Tabellen und Beziehung zwischen Tabellen. Ein Beitrag hat viele Kommentare](images/doctrine_intro/post_comment_relationship.png)
+
+Auf dem Markt gibt es eine Reihe wichtiger relationaler Datenbanken. Unter ihnen: [SQLite](http://www.sqlite.org),
+[MySQL](http://www.mysql.com/), [PostgreSQL](http://www.postgresql.org/), [Oracle](https://www.oracle.com/index.html),
+[Microsoft SQL Server](https://www.microsoft.com/en-us/cloud-platform/sql-server) usw.
+
+Jedes Datenbanksystem verfügt über eigene Funktionen, die für dieses DBMS spezifisch sind und nicht zu anderen
+Systeme gehören. Zum Beispiel:
+ 
+  * SQLite ist als eingebettete Erweiterung der PHP-Engine konzipiert, muss jedoch nicht installiert werden und
+    funktioniert nur für einfache Websites;
+    
+  * MySQL ist ein kostenloses System, das sehr einfach in Installation und Verwaltung ist.
+    Es ist gut für den Einsatz in Systemen von klein bis mittelgroß;
+    
+  * Kommerzielles Oracle DBMS richten sich hauptsächlich an große Systeme und hat hochentwickelte
+    Verwaltungswerkzeuge;
+    
+  * PostgreSQL unterstützt unbegrenzt große Datenbanken und kann als Open-Source-Ersatz
+    von Oracle betrachtet werden.
+
+Die Doctrine-Bibliothek ist für die Zusammenarbeit mit allen gängigen Datenbanken unter Verwendung einer einheitlichen Programmierschnittstelle konzipiert.
+Diese Programmierschnittstelle ist in zwei Ebenen implementiert:
+
+  1. Auf der unteren Ebene bietet Doctrine den einheitlichen Mechanismus zum Erstellen von SQL-Abfragen für alle unterstützten
+     relationale Datenbanken und Manipulation des Datenbankschemas. Dieser Mechanismus ist in der
+	 Komponente *Database Abstraction Layer* (DBAL) implementiert.
+
+  2. Auf der höheren Ebene enthält sie die Komponente *Object Relational Mapper* (ORM) von Doctrine, eine
+     Möglichkeit, Datenbankdaten objektorientiert abzufragen und zu verwalten, indem die Tabellen PHP-Klassen zugeordnet werden.
+	 Diese Komponente stellt auch eine benutzerdefinierte Datenbankabfragesprache namens DQL bereit, mit der Abfragen
+	 im objektorientiertem Stil erstellt werden können.
+
+Normalerweise verwenden Sie die von der übergeordneten ORM-Komponente bereitgestellte API. Gleichzeitig können Sie problemlos
+mit einer untergeordneten DBAL-Komponente arbeiten, wenn Sie das für Ihre speziellen Anforderungen geeignet finden.
+
+I> Doctrine ist datenbankunabhängig. Theoretisch können Sie bei Verwendung von Doctrine den Datenbanktyp abstrahieren
+I> und einfacher zwischen Datenbanken wechseln, als wenn Sie Ihre eigene datenbankabhängige Lösung verwenden.
+
+#### SQL vs. DQL
+    
+Wenn Sie ein relationales Datenbanksystem verwenden, verwenden Sie normalerweise die Sprache *SQL* als Standardmethode für den Zugriff
+auf Datenbankdaten und zum Verwalten des Datenbankschemas. Jedes DBMS verfügt jedoch über eine eigene SQL-Sprache
+(Dialekte).
+    
+Die Bibliothek Doctrine ist für die Zusammenarbeit mit allen wichtigen relationalen Datenbanksystemen konzipiert, die die SQL-Sprache verwenden.
+Es ist jedoch offensichtlich, dass es nur einen Teil ihrer Funktionalität und SQL-Sprachfunktionen unterstützt.
+
+Doctrine basiert auf der PHP-Erweiterunge PDO[^pdo] (und anderen datenbankspezifischen PHP-Erweiterungen, wie `sqlite`, `mysqli`,
+`oci8`, usw.). Diese Erweiterungen stellen Treiber für alle wichtigen relationalen Datenbanksysteme bereit. Sie geben an, welche
+Treiber für die Konfiguration einer Datenbankverbindung verwendet werden.
+
+T> Wenn Sie mit SQL nicht vertraut sind, ist es ein guter Punkt, die Syntax zu erlernen
+T> [W3Schools Tutorials] (http://www.w3schools.com/sql/default.asp).
+
+[^pdo]: Die Erweiterung PHP Data Objects (PDO) definiert eine leichtgewichtige, konsistente Schnittstelle für den Zugriff auf
+        Datenbanken in PHP. Um es datenbankunabhängig zu machen, verwendet PDO das Konzept der Datenbanktreiber.
+        Jeder Datenbanktreiber, der die PDO-Schnittstelle implementiert, kann datenbankspezifisch
+        Funktionen als reguläre Erweiterungsfunktionen verfügbar machen.
+
+Da die Komponente "Object Relational Mapper" von Doctrine für das Arbeiten mit Objekten anstelle von Tabellen ausgelegt ist,
+stellt sie eine eigene "objektorientierte" Abfragesprache mit dem Namen *DQL* [^dql] zur Verfügung. Sie ist im Sinne von SQL ähnlich,
+um Abfragen zu erstellen, in die Datenbank zu schreiben und auszuführen, aber das Ergebnis einer Abfrage ist eher ein Array von Objekten,
+als ein Array von Tabellenzeilen.
+
+[^dql]: DQL steht für Doctrine Query Language.
+
+### NoSQL-Datenbanken
+
+Im Gegensatz zu einem relationalen Datenbanksystem verwendet ein NoSQL-Datenbanksystem - wie der Name vermuten lässt - ein
+nicht-nur-SQL-Methode für den Zugriff auf die Daten. Dies bedeutet, dass jedes NoSQL-System sein eigenen
+benutzerdefinierte Methoden und API für den Zugriff und die Bearbeitung der Daten zur Verfügung stellen kann. 
+Technisch gesehen können NoSQL Datenbanken in folgende Gruppen unterteilt werden:
+
+  * **Document Store**. Eine Dokumentendatenbank verwaltet das Konzept von *Dokumente und ihre Felder*. Das ist nützlich,
+    wenn Sie beispielsweise über einen hierarchischen Dokumentbaum in einem Content-Management-System (CMS) verfügen. Dokumente können
+    in der Datenbank über einen eindeutigen Schlüssel angesprochen, der das Dokument darstellt. Eines der anderen bestimmend
+    Merkmale einer dokumentenorientierten Datenbank, ist das einfache suchen nach einem Schlüsseldokuments,
+    welches Sie zum Abrufen eines Dokuments verwenden können. Es bietet eine API oder Abfragesprache der Datenbank an, die
+    das Abrufen von Dokumenten anhand ihres Inhalts ermöglichen.
+  
+  * **Column Store**. Wird häufig bei der Webindizierung verwendet. Ein spaltenorientiertes DBMS ist eine Datenbankverwaltungssystem,
+    das Datentabellen als Abschnitte von Datenspalten statt als Datenzeilen speichert.
+    Im Vergleich dazu speichern die meisten relationalen DBMS Daten in Zeilen. Dieses spaltenorientierte DBMS hat Vorteile
+    für Data-Warehouses, CRM-Systeme (Customer Relationship Management) und Bibliothekskartenkataloge,
+    und andere Ad-hoc-Abfragesysteme, bei denen Aggregate über eine große Anzahl ähnlicher Einheiten berechnet werden
+    Datenelemente.
+
+  * **Key-Value Store**. Dies ist der einfachste Datenspeicher mit eindeutigen Schlüsseln für den Zugriff auf bestimmte
+    Daten. Solche Datenbanksysteme bieten einen einfachen Schlüsselwert-Suchmechanismus.
+    
+  * und andere.
+  
+I> Doctrine bietet nur Unterstützung für den "Document-Store" der NoSQL-Datenbanksysteme.
+I> "Column Store" und "Key-Value Store" Datenbanksysteme haben typischerweise ein sehr spezifisches Anwendungsgebiet und werden nicht durch
+I> Doctrine abgedeckt.
+  
+#### Dokumentendatenbanken
+
+Doctrine unterstützt eine Reihe von NoSQL-Document-Store-Datenbanken: [MongoDB](https://www.mongodb.org/),
+[CouchDB](http://couchdb.apache.org/), [OrientDB](http://www.orientechnologies.com/orientdb/) und
+[PHPCR](http://phpcr.github.io/).
+    
+Auf einer Blog-Website haben Sie beispielsweise ein Dokument mit dem Namen `post` und ein Dokument mit dem Namen `comment`.
+Das Dokument `post` hätte Felder mit den Namen `id`, `title`, `content`, `author`, `date_created`;
+und das Dokument `comment` hätte Felder mit den Namen `id`, `author`, `content` and `date_created`. Diese
+sind den Tabellen, die Sie in einer relationalen Datenbank haben würden, sehr ähnlich.
+
+I> In diesem Buch richten wir die von Doctrine bereitgestellte API nicht an die NoSQL-Document-Store-Datenbanken. Wenn Sie
+I> mehr über diese Fähigkeiten erfahren wollen, lesen Sie bitte die entsprechenden Abschnitte der Dokumentation 
+I> des Doctrine-Projekts.
+   
+## Doctrine Architecture
+
+Das [Doctrine Project](http://www.doctrine-project.org/) besteht aus mehreren Bibliotheken (Komponenten).
+Jede Doctrine-Komponente wird als von Composer installierbares Paket vertrieben und ist im
+[Packagist.org](https://packagist.org/) Katalog registriert. Dies ist dem Zend Framework 3 sehr ähnlich, denn es
+verwendet für die Installation seiner Komponenten auch Composer.
+
+Hier geben wir Ihnen eine kurze Beschreibung der Doctrine-Bibliotheks-Architektur,
+um Ihnen einen Überblick über ihre Fähigkeiten zu geben.
+
+### Komponenten, die relationale Datenbanken unterstützen
+
+Hauptkomponenten von Doctrine für das Arbeiten mit relationalen Datenbanken sind in Abbildung D.2 dargestellt
+und mit grün markiert. Blaue Blöcke kennzeichnen die PHP-Engine und PHP-Erweiterungen, auf denen Doctrine aufgebaut ist.
+
+![Abbildung D.2. Doctrine-Komponenten für das Arbeiten mit relationalen Datenbanken](images/doctrine_intro/doctrine_orm_architecture.png)
+
+Wie Sie der Abbildung entnehmen können, basiert Doctrine auf den Funktionen der PHP-Engine und auf PHP-Erweiterungen
+die tatsächlich als Treiber für bestimmte Datenbankverwaltungssysteme verwendet werden. Über dieser Basisschicht
+sind grundlegende Bestandteile von Doctrine (wie `Annotations`, `Common`, etc.), die wesentliche Funktionen
+für andere Komponenten der obersten Ebene bereitstellen. Die Komponente `DBAL` stellt eine Abstraktionsebene des Datenbanktyps bereit.
+Darüber hinaus gibt es die Komponente `ORM`, die eine API für das objektorientierte Arbeiten mit Daten bietet. 
+Die Komponenten `DoctrineModule` und `DoctrineORMModule` sind für die Integration mit Zend Framework 3 konzipiert.
+
+I> Doctrine Komponente `ORM` verwendet das sogenannte [Data Mapper](http://en.wikipedia.org/wiki/Data_mapper_pattern)
+   Muster. Dieses Muster weist darauf hin, dass eine Datenbanktabelle als PHP-Entitätsklasse dargestellt werden kann. Die Datenbank
+   in diesem Muster wird eine Art Repository (Speicherung von Entitäten) betrachtet. Wenn Sie eine Entität
+   aus dem Repository abrufen, wird intern eine SQL-Abfrage ausgeführt und eine Instanz der PHP-Entitätsklasse
+   wird konstruiert und seine Klassenvariablen werden mit Daten gefüllt.
+
+Analog zu ZF3-Komponenten bestehen Doctrine-Komponentennamen aus zwei Teilen: dem Anbieternamen
+("Doctrine") und den Komponentennamen (z.B. "Common"). Unten finden Sie die Liste von
+Doctrine-Komponenten zusammen mit ihren Composer installierbaren Paketnamen und kurzen Beschreibungen:
+
+  * `Doctrine\Common`. Eine gemeinsame Bibliothek für Doctrine-Projekte. Diese Komponente enthält häufig verwendete
+    Funktionalitäten. Der Name des vom Composer installierbaren Pakets lautet `doctrine/common`.
+  
+  * `Doctrine\Annotations`. Parser für Kommentar-Annotations. Der Name des vom Composer installierbaren Pakets lautet
+    `doctrine/annotations`.
+  
+  * `Doctrine\Inflector`. Gemeinsame String-Manipulationen in Bezug zum casten von Singular-und Pluralregeln.
+     Der vom Composer installierbarer Paketname lautet `doctrine/inflector`.
+  
+  * `Doctrine\Lexer`. Basisbibliothek für einen Lexer, der in "Recursive Descent Parsers" von Top-Down verwendet werden kann.
+    Der vom Composer installierbarer Paketname lautet `doctrine/lexer`.
+ 
+  * `Doctrine\Cache`. Caching-Bibliothek bietet eine objektorientierte API für viele Cache-Backends.
+     Der vom Composer installierbarer Paketname lautet `doctrine/cache`.
+
+  * `Doctrine\DBAL`. Datenbank-Abstraktionsschicht. Dies ist eine leichte und dünne Laufzeitebene, basierend auf
+     eine PDO-ähnliche API und viele zusätzliche Funktionen wie Datenbankschema-Introspektion und
+     Manipulation durch eine objektorientierte API. Der vom Composer installierbarer Paketname lautet `doctrine/dbal`.
+ 
+  * `Doctrine\Collections`. Abstraktionsbibliothek von Sammlungen. Der Name des vom Composer installierbaren Pakets lautet
+    `doctrine/collections`.
+
+  * `Doctrine\ORM`. Objektrelational-Mapper für PHP. Dies ist eine Doctrine-Komponente, die eine Möglichkeit zum
+     Arbeiten mit Entitätsmodellen objektorientiert bietet, statt mit rohen SQL-Abfragen.
+     Der Name des vom Composer installierbaren Pakets `doctrine/orm`.
+
+  * `Doctrine\Migrations`. Datenbankschemamigrationen mit Doctrine DBAL. Bietet einen einheitlichen Weg
+    Datenbankschemas zu verwalten und zu aktualisieren. Der Name des vom Composer installierbaren Pakets `doctrine/migrations`.
+
+  * `Doctrine\DataFixtures`. Datenbankfixtures für alle Doctrine Object Manager.
+    Stellt ein Framework für die Erstellung von Datenbankfixtures bereit. Sein installierbarer Paketname lautet
+    `doctrine/data-fixtures`.
+
+Da Doctrine PHP-Autoloading und den PSR-4-Standard verwendet, liegen die Klassen, die zu einer bestimmten Komponente gehören,
+im Namesraum der jeweiligen Komponente. Zum Beispiel die Klasse `EntityManager`, die zur Komponenten `Doctrine\ORM` gehört,
+liegt im Namensraum `Doctrine\ORM`.
+
+### Komponenten, die NoSQL-Dokumentendatenbanken unterstützen
+
+Doctrine-Komponenten für das Arbeiten mit NoSQL-Dokumentendatenbanken (MongoDB, CouchDB usw.)
+sind in Abbildung D.3 dargestellt und mit grün markiert. Blaue Blöcke kennzeichnen die PHP-Engine und die PHP-Erweiterungen.
+
+![Abbildung D.3. Doctrine-Komponenten für die Arbeit mit Dokumentendatenbanken](images/doctrine_intro/doctrine_odm_architecture.png)
+
+Wie Sie in Abbildung D.3 sehen können, basieren Doctrine NoSQL-Komponenten auf PHP-Engine-Funktionen
+und auf PHP-Erweiterungen, die als "Treiber" für bestimmte Datenbankverwaltungssysteme angesehen werden können.
+Über dieser Basisschicht befinden sich Komponenten der mittleren Ebene. Die Komponente `Common` ist dieselbe Komponente, die in der Abbildung D.2 gezeigt wurde. 
+Sie bietet häufig verwendete Funktionen. Die Komponenten `MongoDB` and `CouchDB` stellen
+Low-Level-API für entsprechende Datenbanken bereit. Die Komponenten `MongodbODM`,` CouchdbODM`, `OrientdbODM` und` PhpcrODM`
+stellen Object Document Mappers (ODM) für entsprechende Datenbanken bereit. Das ODM-Konzept ist sehr
+ähnlich wie ORM in dem Sinne, dass es die Möglichkeit bietet, objektorientiert mit einer NoSQL-Datenbank zu arbeiten,
+indem Sie ein Dokument einer PHP-Entitätsklasse zuordnen. Die Komponente `DoctrineMongoODMModule` ist vorgesehen
+zur Integration mit ZF3.
+
+Nachfolgend finden Sie die Liste der Komponenten mit ihren Composer installierbaren Paketnamen
+und einer kurze Beschreibungen:
+
+  * `Doctrine\MongoDB` ist ein MongoDB Abstraction Layer. Der Name des vom Composer installierbaren Pakets lautet
+   `doctrine/mongodb`.
+  
+  * `Doctrine\MongodbODM`  (Object Document Mapper) bietet eine Möglichkeit, NoSQL-Dokumente in PHP
+    Entitätsklasse-Modelle abzubilden. Der Composer installierbaren Pakets lautet `doctrine/mongodb-odm`.
+
+  * `Doctrine\MongoODMModule` ist ein Zend Framework 3 - Modul, das die Funktionalität von Doctrine MongoDB ODM 
+    bereitstellt. Es dient zur einfachen Integration mit ZF3. Der Name des vom Composer installierbaren Pakets lautet
+    `doctrine/doctrine-mongo-odm-module`.
+
+  * `Doctrine\CouchDB` bietet eine einfache API, die die HTTP-API von CouchDB umgibt.
+    Der Name des vom Composer installierbaren Pakets lautet `doctrine/couchdb`.
+
+  * `Doctrine\CouchdbODM` ist der CouchDB Document Object Mapper. Er ist in Analogie zu Doctrine ORM
+    und bietet die Möglichkeit, auf die Datenbank objektorientiert zuzugreifen. Der Name des vom Composer 
+    installierbaren Pakets lautet `doctrine/couchdb-odm`.
+
+  * `Doctrine\OrientdbODM` ist eine Sammlung von PHP-Bibliotheken, um OrientDB von PHP aus zu verwenden.
+    Der Name des vom Composer installierbaren Pakets lautet `doctrine/orientdb-odm`.
+
+  * `Doctrine\PhpcrODM` ist ein Object-Document-Mapper für PHPCR.
+    Der Name des vom Composer installierbaren Pakets lautet `doctrine/phpcr-odm`.
+
+## Zusammenfassung
+
+In diesem Anhang haben wir einen Überblick über die Architektur und den Komponenten der Doctrine-Bibliothek gegeben. Doctrine
+ist ein großes Projekt, dass aus mehreren Komponenten besteht, die hauptsächlich auf die Datenpersistenz ausgerichtet sind.
+
+Auf dem Markt gibt es zwei große Gruppen von Datenbankverwaltungssystemen: traditionelle relationale Datenbanken
+und sogenannte NoSQL-Datenbanken. Die meisten relationalen Datenbanken verwenden. Jedes Datenbanksystem seine eigenen spezifischen Merkmale der
+SQL-Sprache zum Abfragen und Bearbeiten von Daten. Dasselbe kann mit NoSQL gesehen werden.
+Datenbanken, in denen jedes System eine eigene Methode für den Zugriff auf Daten bereitstellt. Doctrine ist entworfen, um mit
+Daten auf datenbankunabhängige Weise durch Bereitstellung hochentwickelter Abstraktionsschichten zu arbeiten.
+
+Der nützlichste Bestandteil von Doctrine, der Object Relational Mapper (ORM), ist für Entwickler gedacht,
+objektorientiert mit Daten zu arbeiten. Dies geschieht, wenn Sie anstelle einer SQL-Abfrage schreiben,
+ein Entitätsobjekt (oder ein Arrays von Entitätsobjekten) aus einem Repository laden. Mit diesem Ansatz wird einer Datenbanktabelle
+eine PHP-Klasse (auch Entität genannt) zugeordnet, und eine Zeile dieser Tabelle wird einer
+Instanz dieser Entitätsklasse sein.
